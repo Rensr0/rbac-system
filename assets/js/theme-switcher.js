@@ -55,31 +55,14 @@
 
   // 手机端：底部 ActionSheet
   function showMobileSheet() {
-    // 移除已有
-    var old = document.querySelector('.app-theme-sheet');
-    if (old) old.remove();
-
-    var overlay = document.createElement('div');
-    overlay.className = 'app-action-sheet-overlay';
-    overlay.innerHTML = '<div class="app-action-sheet app-theme-sheet">'
-      + '<div class="sheet-handle"></div>'
+    createActionSheet(
+      '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">切换主题</div>'
       + '<div style="padding:0 16px 16px">'
       + '<div class="theme-grid">' + renderThemeOptions() + '</div>'
       + '</div>'
       + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>'
-      + '</div>';
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add('show'));
-    
-    overlay.onclick = (e) => {
-      if (e.target === overlay) closeActionSheet();
-    };
-    
-    window.closeActionSheet = function() {
-      overlay.querySelector('.app-action-sheet').classList.remove('show');
-      setTimeout(() => overlay.remove(), 300);
-    };
+    );
   }
 
   // 点击外部关闭面板

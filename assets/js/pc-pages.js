@@ -12,21 +12,6 @@ var PCPages = (function () {
     userRouters = routers;
   }
 
-  function miIcon(name, cls) { return '<i class="mi' + (cls ? ' ' + cls : '') + '">' + name + '</i>'; }
-  function renderIcon(iconText) {
-    var knownIcons = ['home','group','security','route','account_circle','login','logout','search',
-      'delete','edit','add','settings','lock','email','phone','calendar_today','arrow_forward',
-      'arrow_back','dashboard','menu','close','check','warning','error','info','refresh',
-      'person','person_add','lock_reset','visibility','shield','key','link','sort','toggle_on',
-      'toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle',
-      'badge','contact_mail','alternate_email','vpn_key','how_to_reg','rocket_launch','chevron_right',
-      'edit_note','logout','inbox','search_off'];
-    if (knownIcons.indexOf(iconText) !== -1) {
-      return miIcon(iconText);
-    }
-    return iconText || miIcon('description');
-  }
-
   // ==================== 首页 ====================
   function loadHome(c) {
     Promise.all([
@@ -39,18 +24,18 @@ var PCPages = (function () {
       var routers = window._userRouters || [];
       c.innerHTML =
         '<div class="stats-grid">'
-        + '<div class="stat-card"><div class="stat-icon">' + miIcon('group', 'mi-lg') + '</div><div class="stat-value">' + (uR.data && uR.data.total || 0) + '</div><div class="stat-label">系统用户</div></div>'
-        + '<div class="stat-card"><div class="stat-icon">' + miIcon('shield', 'mi-lg') + '</div><div class="stat-value">' + (rR.data && rR.data.total || 0) + '</div><div class="stat-label">角色数量</div></div>'
-        + '<div class="stat-card"><div class="stat-icon">' + miIcon('route', 'mi-lg') + '</div><div class="stat-value">' + ((rtR.data || []).length) + '</div><div class="stat-label">路由权限</div></div>'
-        + '<div class="stat-card"><div class="stat-icon">' + miIcon('check_circle', 'mi-lg mi-success') + '</div><div class="stat-value" style="color:var(--success)">正常</div><div class="stat-label">系统状态</div></div>'
+        + '<div class="stat-card"><div class="stat-icon">' + mi('group', 'mi-lg') + '</div><div class="stat-value">' + (uR.data && uR.data.total || 0) + '</div><div class="stat-label">系统用户</div></div>'
+        + '<div class="stat-card"><div class="stat-icon">' + mi('shield', 'mi-lg') + '</div><div class="stat-value">' + (rR.data && rR.data.total || 0) + '</div><div class="stat-label">角色数量</div></div>'
+        + '<div class="stat-card"><div class="stat-icon">' + mi('route', 'mi-lg') + '</div><div class="stat-value">' + ((rtR.data || []).length) + '</div><div class="stat-label">路由权限</div></div>'
+        + '<div class="stat-card"><div class="stat-icon">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-value" style="color:var(--success)">正常</div><div class="stat-label">系统状态</div></div>'
         + '</div>'
         + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(user.nickname || user.username) + '</div>'
         + '<div class="card-body">'
         + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。通过左侧菜单管理用户、角色和路由权限。</p>'
         + '<div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">'
-        + (hasRoute(routers, 'user') ? '<button class="btn btn-primary" onclick="pcNavigate(\'user\')">' + miIcon('group', 'mi-18') + ' 管理用户</button>' : '')
-        + (hasRoute(routers, 'role') ? '<button class="btn btn-outline" onclick="pcNavigate(\'role\')">' + miIcon('shield', 'mi-18') + ' 配置角色</button>' : '')
-        + (hasRoute(routers, 'router') ? '<button class="btn btn-outline" onclick="pcNavigate(\'router\')">' + miIcon('route', 'mi-18') + ' 路由权限</button>' : '')
+        + (hasRoute(routers, 'user') ? '<button class="btn btn-primary" onclick="pcNavigate(\'user\')">' + mi('group', 'mi-18') + ' 管理用户</button>' : '')
+        + (hasRoute(routers, 'role') ? '<button class="btn btn-outline" onclick="pcNavigate(\'role\')">' + mi('shield', 'mi-18') + ' 配置角色</button>' : '')
+        + (hasRoute(routers, 'router') ? '<button class="btn btn-outline" onclick="pcNavigate(\'router\')">' + mi('route', 'mi-18') + ' 路由权限</button>' : '')
         + '</div></div></div>'
         + '<div class="card" style="margin-top:24px"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:300px"></div></div></div>';
 
@@ -113,11 +98,11 @@ var PCPages = (function () {
       c.innerHTML =
         '<div class="page-header">'
         + '<div><h2>用户管理</h2><div class="subtitle">共 ' + total + ' 个用户</div></div>'
-        + '<button class="btn btn-primary" onclick="PCPages.addUser()">' + miIcon('add', 'mi-18') + ' 新增用户</button>'
+        + '<button class="btn btn-primary" onclick="PCPages.addUser()">' + mi('add', 'mi-18') + ' 新增用户</button>'
         + '</div>'
         + '<div class="search-bar">'
         + '<input class="form-input" id="pc-user-search" placeholder="搜索用户名/昵称" value="' + escapeHtml(kw) + '" onkeyup="if(event.key===\'Enter\'){PCPages.userPage=1;PCPages.loadUser(document.getElementById(\'page-content\'))}">'
-        + '<button class="btn btn-outline" onclick="PCPages.userPage=1;PCPages.loadUser(document.getElementById(\'page-content\'))">' + miIcon('search', 'mi-18') + ' 搜索</button>'
+        + '<button class="btn btn-outline" onclick="PCPages.userPage=1;PCPages.loadUser(document.getElementById(\'page-content\'))">' + mi('search', 'mi-18') + ' 搜索</button>'
         + '</div>'
         + '<div class="card"><div class="table-wrap"><table>'
         + '<thead><tr><th>ID</th><th>账号</th><th>昵称</th><th>角色</th><th>状态</th><th>最后登录</th><th>操作</th></tr></thead>'
@@ -131,8 +116,8 @@ var PCPages = (function () {
             + '<td>' + (u.status == 1 ? '<span class="badge badge-success">正常</span>' : '<span class="badge badge-danger">禁用</span>') + '</td>'
             + '<td class="text-sm text-secondary">' + (u.last_login ? formatDate(u.last_login) : '从未登录') + '</td>'
             + '<td><div class="action-btns">'
-            + '<button class="btn btn-sm btn-outline" onclick="PCPages.editUser(' + u.id + ')">' + miIcon('edit', 'mi-14') + ' 编辑</button>'
-            + (!u.is_super ? '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteUser(' + u.id + ')">' + miIcon('delete', 'mi-14') + ' 删除</button>' : '')
+            + '<button class="btn btn-sm btn-outline" onclick="PCPages.editUser(' + u.id + ')">' + mi('edit', 'mi-14') + ' 编辑</button>'
+            + (!u.is_super ? '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteUser(' + u.id + ')">' + mi('delete', 'mi-14') + ' 删除</button>' : '')
             + '</div></td></tr>';
         }).join('')
         + '</tbody></table></div></div>'
@@ -226,7 +211,7 @@ var PCPages = (function () {
       c.innerHTML =
         '<div class="page-header">'
         + '<div><h2>角色管理</h2><div class="subtitle">共 ' + list.length + ' 个角色</div></div>'
-        + '<button class="btn btn-primary" onclick="PCPages.addRole()">' + miIcon('add', 'mi-18') + ' 新增角色</button>'
+        + '<button class="btn btn-primary" onclick="PCPages.addRole()">' + mi('add', 'mi-18') + ' 新增角色</button>'
         + '</div>'
         + '<div class="card"><div class="table-wrap"><table>'
         + '<thead><tr><th>ID</th><th>角色名称</th><th>备注</th><th>用户数</th><th>权限列表</th><th>操作</th></tr></thead>'
@@ -237,8 +222,8 @@ var PCPages = (function () {
             + '<td>' + (r.user_count || 0) + '</td>'
             + '<td>' + ((r.routers || []).map(function(rt) { return '<span class="badge badge-info">' + renderIcon(rt.icon) + ' ' + escapeHtml(rt.router_name) + '</span>'; }).join(' ') || '<span class="text-secondary">无</span>') + '</td>'
             + '<td><div class="action-btns">'
-            + '<button class="btn btn-sm btn-outline" onclick="PCPages.editRole(' + r.id + ')">' + miIcon('edit', 'mi-14') + ' 编辑</button>'
-            + (r.id !== 1 ? '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteRole(' + r.id + ')">' + miIcon('delete', 'mi-14') + ' 删除</button>' : '')
+            + '<button class="btn btn-sm btn-outline" onclick="PCPages.editRole(' + r.id + ')">' + mi('edit', 'mi-14') + ' 编辑</button>'
+            + (r.id !== 1 ? '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteRole(' + r.id + ')">' + mi('delete', 'mi-14') + ' 删除</button>' : '')
             + '</div></td></tr>';
         }).join('')
         + '</tbody></table></div></div>';
@@ -315,7 +300,7 @@ var PCPages = (function () {
       c.innerHTML =
         '<div class="page-header">'
         + '<div><h2>路由管理</h2><div class="subtitle">共 ' + list.length + ' 条路由</div></div>'
-        + '<button class="btn btn-primary" onclick="PCPages.addRouter()">' + miIcon('add', 'mi-18') + ' 新增路由</button>'
+        + '<button class="btn btn-primary" onclick="PCPages.addRouter()">' + mi('add', 'mi-18') + ' 新增路由</button>'
         + '</div>'
         + '<div class="card"><div class="table-wrap"><table>'
         + '<thead><tr><th>ID</th><th>图标</th><th>名称</th><th>路径</th><th>排序</th><th>状态</th><th>绑定角色</th><th>操作</th></tr></thead>'
@@ -328,8 +313,8 @@ var PCPages = (function () {
             + '<td>' + (r.status == 1 ? '<span class="badge badge-success">启用</span>' : '<span class="badge badge-danger">禁用</span>') + '</td>'
             + '<td>' + (r.role_count || 0) + ' 个角色</td>'
             + '<td><div class="action-btns">'
-            + '<button class="btn btn-sm btn-outline" onclick="PCPages.editRouter(' + r.id + ')">' + miIcon('edit', 'mi-14') + ' 编辑</button>'
-            + '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteRouter(' + r.id + ')">' + miIcon('delete', 'mi-14') + ' 删除</button>'
+            + '<button class="btn btn-sm btn-outline" onclick="PCPages.editRouter(' + r.id + ')">' + mi('edit', 'mi-14') + ' 编辑</button>'
+            + '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteRouter(' + r.id + ')">' + mi('delete', 'mi-14') + ' 删除</button>'
             + '</div></td></tr>';
         }).join('')
         + '</tbody></table></div></div>';
@@ -339,10 +324,7 @@ var PCPages = (function () {
   function pcAddRouter() {
     var iconSelect = document.getElementById('form-router-icon');
     if (iconSelect) {
-      var icons = ['home','group','security','route','dashboard','settings','lock','email','phone','calendar_today','search','add','edit','delete','info','warning','error','check','close','menu','person','badge','shield','key','link','sort','toggle_on','toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle','contact_mail','alternate_email','vpn_key','how_to_reg','rocket_launch','chevron_right','edit_note','logout','inbox','search_off','description','folder','analytics','assessment','trending_up','bar_chart','pie_chart','timeline','event','schedule','notifications','favorite','star','share','download','upload','cloud','storage','backup','security','privacy_policy','help','support'];
-      iconSelect.innerHTML = icons.map(function(icon) {
-        return '<option value="' + icon + '">' + icon + '</option>';
-      }).join('');
+      iconSelect.innerHTML = iconSelectHtml();
     }
     document.getElementById('modal-router-title').textContent = '新增路由';
     document.getElementById('form-router-id').value = '';
@@ -359,10 +341,7 @@ var PCPages = (function () {
       
       var iconSelect = document.getElementById('form-router-icon');
       if (iconSelect) {
-        var icons = ['home','group','security','route','dashboard','settings','lock','email','phone','calendar_today','search','add','edit','delete','info','warning','error','check','close','menu','person','badge','shield','key','link','sort','toggle_on','toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle','contact_mail','alternate_email','vpn_key','how_to_reg','rocket_launch','chevron_right','edit_note','logout','inbox','search_off','description','folder','analytics','assessment','trending_up','bar_chart','pie_chart','timeline','event','schedule','notifications','favorite','star','share','download','upload','cloud','storage','backup','security','privacy_policy','help','support'];
-        iconSelect.innerHTML = icons.map(function(icon) {
-          return '<option value="' + icon + '"' + (r.icon === icon ? ' selected' : '') + '>' + icon + '</option>';
-        }).join('');
+        iconSelect.innerHTML = iconSelectHtml(r.icon);
       }
       
       document.getElementById('modal-router-title').textContent = '编辑路由';
@@ -421,40 +400,40 @@ var PCPages = (function () {
       + '<div style="padding:32px">'
       + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px">'
       + '<div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:12px">'
-      + '<div style="font-size:24px;font-weight:700;color:var(--primary);margin-bottom:4px">' + miIcon('badge', 'mi-lg') + '</div>'
+      + '<div style="font-size:24px;font-weight:700;color:var(--primary);margin-bottom:4px">' + mi('badge', 'mi-lg') + '</div>'
       + '<div style="font-size:12px;color:var(--text-secondary)">账号</div>'
       + '<div style="font-size:14px;font-weight:500;margin-top:4px">' + escapeHtml(user.username) + '</div>'
       + '</div>'
       + '<div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:12px">'
-      + '<div style="font-size:24px;font-weight:700;color:var(--success);margin-bottom:4px">' + miIcon('email', 'mi-lg') + '</div>'
+      + '<div style="font-size:24px;font-weight:700;color:var(--success);margin-bottom:4px">' + mi('email', 'mi-lg') + '</div>'
       + '<div style="font-size:12px;color:var(--text-secondary)">邮箱</div>'
       + '<div style="font-size:14px;font-weight:500;margin-top:4px">' + (user.email ? escapeHtml(user.email) : '未设置') + '</div>'
       + '</div>'
       + '<div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:12px">'
-      + '<div style="font-size:24px;font-weight:700;color:var(--warning);margin-bottom:4px">' + miIcon('phone', 'mi-lg') + '</div>'
+      + '<div style="font-size:24px;font-weight:700;color:var(--warning);margin-bottom:4px">' + mi('phone', 'mi-lg') + '</div>'
       + '<div style="font-size:12px;color:var(--text-secondary)">手机</div>'
       + '<div style="font-size:14px;font-weight:500;margin-top:4px">' + (user.phone ? escapeHtml(user.phone) : '未设置') + '</div>'
       + '</div>'
       + '<div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:12px">'
-      + '<div style="font-size:24px;font-weight:700;color:var(--info);margin-bottom:4px">' + miIcon('calendar_today', 'mi-lg') + '</div>'
+      + '<div style="font-size:24px;font-weight:700;color:var(--info);margin-bottom:4px">' + mi('calendar_today', 'mi-lg') + '</div>'
       + '<div style="font-size:12px;color:var(--text-secondary)">最后登录</div>'
       + '<div style="font-size:14px;font-weight:500;margin-top:4px">' + (user.last_login ? formatDate(user.last_login).split(' ')[0] : '首次') + '</div>'
       + '</div>'
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">'
       + '<div>'
-      + '<h3 style="margin:0 0 20px;font-size:18px;display:flex;align-items:center;gap:8px">' + miIcon('edit_note') + ' 编辑资料</h3>'
+      + '<h3 style="margin:0 0 20px;font-size:18px;display:flex;align-items:center;gap:8px">' + mi('edit_note') + ' 编辑资料</h3>'
       + '<div class="form-group"><label class="form-label">昵称</label><input class="form-input" id="pc-profile-nickname" value="' + escapeHtml(user.nickname || '') + '" placeholder="请输入昵称"></div>'
       + '<div class="form-group"><label class="form-label">邮箱</label><input class="form-input" type="email" id="pc-profile-email" value="' + escapeHtml(user.email || '') + '" placeholder="请输入邮箱"></div>'
       + '<div class="form-group"><label class="form-label">手机</label><input class="form-input" type="tel" id="pc-profile-phone" value="' + escapeHtml(user.phone || '') + '" placeholder="请输入手机号"></div>'
-      + '<button class="btn btn-primary" onclick="PCPages.saveProfile()" style="width:100%">' + miIcon('save', 'mi-18') + ' 保存资料</button>'
+      + '<button class="btn btn-primary" onclick="PCPages.saveProfile()" style="width:100%">' + mi('save', 'mi-18') + ' 保存资料</button>'
       + '</div>'
       + '<div>'
-      + '<h3 style="margin:0 0 20px;font-size:18px;display:flex;align-items:center;gap:8px">' + miIcon('lock') + ' 修改密码</h3>'
+      + '<h3 style="margin:0 0 20px;font-size:18px;display:flex;align-items:center;gap:8px">' + mi('lock') + ' 修改密码</h3>'
       + '<div class="form-group"><label class="form-label">原密码</label><input class="form-input" type="password" id="pc-old-pwd" placeholder="请输入原密码"></div>'
       + '<div class="form-group"><label class="form-label">新密码</label><input class="form-input" type="password" id="pc-new-pwd" placeholder="请输入新密码（6位以上）"></div>'
       + '<div class="form-group"><label class="form-label">确认新密码</label><input class="form-input" type="password" id="pc-confirm-pwd" placeholder="再次输入新密码"></div>'
-      + '<button class="btn btn-primary" onclick="PCPages.changePwd()" style="width:100%">' + miIcon('lock_reset', 'mi-18') + ' 修改密码</button>'
+      + '<button class="btn btn-primary" onclick="PCPages.changePwd()" style="width:100%">' + mi('lock_reset', 'mi-18') + ' 修改密码</button>'
       + '</div>'
       + '</div></div></div>';
   }

@@ -13,21 +13,6 @@
     pageLoaders[path] = loader;
   };
 
-  // 图标渲染：如果是已知 Material Icon 名称就渲染图标，否则显示文字
-  function renderIcon(iconText) {
-    var knownIcons = ['home','group','security','route','account_circle','login','logout','search',
-      'delete','edit','add','settings','lock','email','phone','calendar_today','arrow_forward',
-      'arrow_back','dashboard','menu','close','check','warning','error','info','refresh',
-      'person','person_add','lock_reset','visibility','shield','key','link','sort','toggle_on',
-      'toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle',
-      'badge','contact_mail','alternate_email','vpn_key','how_to_reg'];
-    if (knownIcons.indexOf(iconText) !== -1) {
-      return '<i class="mi">' + iconText + '</i>';
-    }
-    // 兼容旧 emoji 数据
-    return iconText || '<i class="mi">description</i>';
-  }
-
   var AppRouter = {
     currentPage: 'home',
     pageStack: [],
@@ -421,11 +406,8 @@
   // 编辑个人资料（手机端）
   window.showEditProfileSheet = function () {
     var user = Storage.get('currentUser') || {};
-    var overlay = document.createElement('div');
-    overlay.className = 'app-action-sheet-overlay show';
-    overlay.innerHTML =
-      '<div class="app-action-sheet" style="transform:translateY(0)">'
-      + '<div class="sheet-handle"></div>'
+    createActionSheet(
+      '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">编辑资料</div>'
       + '<div style="padding:0 16px 16px">'
       + '<div class="app-form">'
@@ -435,13 +417,8 @@
       + '</div>'
       + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitProfile()">保存修改</button>'
       + '</div>'
-      + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
-    document.body.appendChild(overlay);
-    window.closeActionSheet = function () {
-      overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
-      setTimeout(function () { overlay.remove(); }, 350);
-    };
-    overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+      + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>'
+    );
   };
 
   window.submitProfile = function () {
@@ -455,9 +432,6 @@
       if (res.code === 200) {
         Storage.set('currentUser', res.data);
         closeActionSheet();
-        // 刷新页面数据
-        registerPage.mine && registerPage.mine();
-        // 重新加载我的页面
         var mineLoader = pageLoaders['mine'];
         if (mineLoader) mineLoader();
       }
@@ -466,11 +440,8 @@
 
   // 修改密码（手机端）
   window.showChangePwdSheet = function () {
-    var overlay = document.createElement('div');
-    overlay.className = 'app-action-sheet-overlay show';
-    overlay.innerHTML =
-      '<div class="app-action-sheet" style="transform:translateY(0)">'
-      + '<div class="sheet-handle"></div>'
+    createActionSheet(
+      '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">修改密码</div>'
       + '<div style="padding:0 16px 16px">'
       + '<div class="app-form">'
@@ -479,13 +450,8 @@
       + '<div class="app-form-item"><div class="form-label">确认</div><input class="form-input" type="password" id="confirm-pwd" placeholder="再次输入新密码"></div>'
       + '</div>'
       + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitChangePwd()">确认修改</button>'
-      + '</div><div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
-    document.body.appendChild(overlay);
-    window.closeActionSheet = function () {
-      overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
-      setTimeout(function () { overlay.remove(); }, 350);
-    };
-    overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+      + '</div><div class="sheet-cancel" onclick="closeActionSheet()">取消</div>'
+    );
   };
 
   window.submitChangePwd = function () {
@@ -522,11 +488,8 @@
         return '<option value="' + r.id + '">' + escapeHtml(r.role_name) + '</option>';
       }).join('');
 
-      var overlay = document.createElement('div');
-      overlay.className = 'app-action-sheet-overlay show';
-      overlay.innerHTML =
-        '<div class="app-action-sheet" style="transform:translateY(0)">'
-        + '<div class="sheet-handle"></div>'
+      createActionSheet(
+        '<div class="sheet-handle"></div>'
         + '<div class="sheet-title">添加用户</div>'
         + '<div style="padding:0 16px 16px">'
         + '<div class="app-form">'
@@ -538,13 +501,8 @@
         + '</div>'
         + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitAddUser()">确认添加</button>'
         + '</div>'
-        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
-      document.body.appendChild(overlay);
-      window.closeActionSheet = function () {
-        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
-        setTimeout(function () { overlay.remove(); }, 350);
-      };
-      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>'
+      );
     });
   };
 
@@ -573,14 +531,9 @@
       var userRes = results[0], roleRes = results[1];
       if (userRes.code !== 200) { appToast(userRes.msg); return; }
       var user = userRes.data;
-      var roles = roleRes.code === 200 ? (roleRes.data || {}).list || [] : [];
-      var userRoleIds = (user.roles || []).map(function (r) { return r.id; });
 
-      var overlay = document.createElement('div');
-      overlay.className = 'app-action-sheet-overlay show';
-      overlay.innerHTML =
-        '<div class="app-action-sheet" style="transform:translateY(0)">'
-        + '<div class="sheet-handle"></div>'
+      createActionSheet(
+        '<div class="sheet-handle"></div>'
         + '<div class="sheet-title">编辑用户</div>'
         + '<div style="padding:0 16px 16px">'
         + '<div class="app-form">'
@@ -592,13 +545,8 @@
         + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitEditUser(' + userId + ')">保存修改</button>'
         + '<button class="app-btn app-btn-danger" style="margin-top:8px" onclick="deleteUserApp(' + userId + ')">删除用户</button>'
         + '</div>'
-        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
-      document.body.appendChild(overlay);
-      window.closeActionSheet = function () {
-        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
-        setTimeout(function () { overlay.remove(); }, 350);
-      };
-      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>'
+      );
     });
   };
 
@@ -634,15 +582,12 @@
       appHideLoading();
       var routers = res.code === 200 ? res.data || [] : [];
 
-      var overlay = document.createElement('div');
-      overlay.className = 'app-action-sheet-overlay show';
       var routerHtml = routers.map(function (r) {
         return '<div class="role-switch-item"><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span><label class="switch"><input type="checkbox" value="' + r.id + '"><span class="slider"></span></label></div>';
       }).join('');
 
-      overlay.innerHTML =
-        '<div class="app-action-sheet" style="transform:translateY(0);max-height:85vh">'
-        + '<div class="sheet-handle"></div>'
+      createActionSheet(
+        '<div class="sheet-handle"></div>'
         + '<div class="sheet-title">创建角色</div>'
         + '<div style="padding:0 16px 16px;max-height:60vh;overflow-y:auto">'
         + '<div class="app-form">'
@@ -653,13 +598,9 @@
         + '<div style="background:var(--bg-card);border-radius:10px;margin-top:8px;overflow:hidden">' + routerHtml + '</div>'
         + '</div>'
         + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitAddRole()">确认创建</button>'
-        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
-      document.body.appendChild(overlay);
-      window.closeActionSheet = function () {
-        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
-        setTimeout(function () { overlay.remove(); }, 350);
-      };
-      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>',
+        { maxHeight: '85vh' }
+      );
     });
   };
 
@@ -694,11 +635,8 @@
         return '<div class="role-switch-item"><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span><label class="switch"><input type="checkbox" value="' + r.id + '" ' + checked + '><span class="slider"></span></label></div>';
       }).join('');
 
-      var overlay = document.createElement('div');
-      overlay.className = 'app-action-sheet-overlay show';
-      overlay.innerHTML =
-        '<div class="app-action-sheet" style="transform:translateY(0);max-height:85vh">'
-        + '<div class="sheet-handle"></div>'
+      createActionSheet(
+        '<div class="sheet-handle"></div>'
         + '<div class="sheet-title">编辑角色</div>'
         + '<div style="padding:0 16px 16px;max-height:60vh;overflow-y:auto">'
         + '<div class="app-form">'
@@ -710,13 +648,9 @@
         + '</div>'
         + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitEditRole(' + roleId + ')">保存修改</button>'
         + '<button class="app-btn app-btn-danger" style="margin-top:8px" onclick="deleteRoleApp(' + roleId + ')">删除角色</button>'
-        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
-      document.body.appendChild(overlay);
-      window.closeActionSheet = function () {
-        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
-        setTimeout(function () { overlay.remove(); }, 350);
-      };
-      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>',
+        { maxHeight: '85vh' }
+      );
     });
   };
 
@@ -747,33 +681,21 @@
 
   // ==================== 路由操作 ====================
   window.showAddRouterSheet = function () {
-    var iconOptions = ['home','group','security','route','dashboard','settings','lock','email','phone','calendar_today','search','add','edit','delete','info','warning','error','check','close','menu','person','badge','shield','key','link','sort','toggle_on','toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle','contact_mail','alternate_email','vpn_key','how_to_reg'].map(function (icon) {
-      return '<option value="' + icon + '">' + icon + '</option>';
-    }).join('');
-
-    var overlay = document.createElement('div');
-    overlay.className = 'app-action-sheet-overlay show';
-    overlay.innerHTML =
-      '<div class="app-action-sheet" style="transform:translateY(0)">'
-      + '<div class="sheet-handle"></div>'
+    createActionSheet(
+      '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">添加路由</div>'
       + '<div style="padding:0 16px 16px">'
       + '<div class="app-form">'
       + '<div class="app-form-item"><div class="form-label">路由名称</div><input class="form-input" id="add-router-name" placeholder="如：用户管理"></div>'
       + '<div class="app-form-item"><div class="form-label">路由路径</div><input class="form-input" id="add-router-path" placeholder="如：user"></div>'
-      + '<div class="app-form-item"><div class="form-label">图标</div><select class="form-select" id="add-router-icon">' + iconOptions + '</select></div>'
+      + '<div class="app-form-item"><div class="form-label">图标</div><select class="form-select" id="add-router-icon">' + iconSelectHtml() + '</select></div>'
       + '<div class="app-form-item"><div class="form-label">排序</div><input class="form-input" type="number" id="add-router-sort" value="10"></div>'
       + '<div class="app-form-item"><div class="form-label">状态</div><select class="form-select" id="add-router-status"><option value="1">启用</option><option value="0">禁用</option></select></div>'
       + '</div>'
       + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitAddRouter()">确认添加</button>'
       + '</div>'
-      + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
-    document.body.appendChild(overlay);
-    window.closeActionSheet = function () {
-      overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
-      setTimeout(function () { overlay.remove(); }, 350);
-    };
-    overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+      + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>'
+    );
   };
 
   window.submitAddRouter = function () {
@@ -798,34 +720,22 @@
       if (res.code !== 200) { appToast(res.msg); return; }
       var router = res.data;
 
-      var iconOptions = ['home','group','security','route','dashboard','settings','lock','email','phone','calendar_today','search','add','edit','delete','info','warning','error','check','close','menu','person','badge','shield','key','link','sort','toggle_on','toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle','contact_mail','alternate_email','vpn_key','how_to_reg'].map(function (icon) {
-        return '<option value="' + icon + '"' + (router.icon === icon ? ' selected' : '') + '>' + icon + '</option>';
-      }).join('');
-
-      var overlay = document.createElement('div');
-      overlay.className = 'app-action-sheet-overlay show';
-      overlay.innerHTML =
-        '<div class="app-action-sheet" style="transform:translateY(0)">'
-        + '<div class="sheet-handle"></div>'
+      createActionSheet(
+        '<div class="sheet-handle"></div>'
         + '<div class="sheet-title">编辑路由</div>'
         + '<div style="padding:0 16px 16px">'
         + '<div class="app-form">'
         + '<div class="app-form-item"><div class="form-label">路由名称</div><input class="form-input" id="edit-router-name" value="' + escapeHtml(router.router_name) + '"></div>'
         + '<div class="app-form-item"><div class="form-label">路由路径</div><input class="form-input" id="edit-router-path" value="' + escapeHtml(router.router_path) + '" readonly style="background:var(--bg-secondary)"></div>'
-        + '<div class="app-form-item"><div class="form-label">图标</div><select class="form-select" id="edit-router-icon">' + iconOptions + '</select></div>'
+        + '<div class="app-form-item"><div class="form-label">图标</div><select class="form-select" id="edit-router-icon">' + iconSelectHtml(router.icon) + '</select></div>'
         + '<div class="app-form-item"><div class="form-label">排序</div><input class="form-input" type="number" id="edit-router-sort" value="' + router.sort + '"></div>'
         + '<div class="app-form-item"><div class="form-label">状态</div><select class="form-select" id="edit-router-status"><option value="1" ' + (router.status == 1 ? 'selected' : '') + '>启用</option><option value="0" ' + (router.status == 0 ? 'selected' : '') + '>禁用</option></select></div>'
         + '</div>'
         + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitEditRouter(' + routerId + ')">保存修改</button>'
         + '<button class="app-btn app-btn-danger" style="margin-top:8px" onclick="deleteRouterApp(' + routerId + ')">删除路由</button>'
         + '</div>'
-        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
-      document.body.appendChild(overlay);
-      window.closeActionSheet = function () {
-        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
-        setTimeout(function () { overlay.remove(); }, 350);
-      };
-      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>'
+      );
     });
   };
 

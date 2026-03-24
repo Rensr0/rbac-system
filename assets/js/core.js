@@ -54,11 +54,35 @@ var API = (function () {
 })();
 
 // ==================== Material Icons 辅助 ====================
+var KNOWN_ICONS = ['home','group','security','route','account_circle','login','logout','search',
+  'delete','edit','add','settings','lock','email','phone','calendar_today','arrow_forward',
+  'arrow_back','dashboard','menu','close','check','warning','error','info','refresh',
+  'person','person_add','lock_reset','visibility','shield','key','link','sort','toggle_on',
+  'toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle',
+  'badge','contact_mail','alternate_email','vpn_key','how_to_reg','rocket_launch','chevron_right',
+  'edit_note','logout','inbox','search_off','description','save','palette','expand_more','block',
+  'check_circle','star','folder','analytics','assessment','trending_up','bar_chart','pie_chart',
+  'timeline','event','schedule','notifications','favorite','share','download','upload','cloud',
+  'storage','backup','privacy_policy','help','support'];
+
 function mi(name, cls) {
   return '<i class="mi' + (cls ? ' ' + cls : '') + '">' + name + '</i>';
 }
 function miSpan(name, text, cls) {
   return '<span style="display:inline-flex;align-items:center;gap:6px">' + mi(name, cls) + escapeHtml(text) + '</span>';
+}
+
+function renderIcon(iconText) {
+  if (KNOWN_ICONS.indexOf(iconText) !== -1) {
+    return '<i class="mi">' + iconText + '</i>';
+  }
+  return iconText || '<i class="mi">description</i>';
+}
+
+function iconSelectHtml(selected) {
+  return KNOWN_ICONS.map(function (icon) {
+    return '<option value="' + icon + '"' + (icon === selected ? ' selected' : '') + '>' + icon + '</option>';
+  }).join('');
 }
 
 // ==================== 本地存储 ====================
@@ -233,27 +257,35 @@ function getInitial(name) {
 }
 
 // ==================== 手机端 Action Sheet（通用） ====================
-function showActionSheet(html) {
-  return new Promise(function (resolve) {
-    var overlay = document.createElement('div');
-    overlay.className = 'app-action-sheet-overlay';
-    overlay.innerHTML = '<div class="app-action-sheet">' + html + '</div>';
+/**
+ * 创建并显示一个 Action Sheet，自动处理关闭逻辑。
+ * @param {string} innerHtml - sheet 内部 HTML（不含 overlay 包裹）
+ * @param {object} [opts] - 可选配置 { maxHeight: '85vh' }
+ * @returns {HTMLElement} overlay 元素
+ */
+function createActionSheet(innerHtml, opts) {
+  opts = opts || {};
+  var overlay = document.createElement('div');
+  overlay.className = 'app-action-sheet-overlay show';
+  var sheetStyle = 'transform:translateY(0)';
+  if (opts.maxHeight) sheetStyle += ';max-height:' + opts.maxHeight;
+  overlay.innerHTML = '<div class="app-action-sheet" style="' + sheetStyle + '">' + innerHtml + '</div>';
+  document.body.appendChild(overlay);
 
-    document.body.appendChild(overlay);
-    requestAnimationFrame(function () { overlay.classList.add('show'); });
+  window.closeActionSheet = function () {
+    overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
+    setTimeout(function () { overlay.remove(); }, 350);
+  };
 
-    overlay.onclick = function (e) {
-      if (e.target === overlay) {
-        closeActionSheet();
-        resolve(null);
-      }
-    };
+  overlay.onclick = function (e) {
+    if (e.target === overlay) window.closeActionSheet();
+  };
 
-    window.closeActionSheet = function () {
-      overlay.querySelector('.app-action-sheet').classList.remove('show');
-      setTimeout(function () { overlay.remove(); }, 300);
-    };
-  });
+  return overlay;
+}
+
+function closeActionSheet() {
+  if (typeof window.closeActionSheet === 'function') window.closeActionSheet();
 }
 
 // ==================== 验证码工具 ====================

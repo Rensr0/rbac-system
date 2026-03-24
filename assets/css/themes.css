@@ -354,9 +354,4 @@ html, body, .sidebar, .app-navbar, .app-statusbar, .app-tabbar,
 }
 .theme-option.active .theme-label { color: var(--primary); font-weight: 600; }
 
-/* 手机端主题选择器（底部弹出） */
-.app-theme-sheet .theme-grid {
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  padding: 8px 0;
-}
+/* 主题选择器底部弹出已使用通用 createActionSheet，无需单独样式 */
