@@ -17,6 +17,7 @@ switch ($method) {
     case 'POST':
         if ($action === 'roles') { assignRoles(); }
         elseif ($action === 'password') { changePassword(); }
+        elseif ($action === 'profile') { updateProfile(); }
         elseif ($action === 'update') { updateUser(); }
         elseif ($action === 'delete') { deleteUser(); }
         else { createUser(); }
@@ -165,6 +166,53 @@ function updateUser() {
         success(null, '更新成功');
     } catch (Exception $e) {
         error('更新用户失败');
+    }
+}
+
+/**
+ * 用户自助编辑个人资料（无需超级管理员权限）
+ */
+function updateProfile() {
+    $user = getCurrentUser();
+    $data = getJsonBody();
+
+    $nickname = trim(isset($data['nickname']) ? $data['nickname'] : '');
+    $email    = trim(isset($data['email']) ? $data['email'] : '');
+    $phone    = trim(isset($data['phone']) ? $data['phone'] : '');
+
+    if ($nickname !== '' && !validateLength($nickname, 1, 50)) { error('昵称长度需在 1-50 位之间'); }
+    if ($email !== '' && !validateEmail($email)) { error('邮箱格式不正确'); }
+    if ($phone !== '' && !preg_match('/^[\d\-+() ]{0,20}$/', $phone)) { error('手机号格式不正确'); }
+
+    try {
+        $db = getDB();
+        $sets = array();
+        $params = array();
+
+        if ($nickname !== '') { $sets[] = 'nickname = ?'; $params[] = $nickname; }
+        if ($email !== '')    {
+            // 检查邮箱是否被其他用户使用
+            $stmt = $db->prepare("SELECT id FROM admin_users WHERE email = ? AND id != ?");
+            $stmt->execute(array($email, $user['id']));
+            if ($stmt->fetch()) { error('该邮箱已被其他用户使用'); }
+            $sets[] = 'email = ?'; $params[] = $email;
+        }
+        if ($phone !== '')    { $sets[] = 'phone = ?'; $params[] = $phone; }
+
+        if (empty($sets)) { error('没有需要更新的字段'); }
+
+        $params[] = $user['id'];
+        $db->prepare("UPDATE admin_users SET " . implode(', ', $sets) . " WHERE id = ?")->execute($params);
+
+        // 同步 session
+        if ($nickname !== '') { $_SESSION['admin_user']['nickname'] = $nickname; }
+        if ($email !== '') { $_SESSION['admin_user']['email'] = $email; }
+        if ($phone !== '') { $_SESSION['admin_user']['phone'] = $phone; }
+
+        writeLog('profile_update', "用户 [{$user['username']}] 更新个人资料");
+        success($_SESSION['admin_user'], '资料更新成功');
+    } catch (Exception $e) {
+        error('更新失败');
     }
 }
 

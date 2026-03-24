@@ -11,10 +11,11 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="../assets/css/global.css?v=2.0.0">
-  <link rel="stylesheet" href="../assets/css/pc.css?v=2.0.0">
-  <link rel="stylesheet" href="../assets/css/app.css?v=2.0.0">
-  <link rel="stylesheet" href="../assets/css/themes.css?v=2.0.0">
+  <link rel="stylesheet" href="../assets/css/material-icons.css?v=3.0.0">
+  <link rel="stylesheet" href="../assets/css/global.css?v=3.0.0">
+  <link rel="stylesheet" href="../assets/css/pc.css?v=3.0.0">
+  <link rel="stylesheet" href="../assets/css/app.css?v=3.0.0">
+  <link rel="stylesheet" href="../assets/css/themes.css?v=3.0.0">
 </head>
 <body>
 
@@ -22,13 +23,13 @@
 <div class="pc-layout" id="pc-layout">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h2>🔐 RBAC</h2>
-      <p>权限管理系统 v2.0</p>
+      <h2><i class="mi mi-lg">lock</i> RBAC</h2>
+      <p>权限管理系统 v3.0</p>
     </div>
     <nav class="sidebar-nav" id="sidebar-nav"></nav>
     <div class="sidebar-footer">
       <div class="nav-item" onclick="logoutPC()" style="color:rgba(255,255,255,0.5)">
-        <span class="nav-icon">🚪</span><span>退出登录</span>
+        <span class="nav-icon"><i class="mi mi-sm">logout</i></span><span>退出登录</span>
       </div>
     </div>
   </aside>
@@ -40,7 +41,6 @@
           <div class="user-avatar" id="pc-avatar">A</div>
           <span id="pc-nickname">管理员</span>
         </div>
-        <div id="pc-theme-switcher"></div>
       </div>
     </div>
     <div class="page-content" id="page-content">
@@ -49,10 +49,10 @@
   </div>
 </div>
 
-<!-- 手机端 APP 风格布局（动态生成） -->
+<!-- 手机端 APP 风格布局 -->
 <div class="app-shell" id="app-shell">
   <div class="app-navbar">
-    <div class="navbar-back" id="navbar-back" style="display:none">‹</div>
+    <div class="navbar-back" id="navbar-back" style="display:none"><i class="mi mi-light">arrow_back</i></div>
     <div class="navbar-title">首页</div>
     <div class="navbar-action" id="navbar-action"></div>
   </div>
@@ -60,14 +60,14 @@
   <div class="app-tabbar" id="app-tabbar"></div>
 </div>
 
-<!-- PC 端弹窗容器（由 modals.js 动态注入） -->
+<!-- PC 端弹窗容器 -->
 <div id="modal-container"></div>
 
-<script src="../assets/js/core.js?v=2.0.0"></script>
-<script src="../assets/js/theme-switcher.js?v=2.0.0"></script>
-<script src="../assets/js/modals.js?v=2.0.0"></script>
-<script src="../assets/js/app.js?v=2.0.0"></script>
-<script src="../assets/js/pc-pages.js?v=2.0.0"></script>
+<script src="../assets/js/core.js?v=3.0.0"></script>
+<script src="../assets/js/theme-switcher.js?v=3.0.0"></script>
+<script src="../assets/js/modals.js?v=3.0.0"></script>
+<script src="../assets/js/app.js?v=3.0.0"></script>
+<script src="../assets/js/pc-pages.js?v=3.0.0"></script>
 <script>
 (function () {
   if (window.innerWidth <= 768) return;
@@ -84,9 +84,7 @@
       document.getElementById('pc-nickname').textContent = currentUser.nickname || currentUser.username;
       document.getElementById('pc-avatar').textContent = getInitial(currentUser.nickname || currentUser.username);
 
-      // 注入 PC 端弹窗
       if (window.ModalTemplates) ModalTemplates.inject();
-      if (window.ThemeSwitcher) ThemeSwitcher.initPC(document.getElementById('pc-theme-switcher'));
 
       API.get('router/', { action: 'user' }).then(function(rRes) {
         if (rRes.code === 200) {
@@ -103,7 +101,7 @@
   function renderSidebar() {
     document.getElementById('sidebar-nav').innerHTML = userRouters.map(function(r) {
       return '<div class="nav-item" data-page="' + r.router_path + '" onclick="pcNavigate(\'' + r.router_path + '\')">'
-        + '<span class="nav-icon">' + (r.icon || '📄') + '</span><span>' + escapeHtml(r.router_name) + '</span>'
+        + '<span class="nav-icon"><i class="mi">' + (r.icon || 'description') + '</i></span><span>' + escapeHtml(r.router_name) + '</span>'
         + '</div>';
     }).join('');
   }
@@ -128,7 +126,7 @@
     if (loaders[page]) {
       loaders[page](container);
     } else {
-      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🚫</div><p>页面不存在</p></div>';
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">' + mi('block', 'mi-xl') + '</div><p>页面不存在</p></div>';
     }
   };
 

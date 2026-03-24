@@ -1,8 +1,8 @@
 /**
- * core.js v2.0 - 核心请求库 + 权限工具 + 通用 UI 组件
+ * core.js v3.0 - 核心请求库 + 权限工具 + 通用 UI 组件
+ * Material Icons 替代 emoji
  */
 var API = (function () {
-  // 自动检测 API 基础路径
   var path = window.location.pathname;
   var BASE = path.indexOf('/pages/') !== -1 ? '../api' : 'api';
 
@@ -53,6 +53,14 @@ var API = (function () {
   };
 })();
 
+// ==================== Material Icons 辅助 ====================
+function mi(name, cls) {
+  return '<i class="mi' + (cls ? ' ' + cls : '') + '">' + name + '</i>';
+}
+function miSpan(name, text, cls) {
+  return '<span style="display:inline-flex;align-items:center;gap:6px">' + mi(name, cls) + escapeHtml(text) + '</span>';
+}
+
 // ==================== 本地存储 ====================
 var Storage = {
   get: function (key) {
@@ -62,6 +70,20 @@ var Storage = {
   set: function (key, val) { localStorage.setItem(key, JSON.stringify(val)); },
   remove: function (key) { localStorage.removeItem(key); },
 };
+
+// ==================== Cookie 工具 ====================
+function setCookie(name, value, days) {
+  var d = new Date();
+  d.setTime(d.getTime() + (days || 30) * 24 * 60 * 60 * 1000);
+  document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+}
+function getCookie(name) {
+  var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+function deleteCookie(name) {
+  document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+}
 
 // ==================== Toast ====================
 function showToast(msg, duration) {
@@ -150,8 +172,6 @@ function confirmDialog(title, content) {
     }
 
     document.body.appendChild(overlay);
-
-    // 触发动画：PC 端需要 .show，手机端已在 classList 中
     if (!isMobileDevice) {
       requestAnimationFrame(function () { overlay.classList.add('show'); });
     }
@@ -234,4 +254,9 @@ function showActionSheet(html) {
       setTimeout(function () { overlay.remove(); }, 300);
     };
   });
+}
+
+// ==================== 验证码工具 ====================
+function getCaptchaUrl() {
+  return API.get('login/', { action: 'captcha' });
 }

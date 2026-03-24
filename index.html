@@ -9,10 +9,12 @@
   <meta name="format-detection" content="telephone=no">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>登录 - RBAC 权限管理系统</title>
-  <link rel="stylesheet" href="assets/css/global.css?v=2.0.0">
-  <link rel="stylesheet" href="assets/css/app.css?v=2.0.0">
-  <link rel="stylesheet" href="assets/css/themes.css?v=2.0.0">
+  <link rel="stylesheet" href="assets/css/material-icons.css?v=3.0.0">
+  <link rel="stylesheet" href="assets/css/global.css?v=3.0.0">
+  <link rel="stylesheet" href="assets/css/app.css?v=3.0.0">
+  <link rel="stylesheet" href="assets/css/themes.css?v=3.0.0">
   <style>
+    /* ========== PC 登录页 ========== */
     .pc-login-wrap {
       min-height: 100vh;
       display: flex;
@@ -23,7 +25,6 @@
       position: relative;
       overflow: hidden;
     }
-    /* 装饰性背景 */
     .pc-login-wrap::before {
       content: '';
       position: absolute;
@@ -41,8 +42,7 @@
       bottom: -100px; left: -100px;
     }
     .pc-login-card {
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(20px);
+      background: var(--bg-card);
       border-radius: 24px;
       padding: 44px;
       width: 100%;
@@ -51,6 +51,7 @@
       position: relative;
       z-index: 1;
       animation: cardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      color: var(--text-primary);
     }
     @keyframes cardIn {
       from { opacity: 0; transform: translateY(20px) scale(0.96); }
@@ -58,10 +59,10 @@
     }
     .pc-login-card .logo {
       text-align: center;
-      font-size: 52px;
       margin-bottom: 12px;
       animation: logoFloat 3s ease-in-out infinite;
     }
+    .pc-login-card .logo .mi { font-size: 52px; color: var(--primary); }
     @keyframes logoFloat {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-6px); }
@@ -76,7 +77,7 @@
       text-align: center;
       color: var(--text-secondary);
       font-size: 14px;
-      margin-bottom: 36px;
+      margin-bottom: 28px;
     }
     .pc-login-card .login-footer {
       text-align: center;
@@ -84,6 +85,71 @@
       font-size: 12px;
       color: var(--text-tertiary);
     }
+    /* 验证码行 */
+    .captcha-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .captcha-row .form-input { flex: 1; }
+    .captcha-row img {
+      height: 42px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: opacity 0.2s;
+    }
+    .captcha-row img:hover { opacity: 0.8; }
+    /* 记住密码 */
+    .remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 12px 0 4px;
+      font-size: 13px;
+    }
+    .remember-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .remember-row input[type="checkbox"] {
+      accent-color: var(--primary);
+      width: 16px; height: 16px;
+    }
+    .remember-row a {
+      color: var(--primary);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .remember-row a:hover { text-decoration: underline; }
+    /* Tab 切换 */
+    .login-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border-light);
+      margin-bottom: 24px;
+    }
+    .login-tabs .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .login-tabs .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+    .login-panel { display: none; }
+    .login-panel.active { display: block; }
     .login-hint {
       display: flex;
       align-items: center;
@@ -102,83 +168,230 @@
     @media (min-width: 769px) {
       .app-login-wrap { display: none; }
     }
+    /* 暗色适配 */
+    [data-theme="dark"] .pc-login-card {
+      background: #1C1C1E;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+    [data-theme="dark"] .login-tabs { border-bottom-color: #38383A; }
+    [data-theme="dark"] .captcha-row img { border-color: #38383A; }
+    [data-theme="dark"] .login-hint {
+      background: rgba(94,123,255,0.08);
+      border-color: rgba(94,123,255,0.12);
+    }
   </style>
 </head>
 <body>
 
-<!-- 主题切换按钮 -->
-<button onclick="ThemeSwitcher.toggle()" title="切换主题" style="
-  position:fixed;bottom:24px;right:24px;z-index:999;
-  width:44px;height:44px;border:none;border-radius:50%;
-  background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);
-  font-size:20px;cursor:pointer;transition:transform 0.2s;
-  box-shadow:0 4px 16px rgba(0,0,0,0.15);
-" onmouseover="this.style.transform='scale(1.1) rotate(15deg)'" onmouseout="this.style.transform='scale(1)'">🎨</button>
-<div id="login-theme-panel" style="position:fixed;bottom:76px;right:24px;z-index:999">
-  <div class="theme-panel" id="theme-panel" style="position:fixed;bottom:76px;right:24px;width:260px">
-    <div class="theme-panel-title">选择主题</div>
-    <div class="theme-grid" id="login-theme-grid"></div>
-  </div>
-</div>
-<script>
-  var grid = document.getElementById('login-theme-grid');
-  if (grid && window.ThemeSwitcher) {
-    ThemeSwitcher.themes.forEach(function(t) {
-      var active = ThemeSwitcher.get() === t.id;
-      grid.innerHTML += '<div class="theme-option' + (active ? ' active' : '') + '" data-theme="' + t.id + '" onclick="ThemeSwitcher.set(\'' + t.id + '\')">'
-        + '<div class="theme-dot" style="background:' + t.dot + '"></div>'
-        + '<div class="theme-label">' + t.name + '</div></div>';
-    });
-  }
-</script>
-
 <!-- PC 端登录 -->
 <div class="pc-login-wrap">
   <div class="pc-login-card">
-    <div class="logo">🔐</div>
+    <div class="logo"><i class="mi mi-xl">lock</i></div>
     <h2>RBAC 权限管理系统</h2>
     <p class="sub">前后端分离 · 动态权限 · 三端适配</p>
-    <div class="form-group">
-      <label class="form-label">账号</label>
-      <input class="form-input" type="text" id="pc-username" placeholder="请输入管理员账号" autocomplete="username">
+
+    <!-- Tab 切换 -->
+    <div class="login-tabs">
+      <div class="tab active" onclick="switchLoginTab('login')">登录</div>
+      <div class="tab" onclick="switchLoginTab('register')">注册</div>
+      <div class="tab" onclick="switchLoginTab('forgot')">找回密码</div>
     </div>
-    <div class="form-group">
-      <label class="form-label">密码</label>
-      <input class="form-input" type="password" id="pc-password" placeholder="请输入密码" autocomplete="current-password">
+
+    <!-- 登录面板 -->
+    <div class="login-panel active" id="panel-login">
+      <div class="form-group">
+        <label class="form-label"><i class="mi mi-16">person</i> 账号</label>
+        <input class="form-input" type="text" id="pc-username" placeholder="请输入管理员账号" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label"><i class="mi mi-16">lock</i> 密码</label>
+        <input class="form-input" type="password" id="pc-password" placeholder="请输入密码" autocomplete="current-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label"><i class="mi mi-16">visibility</i> 验证码</label>
+        <div class="captcha-row">
+          <input class="form-input" type="text" id="pc-captcha" placeholder="请输入验证码" maxlength="4">
+          <img id="pc-captcha-img" onclick="refreshCaptcha('pc')" title="点击刷新验证码">
+        </div>
+      </div>
+      <div class="remember-row">
+        <label><input type="checkbox" id="pc-remember"> 记住密码</label>
+        <a onclick="switchLoginTab('forgot')">忘记密码？</a>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" id="pc-login-btn" onclick="pcLogin()" style="margin-top:12px">
+        <i class="mi mi-18">login</i> 登 录
+      </button>
+      <div class="login-hint">
+        <i class="mi mi-16">info</i>
+        <span>默认账号 admin / 123456，首次登录请修改密码</span>
+      </div>
     </div>
-    <button class="btn btn-primary btn-block btn-lg" id="pc-login-btn" onclick="pcLogin()" style="margin-top:4px">登 录</button>
-    <div class="login-hint">
-      <span>💡</span>
-      <span>默认账号 admin / 123456，首次登录请修改密码</span>
+
+    <!-- 注册面板 -->
+    <div class="login-panel" id="panel-register">
+      <div class="form-group">
+        <label class="form-label">账号</label>
+        <input class="form-input" type="text" id="reg-username" placeholder="字母数字下划线，2-50位">
+      </div>
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input class="form-input" type="password" id="reg-password" placeholder="至少6位">
+      </div>
+      <div class="form-group">
+        <label class="form-label">昵称</label>
+        <input class="form-input" type="text" id="reg-nickname" placeholder="选填，默认同账号">
+      </div>
+      <div class="form-group">
+        <label class="form-label">邮箱</label>
+        <input class="form-input" type="email" id="reg-email" placeholder="选填，用于找回密码">
+      </div>
+      <div class="form-group">
+        <label class="form-label">验证码</label>
+        <div class="captcha-row">
+          <input class="form-input" type="text" id="reg-captcha" placeholder="请输入验证码" maxlength="4">
+          <img id="reg-captcha-img" onclick="refreshCaptcha('reg')" title="点击刷新验证码">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="pcRegister()">
+        <i class="mi mi-18">person_add</i> 注 册
+      </button>
     </div>
-    <div class="login-footer">RBAC 权限管理系统 v2.0</div>
+
+    <!-- 找回密码面板 -->
+    <div class="login-panel" id="panel-forgot">
+      <div class="form-group">
+        <label class="form-label">账号</label>
+        <input class="form-input" type="text" id="forgot-username" placeholder="请输入注册时的账号">
+      </div>
+      <div class="form-group">
+        <label class="form-label">邮箱</label>
+        <input class="form-input" type="email" id="forgot-email" placeholder="请输入注册时的邮箱">
+      </div>
+      <div class="form-group">
+        <label class="form-label">验证码</label>
+        <div class="captcha-row">
+          <input class="form-input" type="text" id="forgot-captcha" placeholder="请输入验证码" maxlength="4">
+          <img id="forgot-captcha-img" onclick="refreshCaptcha('forgot')" title="点击刷新验证码">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="pcForgot()">
+        <i class="mi mi-18">lock_reset</i> 重置密码
+      </button>
+    </div>
+
+    <div class="login-footer">RBAC 权限管理系统 v3.0</div>
   </div>
 </div>
 
 <!-- 手机端 APP 风格登录 -->
 <div class="app-login app-login-wrap">
-  <div class="login-logo">🔐</div>
+  <div class="login-logo"><i class="mi mi-xl mi-light">lock</i></div>
   <div class="login-title">RBAC 管理系统</div>
   <div class="login-sub">前后端分离 · 动态权限管理</div>
   <div class="login-form">
     <div class="login-input-wrap">
-      <span class="input-icon">👤</span>
+      <span class="input-icon"><i class="mi mi-18">person</i></span>
       <input class="login-input" type="text" id="app-username" placeholder="请输入账号" autocomplete="username">
     </div>
     <div class="login-input-wrap">
-      <span class="input-icon">🔒</span>
+      <span class="input-icon"><i class="mi mi-18">lock</i></span>
       <input class="login-input" type="password" id="app-password" placeholder="请输入密码" autocomplete="current-password">
     </div>
-    <button class="login-btn" id="app-login-btn" onclick="appLogin()">登 录</button>
+    <div class="login-input-wrap" style="gap:6px">
+      <span class="input-icon"><i class="mi mi-18">visibility</i></span>
+      <input class="login-input" type="text" id="app-captcha" placeholder="验证码" maxlength="4" style="flex:1">
+      <img id="app-captcha-img" onclick="refreshCaptcha('app')" style="height:38px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.15)">
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:0 4px">
+      <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,0.6);cursor:pointer">
+        <input type="checkbox" id="app-remember" style="accent-color:var(--primary);width:14px;height:14px"> 记住密码
+      </label>
+      <span onclick="appShowForgot()" style="font-size:12px;color:rgba(255,255,255,0.7);cursor:pointer">忘记密码？</span>
+    </div>
+    <button class="login-btn" id="app-login-btn" onclick="appLogin()">
+      <i class="mi mi-18" style="color:var(--primary)">login</i> 登 录
+    </button>
+    <div style="text-align:center;margin-top:16px">
+      <span onclick="appShowRegister()" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer">
+        没有账号？<span style="color:#fff;font-weight:600">立即注册</span>
+      </span>
+    </div>
   </div>
-  <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:28px">默认账号：admin / 123456</div>
-  <div style="color:rgba(255,255,255,0.3);font-size:11px;margin-top:8px">v2.0</div>
+  <div style="color:rgba(255,255,255,0.3);font-size:11px;margin-top:28px">v3.0</div>
 </div>
 
-<script src="assets/js/core.js?v=2.0.0"></script>
-<script src="assets/js/theme-switcher.js?v=2.0.0"></script>
+<!-- 手机端注册 ActionSheet -->
+<div class="app-action-sheet-overlay" id="app-register-overlay" style="display:none">
+  <div class="app-action-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">注册新账号</div>
+    <div style="padding:0 16px 16px">
+      <div class="app-form">
+        <div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="app-reg-username" placeholder="字母数字下划线"></div>
+        <div class="app-form-item"><div class="form-label">密码</div><input class="form-input" type="password" id="app-reg-password" placeholder="至少6位"></div>
+        <div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-reg-nickname" placeholder="选填"></div>
+        <div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-reg-email" placeholder="选填"></div>
+        <div class="app-form-item"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-reg-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-reg-captcha-img" onclick="refreshCaptcha('app-reg')" style="height:36px;border-radius:6px;cursor:pointer;border:1px solid var(--border)"></div></div>
+      </div>
+      <button class="app-btn app-btn-primary" style="margin-top:12px" onclick="appRegister()">确认注册</button>
+    </div>
+    <div class="sheet-cancel" onclick="closeAppSheet('app-register-overlay')">取消</div>
+  </div>
+</div>
+
+<!-- 手机端忘记密码 ActionSheet -->
+<div class="app-action-sheet-overlay" id="app-forgot-overlay" style="display:none">
+  <div class="app-action-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">找回密码</div>
+    <div style="padding:0 16px 16px">
+      <div class="app-form">
+        <div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="app-forgot-username" placeholder="请输入账号"></div>
+        <div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-forgot-email" placeholder="请输入邮箱"></div>
+        <div class="app-form-item"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-forgot-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-forgot-captcha-img" onclick="refreshCaptcha('app-forgot')" style="height:36px;border-radius:6px;cursor:pointer;border:1px solid var(--border)"></div></div>
+      </div>
+      <button class="app-btn app-btn-primary" style="margin-top:12px" onclick="appForgot()">重置密码</button>
+    </div>
+    <div class="sheet-cancel" onclick="closeAppSheet('app-forgot-overlay')">取消</div>
+  </div>
+</div>
+
+<script src="assets/js/core.js?v=3.0.0"></script>
+<script src="assets/js/theme-switcher.js?v=3.0.0"></script>
 <script>
-// 已登录检测
+// ==================== 验证码管理 ====================
+var captchaTimestamps = {};
+function refreshCaptcha(prefix) {
+  var ts = Date.now();
+  captchaTimestamps[prefix] = ts;
+  var suffix = '/api/login/?action=captcha&t=' + ts;
+  var imgMap = {
+    'pc': 'pc-captcha-img',
+    'reg': 'reg-captcha-img',
+    'forgot': 'forgot-captcha-img',
+    'app': 'app-captcha-img',
+    'app-reg': 'app-reg-captcha-img',
+    'app-forgot': 'app-forgot-captcha-img'
+  };
+  var el = document.getElementById(imgMap[prefix]);
+  if (el) el.src = suffix;
+}
+
+// 初始化所有验证码
+['pc','reg','forgot','app','app-reg','app-forgot'].forEach(function(p) { refreshCaptcha(p); });
+
+// ==================== PC 端 Tab 切换 ====================
+function switchLoginTab(tab) {
+  document.querySelectorAll('.login-tabs .tab').forEach(function(t) {
+    t.classList.toggle('active', t.textContent.trim() === ({login:'登录',register:'注册',forgot:'找回密码'}[tab]));
+  });
+  document.querySelectorAll('.login-panel').forEach(function(p) { p.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + tab);
+  if (panel) panel.classList.add('active');
+  refreshCaptcha(tab === 'login' ? 'pc' : tab);
+}
+
+// ==================== 已登录检测 ====================
 (function() {
   API.get('login/').then(function(res) {
     if (res.code === 200) {
@@ -188,50 +401,178 @@
   }).catch(function() {});
 })();
 
-// PC 端登录
+// ==================== 记住密码 ====================
+function loadRemembered() {
+  var saved = getCookie('remember_user');
+  if (saved) {
+    try {
+      var info = JSON.parse(saved);
+      var uEl = document.getElementById('pc-username');
+      var pEl = document.getElementById('pc-password');
+      var rEl = document.getElementById('pc-remember');
+      if (uEl && info.u) uEl.value = info.u;
+      if (pEl && info.p) pEl.value = atob(info.p);
+      if (rEl) rEl.checked = true;
+      // 手机端
+      var auEl = document.getElementById('app-username');
+      var apEl = document.getElementById('app-password');
+      var arEl = document.getElementById('app-remember');
+      if (auEl && info.u) auEl.value = info.u;
+      if (apEl && info.p) apEl.value = atob(info.p);
+      if (arEl) arEl.checked = true;
+    } catch(e) {}
+  }
+}
+function saveRemember(username, password, remember) {
+  if (remember) {
+    setCookie('remember_user', JSON.stringify({ u: username, p: btoa(password) }), 30);
+  } else {
+    deleteCookie('remember_user');
+  }
+}
+loadRemembered();
+
+// ==================== PC 端登录 ====================
 function pcLogin() {
   var username = document.getElementById('pc-username').value.trim();
   var password = document.getElementById('pc-password').value.trim();
+  var captcha  = document.getElementById('pc-captcha').value.trim();
+  var remember = document.getElementById('pc-remember').checked;
   if (!username || !password) { showToast('请输入账号和密码'); return; }
+  if (!captcha) { showToast('请输入验证码'); return; }
 
   var btn = document.getElementById('pc-login-btn');
   btn.disabled = true; btn.textContent = '登录中...'; showLoading();
 
-  API.post('login/', { username: username, password: password }).then(function(res) {
-    hideLoading(); btn.disabled = false; btn.textContent = '登 录';
+  API.post('login/', { username: username, password: password, captcha: captcha }).then(function(res) {
+    hideLoading(); btn.disabled = false; btn.innerHTML = '<i class="mi mi-18">login</i> 登 录';
     if (res.code === 200) {
+      saveRemember(username, password, remember);
       Storage.set('currentUser', res.data);
       window.location.href = 'pages/home.html';
     } else {
       showToast(res.msg || '登录失败');
+      refreshCaptcha('pc');
     }
   });
 }
 
-// 手机端登录
+// ==================== PC 端注册 ====================
+function pcRegister() {
+  var username = document.getElementById('reg-username').value.trim();
+  var password = document.getElementById('reg-password').value.trim();
+  var nickname = document.getElementById('reg-nickname').value.trim();
+  var email    = document.getElementById('reg-email').value.trim();
+  var captcha  = document.getElementById('reg-captcha').value.trim();
+  if (!username || !password) { showToast('请输入账号和密码'); return; }
+  if (!captcha) { showToast('请输入验证码'); return; }
+
+  showLoading();
+  API.post('login/', { action: 'register', username: username, password: password, nickname: nickname, email: email, captcha: captcha }).then(function(res) {
+    hideLoading();
+    showToast(res.msg);
+    if (res.code === 200) { switchLoginTab('login'); }
+    refreshCaptcha('reg');
+  });
+}
+
+// ==================== PC 端找回密码 ====================
+function pcForgot() {
+  var username = document.getElementById('forgot-username').value.trim();
+  var email    = document.getElementById('forgot-email').value.trim();
+  var captcha  = document.getElementById('forgot-captcha').value.trim();
+  if (!username || !email) { showToast('请输入账号和邮箱'); return; }
+  if (!captcha) { showToast('请输入验证码'); return; }
+
+  showLoading();
+  API.post('login/', { action: 'forgot', username: username, email: email, captcha: captcha }).then(function(res) {
+    hideLoading();
+    showToast(res.msg);
+    if (res.code === 200) { switchLoginTab('login'); }
+    refreshCaptcha('forgot');
+  });
+}
+
+// ==================== 手机端登录 ====================
 function appLogin() {
   var username = document.getElementById('app-username').value.trim();
   var password = document.getElementById('app-password').value.trim();
+  var captcha  = document.getElementById('app-captcha').value.trim();
+  var remember = document.getElementById('app-remember').checked;
   if (!username || !password) { appToast('请输入账号和密码'); return; }
+  if (!captcha) { appToast('请输入验证码'); return; }
 
   var btn = document.getElementById('app-login-btn');
   btn.disabled = true; btn.textContent = '登录中...'; appShowLoading();
 
-  API.post('login/', { username: username, password: password }).then(function(res) {
-    appHideLoading(); btn.disabled = false; btn.textContent = '登 录';
+  API.post('login/', { username: username, password: password, captcha: captcha }).then(function(res) {
+    appHideLoading(); btn.disabled = false; btn.innerHTML = '<i class="mi mi-18" style="color:var(--primary)">login</i> 登 录';
     if (res.code === 200) {
+      saveRemember(username, password, remember);
       Storage.set('currentUser', res.data);
       window.location.href = 'pages/home.html';
     } else {
       appToast(res.msg || '登录失败');
+      refreshCaptcha('app');
     }
+  });
+}
+
+// ==================== 手机端注册/忘记密码 ====================
+function appShowRegister() {
+  var el = document.getElementById('app-register-overlay');
+  el.style.display = 'flex';
+  refreshCaptcha('app-reg');
+}
+function appShowForgot() {
+  var el = document.getElementById('app-forgot-overlay');
+  el.style.display = 'flex';
+  refreshCaptcha('app-forgot');
+}
+function closeAppSheet(id) {
+  document.getElementById(id).style.display = 'none';
+}
+function appRegister() {
+  var username = document.getElementById('app-reg-username').value.trim();
+  var password = document.getElementById('app-reg-password').value.trim();
+  var nickname = document.getElementById('app-reg-nickname').value.trim();
+  var email    = document.getElementById('app-reg-email').value.trim();
+  var captcha  = document.getElementById('app-reg-captcha').value.trim();
+  if (!username || !password) { appToast('请输入账号和密码'); return; }
+  if (!captcha) { appToast('请输入验证码'); return; }
+  appShowLoading();
+  API.post('login/', { action: 'register', username: username, password: password, nickname: nickname, email: email, captcha: captcha }).then(function(res) {
+    appHideLoading();
+    appToast(res.msg);
+    if (res.code === 200) { closeAppSheet('app-register-overlay'); }
+    refreshCaptcha('app-reg');
+  });
+}
+function appForgot() {
+  var username = document.getElementById('app-forgot-username').value.trim();
+  var email    = document.getElementById('app-forgot-email').value.trim();
+  var captcha  = document.getElementById('app-forgot-captcha').value.trim();
+  if (!username || !email) { appToast('请输入账号和邮箱'); return; }
+  if (!captcha) { appToast('请输入验证码'); return; }
+  appShowLoading();
+  API.post('login/', { action: 'forgot', username: username, email: email, captcha: captcha }).then(function(res) {
+    appHideLoading();
+    appToast(res.msg);
+    if (res.code === 200) { closeAppSheet('app-forgot-overlay'); }
+    refreshCaptcha('app-forgot');
   });
 }
 
 // Enter 键登录
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
-    isMobile() ? appLogin() : pcLogin();
+    if (document.getElementById('panel-register') && document.getElementById('panel-register').classList.contains('active')) {
+      pcRegister();
+    } else if (document.getElementById('panel-forgot') && document.getElementById('panel-forgot').classList.contains('active')) {
+      pcForgot();
+    } else {
+      isMobile() ? appLogin() : pcLogin();
+    }
   }
 });
 </script>

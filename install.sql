@@ -70,11 +70,11 @@ CREATE TABLE `routers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='路由权限页面表';
 
 INSERT INTO `routers` (`id`, `router_name`, `router_path`, `icon`, `sort`, `status`) VALUES
-(1, '系统首页', 'home', '🏠', 1, 1),
-(2, '用户管理', 'user', '👥', 2, 1),
-(3, '角色管理', 'role', '🎭', 3, 1),
-(4, '路由管理', 'router', '🧭', 4, 1),
-(5, '个人中心', 'mine', '👤', 5, 1);
+(1, '系统首页', 'home', 'home', 1, 1),
+(2, '用户管理', 'user', 'group', 2, 1),
+(3, '角色管理', 'role', 'security', 3, 1),
+(4, '路由管理', 'router', 'route', 4, 1),
+(5, '个人中心', 'mine', 'account_circle', 5, 1);
 
 -- ----------------------------
 -- 角色-路由关联表
