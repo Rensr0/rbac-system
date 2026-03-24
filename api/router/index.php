@@ -111,13 +111,13 @@ function updateRouter() {
     if ($id <= 0) { error('参数错误'); }
 
     $routerName = trim(isset($data['router_name']) ? $data['router_name'] : '');
-    $routerPath = trim(isset($data['router_path']) ? $data['router_path'] : '');
-    $icon       = trim(isset($data['icon']) ? $data['icon'] : '');
+    $routerPath = isset($data['router_path']) ? trim($data['router_path']) : null;
+    $icon       = isset($data['icon']) ? trim($data['icon']) : null;
     $sort       = isset($data['sort']) ? intval($data['sort']) : null;
     $status     = isset($data['status']) ? intval($data['status']) : null;
 
     if ($routerName !== '' && !validateLength($routerName, 1, 50)) { error('路由名称长度需在 1-50 位之间'); }
-    if ($routerPath !== '') {
+    if ($routerPath !== null && $routerPath !== '') {
         if (!validateLength($routerPath, 1, 100)) { error('路由路径长度需在 1-100 位之间'); }
         if (!preg_match('/^[a-zA-Z0-9_\-\/]+$/', $routerPath)) { error('路由路径格式不正确'); }
     }
@@ -128,8 +128,8 @@ function updateRouter() {
         $sets = array();
         $params = array();
         if ($routerName !== '') { $sets[] = 'router_name = ?'; $params[] = $routerName; }
-        if ($routerPath !== '') { $sets[] = 'router_path = ?'; $params[] = $routerPath; }
-        if ($icon !== '')       { $sets[] = 'icon = ?';        $params[] = $icon; }
+        if ($routerPath !== null && $routerPath !== '') { $sets[] = 'router_path = ?'; $params[] = $routerPath; }
+        if ($icon !== null && $icon !== '') { $sets[] = 'icon = ?'; $params[] = $icon; }
         if ($sort !== null)     { $sets[] = 'sort = ?';        $params[] = $sort; }
         if ($status !== null)   { $sets[] = 'status = ?';      $params[] = $status; }
 

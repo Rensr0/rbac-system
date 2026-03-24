@@ -181,6 +181,15 @@ var PCPages = (function () {
     if (id) {
       SharedOps.user.update(parseInt(id), { nickname: nickname, email: email, phone: phone }, function(updateRes) {
         if (updateRes.code !== 200) { showToast(updateRes.msg || '更新用户失败'); return; }
+        // 如果编辑的是当前登录用户，同步更新 localStorage 和顶栏
+        var current = Storage.get('currentUser');
+        if (current && current.id === parseInt(id) && updateRes.data) {
+          Storage.set('currentUser', updateRes.data);
+          var nickEl = document.getElementById('pc-nickname');
+          if (nickEl) nickEl.textContent = updateRes.data.nickname || updateRes.data.username;
+          var avatarEl = document.getElementById('pc-avatar');
+          if (avatarEl) avatarEl.textContent = getInitial(updateRes.data.nickname || updateRes.data.username);
+        }
         SharedOps.user.updateRoles(parseInt(id), roleIds, function(res) {
           showToast(res.msg);
           if (res.code === 200) { closeModal('modal-user'); loadPCUser(document.getElementById('page-content')); }
@@ -253,12 +262,14 @@ var PCPages = (function () {
       var role = (roleRes.data && roleRes.data.list || []).find(function(r) { return r.id === id; });
       var routers = routerRes.data || [];
       if (!role) { showToast('角色不存在'); return; }
+      // 兼容两种数据格式：router_ids (数组) 或 routers (对象数组)
+      var roleRouterIds = role.router_ids || (role.routers || []).map(function(r) { return r.id; });
       document.getElementById('modal-role-title').textContent = '编辑角色';
       document.getElementById('form-role-id').value = role.id;
       var nEl = document.getElementById('form-role-name'); nEl.value = role.role_name; nEl.disabled = (id === 1);
       document.getElementById('form-role-remark').value = role.remark || '';
       document.getElementById('form-role-routers').innerHTML = routers.map(function(r) {
-        return '<div class="tree-item"><input type="checkbox" value="' + r.id + '" class="role-router-cb" ' + ((role.router_ids || []).indexOf(r.id) !== -1 ? 'checked' : '') + '><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span></div>';
+        return '<div class="tree-item"><input type="checkbox" value="' + r.id + '" class="role-router-cb" ' + (roleRouterIds.indexOf(r.id) !== -1 ? 'checked' : '') + '><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span></div>';
       }).join('');
       openModal('modal-role');
     });
@@ -364,7 +375,7 @@ var PCPages = (function () {
     var sort = parseInt(document.getElementById('form-router-sort').value) || 0;
     if (!routerName || !routerPath) { showToast('名称和路径不能为空'); return; }
     if (id) {
-      SharedOps.router.update(parseInt(id), { router_name: routerName, icon: icon, sort: sort }, function(res) {
+      SharedOps.router.update(parseInt(id), { router_name: routerName, router_path: routerPath, icon: icon, sort: sort }, function(res) {
         showToast(res.msg);
         if (res.code === 200) { closeModal('modal-router'); loadPCRouter(document.getElementById('page-content')); }
       });

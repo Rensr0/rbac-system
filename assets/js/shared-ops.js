@@ -117,13 +117,13 @@ var SharedOps = (function () {
   }
 
   function updateRouter(id, data, cb) {
-    API.post('router/', {
-      action: 'edit', id: id,
-      router_name: data.router_name,
-      icon: data.icon,
-      sort: data.sort,
-      status: data.status
-    }).then(function (res) { cb(res); });
+    var postData = { action: 'edit', id: id };
+    if (data.router_name !== undefined) postData.router_name = data.router_name;
+    if (data.router_path !== undefined) postData.router_path = data.router_path;
+    if (data.icon !== undefined) postData.icon = data.icon;
+    if (data.sort !== undefined) postData.sort = data.sort;
+    if (data.status !== undefined) postData.status = data.status;
+    API.post('router/', postData).then(function (res) { cb(res); });
   }
 
   function deleteRouter(id, cb) {

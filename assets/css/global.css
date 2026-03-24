@@ -280,7 +280,8 @@ tr:hover td { background: rgba(79,110,247,0.03); }
 .loading-mask {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(255,255,255,0.6);
+  background: var(--bg-primary);
+  opacity: 0.6;
   backdrop-filter: blur(4px);
   z-index: 9998;
   display: none;
@@ -357,6 +358,57 @@ tr:hover td { background: rgba(79,110,247,0.03); }
 }
 .action-btns .btn { padding: 4px 10px; font-size: 12px; }
 
+/* ========== 图标选择器 ========== */
+.icon-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.icon-pick-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-light);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 18px;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+}
+.icon-pick-item:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-glow);
+  transform: scale(1.08);
+}
+.icon-pick-item.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79,110,247,0.3);
+}
+.icon-pick-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  transition: all 0.15s;
+}
+.icon-pick-trigger:hover {
+  border-color: var(--primary);
+  background: var(--primary-glow);
+}
+.icon-pick-trigger i { font-size: 20px; }
+
 /* ========== 选中态高亮 ========== */
 ::selection {
   background: var(--primary);
@@ -382,69 +434,6 @@ tr:hover td { background: rgba(79,110,247,0.03); }
 }
 .theme-toggle-btn:active {
   transform: scale(0.95);
-}
-
-.theme-panel {
-  position: fixed;
-  top: 60px;
-  right: 20px;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: var(--shadow-lg);
-  z-index: 1000;
-  min-width: 280px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all var(--transition-smooth);
-}
-.theme-panel.show {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-.theme-panel-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: var(--text-primary);
-}
-.theme-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-.theme-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  background: var(--bg-secondary);
-}
-.theme-option:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-.theme-option.active {
-  border-color: var(--primary);
-  background: var(--primary-glow);
-}
-.theme-dot {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  box-shadow: var(--shadow-sm);
-}
-.theme-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-primary);
 }
 
 /* ========== 用户下拉菜单 ========== */
@@ -478,7 +467,8 @@ tr:hover td { background: rgba(79,110,247,0.03); }
   border: 1px solid var(--border-light);
 }
 .user-info:hover .user-dropdown,
-.user-dropdown:hover {
+.user-dropdown:hover,
+.user-info .user-dropdown.show {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);

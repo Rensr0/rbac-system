@@ -169,10 +169,15 @@ function updateUser() {
             error('没有需要更新的字段');
         }
 
+        // 返回更新后的用户数据，方便前端同步
+        $stmt = $db->prepare("SELECT id, username, nickname, avatar, email, phone, status, is_super, last_login, create_time FROM admin_users WHERE id = ?");
+        $stmt->execute(array($id));
+        $updatedUser = $stmt->fetch();
+
         $logDetail = "更新用户 ID=$id";
         if ($status !== null) { $logDetail .= ', 状态=' . ($status ? '启用' : '禁用'); }
         writeLog('user_update', $logDetail);
-        success(null, '更新成功');
+        success($updatedUser, '更新成功');
     } catch (Exception $e) {
         error('更新用户失败');
     }

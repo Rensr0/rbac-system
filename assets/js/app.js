@@ -561,7 +561,15 @@
     SharedOps.user.update(userId, { nickname: nickname, email: email, phone: phone, status: status }, function (res) {
       appHideLoading();
       appToast(res.msg);
-      if (res.code === 200) { closeActionSheet(); AppRouter.navigate('user'); }
+      if (res.code === 200) {
+        // 如果编辑的是当前登录用户，同步更新 localStorage
+        var current = Storage.get('currentUser');
+        if (current && current.id === userId && res.data) {
+          Storage.set('currentUser', res.data);
+        }
+        closeActionSheet();
+        AppRouter.navigate('user');
+      }
     });
   };
 
@@ -693,7 +701,7 @@
       + '<div class="app-form">'
       + '<div class="app-form-item"><div class="form-label">路由名称</div><input class="form-input" id="add-router-name" placeholder="如：用户管理"></div>'
       + '<div class="app-form-item"><div class="form-label">路由路径</div><input class="form-input" id="add-router-path" placeholder="如：user"></div>'
-      + '<div class="app-form-item"><div class="form-label">图标</div><select class="form-select" id="add-router-icon">' + iconSelectHtml() + '</select></div>'
+      + '<div class="app-form-item"><div class="form-label">图标</div><input type="hidden" id="add-router-icon"><div class="icon-pick-trigger" id="add-router-icon-preview" onclick="openIconPicker(\'add-router-icon\',function(ic){document.getElementById(\'add-router-icon-preview\').innerHTML=\'<i class=mi>\'+ic+\'</i> \'+ic})" style="flex:1"><i class="mi">palette</i> 选择图标</div></div>'
       + '<div class="app-form-item"><div class="form-label">排序</div><input class="form-input" type="number" id="add-router-sort" value="10"></div>'
       + '<div class="app-form-item"><div class="form-label">状态</div><select class="form-select" id="add-router-status"><option value="1">启用</option><option value="0">禁用</option></select></div>'
       + '</div>'
@@ -731,8 +739,8 @@
         + '<div style="padding:0 16px 16px">'
         + '<div class="app-form">'
         + '<div class="app-form-item"><div class="form-label">路由名称</div><input class="form-input" id="edit-router-name" value="' + escapeHtml(router.router_name) + '"></div>'
-        + '<div class="app-form-item"><div class="form-label">路由路径</div><input class="form-input" id="edit-router-path" value="' + escapeHtml(router.router_path) + '" readonly style="background:var(--bg-secondary)"></div>'
-        + '<div class="app-form-item"><div class="form-label">图标</div><select class="form-select" id="edit-router-icon">' + iconSelectHtml(router.icon) + '</select></div>'
+        + '<div class="app-form-item"><div class="form-label">路由路径</div><input class="form-input" id="edit-router-path" value="' + escapeHtml(router.router_path) + '"></div>'
+        + '<div class="app-form-item"><div class="form-label">图标</div><input type="hidden" id="edit-router-icon" value="' + (router.icon || '') + '"><div class="icon-pick-trigger" id="edit-router-icon-preview" onclick="openIconPicker(\'edit-router-icon\',function(ic){document.getElementById(\'edit-router-icon-preview\').innerHTML=\'<i class=mi>\'+ic+\'</i> \'+ic})" style="flex:1">' + (router.icon ? '<i class="mi">' + router.icon + '</i> ' + router.icon : '<i class="mi">palette</i> 选择图标') + '</div></div>'
         + '<div class="app-form-item"><div class="form-label">排序</div><input class="form-input" type="number" id="edit-router-sort" value="' + router.sort + '"></div>'
         + '<div class="app-form-item"><div class="form-label">状态</div><select class="form-select" id="edit-router-status"><option value="1" ' + (router.status == 1 ? 'selected' : '') + '>启用</option><option value="0" ' + (router.status == 0 ? 'selected' : '') + '>禁用</option></select></div>'
         + '</div>'
@@ -746,12 +754,13 @@
 
   window.submitEditRouter = function (routerId) {
     var routerName = document.getElementById('edit-router-name').value.trim();
+    var routerPath = document.getElementById('edit-router-path').value.trim();
     var icon = document.getElementById('edit-router-icon').value;
     var sort = document.getElementById('edit-router-sort').value;
     var status = document.getElementById('edit-router-status').value;
-    if (!routerName) { appToast('请输入路由名称'); return; }
+    if (!routerName || !routerPath) { appToast('请输入路由名称和路径'); return; }
     appShowLoading();
-    SharedOps.router.update(routerId, { router_name: routerName, icon: icon, sort: sort, status: status }, function (res) {
+    SharedOps.router.update(routerId, { router_name: routerName, router_path: routerPath, icon: icon, sort: sort, status: status }, function (res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) { closeActionSheet(); AppRouter.navigate('router'); }

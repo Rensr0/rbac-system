@@ -765,6 +765,16 @@
     color: var(--text-secondary);
     font-size: 16px;
   }
+
+  /* ========== 移动端图标选择器 ========== */
+  .icon-pick-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .icon-pick-item {
+    font-size: 16px;
+    border-width: 1.5px;
+  }
 }
 
 /* ========== 全局动画 ========== */
