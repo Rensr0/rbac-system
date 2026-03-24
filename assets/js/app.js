@@ -1,6 +1,6 @@
 /**
  * app.js v3.0 - 手机端 APP 路由系统
- * Material Icons 替代 emoji
+ * 业务操作通过 SharedOps 共享
  */
 (function () {
   'use strict';
@@ -41,10 +41,13 @@
 
     loadUserRouters: function () {
       var self = this;
-      return API.get('router/', { action: 'user' }).then(function (res) {
-        if (res.code === 200) {
-          self.userRouters = res.data || [];
-        }
+      return new Promise(function(resolve) {
+        SharedOps.router.userRouters(function(res) {
+          if (res.code === 200) {
+            self.userRouters = res.data || [];
+          }
+          resolve();
+        });
       });
     },
 
@@ -249,12 +252,11 @@
     if (!content) return;
 
     appShowLoading();
-    API.get('user/', { page: 1, limit: 20 }).then(function (res) {
+    SharedOps.user.search('', 1, 20, function (res) {
       appHideLoading();
       if (res.code !== 200) { appToast(res.msg); return; }
 
       var list = (res.data || {}).list || [];
-      var total = (res.data || {}).total || 0;
 
       content.innerHTML =
         '<div class="app-page-content">'
@@ -286,7 +288,7 @@
   window.searchUsers = function () {
     var kw = document.getElementById('user-search') ? document.getElementById('user-search').value : '';
     appShowLoading();
-    API.get('user/', { keyword: kw, page: 1, limit: 20 }).then(function (res) {
+    SharedOps.user.search(kw, 1, 20, function (res) {
       appHideLoading();
       if (res.code !== 200) return;
       var list = (res.data || {}).list || [];
@@ -305,7 +307,7 @@
     if (!content) return;
 
     appShowLoading();
-    API.get('role/', { limit: 100 }).then(function (res) {
+    SharedOps.role.list(100, function (res) {
       appHideLoading();
       if (res.code !== 200) { appToast(res.msg); return; }
       var list = (res.data || {}).list || [];
@@ -342,7 +344,7 @@
     if (!content) return;
 
     appShowLoading();
-    API.get('router/').then(function (res) {
+    SharedOps.router.list(function (res) {
       appHideLoading();
       if (res.code !== 200) { appToast(res.msg); return; }
       var list = res.data || [];
@@ -426,7 +428,7 @@
     var email    = document.getElementById('profile-email').value.trim();
     var phone    = document.getElementById('profile-phone').value.trim();
     appShowLoading();
-    API.post('user/', { action: 'profile', nickname: nickname, email: email, phone: phone }).then(function (res) {
+    SharedOps.user.updateProfile({ nickname: nickname, email: email, phone: phone }, function (res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) {
@@ -461,7 +463,7 @@
     if (!oldPwd || !newPwd) { appToast('请填写完整'); return; }
     if (newPwd !== confirmPwd) { appToast('两次密码不一致'); return; }
     appShowLoading();
-    API.post('user/', { action: 'password', old_password: oldPwd, new_password: newPwd }).then(function (res) {
+    SharedOps.user.changePassword(oldPwd, newPwd, function (res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) closeActionSheet();
@@ -481,7 +483,7 @@
   // ==================== 用户操作 ====================
   window.showAddUserSheet = function () {
     appShowLoading();
-    API.get('role/', { limit: 100 }).then(function (res) {
+    SharedOps.role.list(100, function (res) {
       appHideLoading();
       var roles = res.code === 200 ? (res.data || {}).list || [] : [];
       var roleOptions = roles.map(function (r) {
@@ -514,7 +516,7 @@
     var roleId = document.getElementById('add-role').value;
     if (!username || !password) { appToast('请输入账号和密码'); return; }
     appShowLoading();
-    API.post('user/', { action: 'add', username: username, password: password, nickname: nickname, email: email, role_id: roleId }).then(function (res) {
+    SharedOps.user.add({ username: username, password: password, nickname: nickname, email: email, role_ids: [roleId] }, function (res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) { closeActionSheet(); AppRouter.navigate('user'); }
@@ -524,8 +526,8 @@
   window.editUserApp = function (userId) {
     appShowLoading();
     Promise.all([
-      API.get('user/', { action: 'detail', id: userId }),
-      API.get('role/', { limit: 100 })
+      new Promise(function(resolve) { SharedOps.user.detail(userId, resolve); }),
+      new Promise(function(resolve) { SharedOps.role.list(100, resolve); })
     ]).then(function (results) {
       appHideLoading();
       var userRes = results[0], roleRes = results[1];
@@ -556,7 +558,7 @@
     var phone = document.getElementById('edit-phone').value.trim();
     var status = document.getElementById('edit-status').value;
     appShowLoading();
-    API.post('user/', { action: 'edit', id: userId, nickname: nickname, email: email, phone: phone, status: status }).then(function (res) {
+    SharedOps.user.update(userId, { nickname: nickname, email: email, phone: phone, status: status }, function (res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) { closeActionSheet(); AppRouter.navigate('user'); }
@@ -567,7 +569,7 @@
     confirmDialog('删除用户', '确定要删除该用户吗？此操作不可恢复！').then(function (ok) {
       if (!ok) return;
       appShowLoading();
-      API.post('user/', { action: 'delete', id: userId }).then(function (res) {
+      SharedOps.user.delete(userId, function (res) {
         appHideLoading();
         appToast(res.msg);
         if (res.code === 200) { closeActionSheet(); AppRouter.navigate('user'); }
@@ -578,7 +580,7 @@
   // ==================== 角色操作 ====================
   window.showAddRoleSheet = function () {
     appShowLoading();
-    API.get('router/', { limit: 100 }).then(function (res) {
+    SharedOps.router.list(function (res) {
       appHideLoading();
       var routers = res.code === 200 ? res.data || [] : [];
 
@@ -610,7 +612,7 @@
     var routerIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(function (cb) { return cb.value; });
     if (!roleName) { appToast('请输入角色名称'); return; }
     appShowLoading();
-    API.post('role/', { action: 'add', role_name: roleName, remark: remark, router_ids: routerIds }).then(function (res) {
+    SharedOps.role.add({ role_name: roleName, remark: remark, router_ids: routerIds }, function (res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) { closeActionSheet(); AppRouter.navigate('role'); }
@@ -620,8 +622,8 @@
   window.editRoleApp = function (roleId) {
     appShowLoading();
     Promise.all([
-      API.get('role/', { action: 'detail', id: roleId }),
-      API.get('router/', { limit: 100 })
+      new Promise(function(resolve) { API.get('role/', { action: 'detail', id: roleId }).then(resolve); }),
+      new Promise(function(resolve) { SharedOps.router.list(resolve); })
     ]).then(function (results) {
       appHideLoading();
       var roleRes = results[0], routerRes = results[1];
@@ -660,10 +662,13 @@
     var routerIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(function (cb) { return cb.value; });
     if (!roleName) { appToast('请输入角色名称'); return; }
     appShowLoading();
-    API.post('role/', { action: 'edit', id: roleId, role_name: roleName, remark: remark, router_ids: routerIds }).then(function (res) {
-      appHideLoading();
-      appToast(res.msg);
-      if (res.code === 200) { closeActionSheet(); AppRouter.navigate('role'); }
+    SharedOps.role.update(roleId, { role_name: roleName, remark: remark }, function (updateRes) {
+      if (updateRes.code !== 200) { appHideLoading(); appToast(updateRes.msg); return; }
+      SharedOps.role.updateRouters(roleId, routerIds, function (res) {
+        appHideLoading();
+        appToast(res.msg);
+        if (res.code === 200) { closeActionSheet(); AppRouter.navigate('role'); }
+      });
     });
   };
 
@@ -671,7 +676,7 @@
     confirmDialog('删除角色', '确定要删除该角色吗？此操作不可恢复！').then(function (ok) {
       if (!ok) return;
       appShowLoading();
-      API.post('role/', { action: 'delete', id: roleId }).then(function (res) {
+      SharedOps.role.delete(roleId, function (res) {
         appHideLoading();
         appToast(res.msg);
         if (res.code === 200) { closeActionSheet(); AppRouter.navigate('role'); }
@@ -706,7 +711,7 @@
     var status = document.getElementById('add-router-status').value;
     if (!routerName || !routerPath) { appToast('请输入路由名称和路径'); return; }
     appShowLoading();
-    API.post('router/', { action: 'add', router_name: routerName, router_path: routerPath, icon: icon, sort: sort, status: status }).then(function (res) {
+    SharedOps.router.add({ router_name: routerName, router_path: routerPath, icon: icon, sort: sort, status: status }, function (res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) { closeActionSheet(); AppRouter.navigate('router'); }
@@ -715,10 +720,10 @@
 
   window.editRouterApp = function (routerId) {
     appShowLoading();
-    API.get('router/', { action: 'detail', id: routerId }).then(function (res) {
+    SharedOps.router.list(function (res) {
       appHideLoading();
-      if (res.code !== 200) { appToast(res.msg); return; }
-      var router = res.data;
+      var router = (res.data || []).find(function(r) { return r.id === routerId; });
+      if (!router) { appToast('路由不存在'); return; }
 
       createActionSheet(
         '<div class="sheet-handle"></div>'
@@ -746,7 +751,7 @@
     var status = document.getElementById('edit-router-status').value;
     if (!routerName) { appToast('请输入路由名称'); return; }
     appShowLoading();
-    API.post('router/', { action: 'edit', id: routerId, router_name: routerName, icon: icon, sort: sort, status: status }).then(function (res) {
+    SharedOps.router.update(routerId, { router_name: routerName, icon: icon, sort: sort, status: status }, function (res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) { closeActionSheet(); AppRouter.navigate('router'); }
@@ -757,7 +762,7 @@
     confirmDialog('删除路由', '确定要删除该路由吗？此操作不可恢复！').then(function (ok) {
       if (!ok) return;
       appShowLoading();
-      API.post('router/', { action: 'delete', id: routerId }).then(function (res) {
+      SharedOps.router.delete(routerId, function (res) {
         appHideLoading();
         appToast(res.msg);
         if (res.code === 200) { closeActionSheet(); AppRouter.navigate('router'); }

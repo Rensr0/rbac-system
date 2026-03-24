@@ -1,6 +1,6 @@
 /**
  * pc-pages.js v3.0 - PC 端页面渲染逻辑
- * Material Icons 替代 emoji
+ * 业务操作通过 SharedOps 共享
  */
 var PCPages = (function () {
   var currentUser = null;
@@ -89,7 +89,7 @@ var PCPages = (function () {
   // ==================== 用户管理 ====================
   function loadPCUser(c, kw) {
     kw = kw || (document.getElementById('pc-user-search') ? document.getElementById('pc-user-search').value : '') || '';
-    API.get('user/', { page: _userPage, limit: 10, keyword: kw }).then(function(res) {
+    SharedOps.user.search(kw, _userPage, 10, function(res) {
       if (res.code !== 200) { showToast(res.msg); return; }
       var list = (res.data || {}).list || [];
       var total = (res.data || {}).total || 0;
@@ -130,7 +130,7 @@ var PCPages = (function () {
   }
 
   function pcAddUser() {
-    API.get('role/', { limit: 100 }).then(function(res) {
+    SharedOps.role.list(100, function(res) {
       var roles = (res.data || {}).list || [];
       document.getElementById('modal-user-title').textContent = '新增用户';
       document.getElementById('form-user-id').value = '';
@@ -148,10 +148,10 @@ var PCPages = (function () {
   }
 
   function pcEditUser(id) {
-    API.get('user/', { action: 'detail', id: id }).then(function(res) {
+    SharedOps.user.detail(id, function(res) {
       if (res.code !== 200) { showToast(res.msg); return; }
       var u = res.data;
-      API.get('role/', { limit: 100 }).then(function(roleRes) {
+      SharedOps.role.list(100, function(roleRes) {
         var roles = (roleRes.data || {}).list || [];
         document.getElementById('modal-user-title').textContent = '编辑用户';
         document.getElementById('form-user-id').value = u.id;
@@ -179,15 +179,15 @@ var PCPages = (function () {
     if (!username) { showToast('请输入账号'); return; }
 
     if (id) {
-      API.post('user/', { action: 'update', id: parseInt(id), nickname: nickname, email: email, phone: phone }).then(function(updateRes) {
+      SharedOps.user.update(parseInt(id), { nickname: nickname, email: email, phone: phone }, function(updateRes) {
         if (updateRes.code !== 200) { showToast(updateRes.msg || '更新用户失败'); return; }
-        API.post('user/', { action: 'roles', user_id: parseInt(id), role_ids: roleIds }).then(function(res) {
+        SharedOps.user.updateRoles(parseInt(id), roleIds, function(res) {
           showToast(res.msg);
           if (res.code === 200) { closeModal('modal-user'); loadPCUser(document.getElementById('page-content')); }
         });
       });
     } else {
-      API.post('user/', { username: username, password: password || '123456', nickname: nickname, email: email, phone: phone, role_ids: roleIds }).then(function(res) {
+      SharedOps.user.add({ username: username, password: password || '123456', nickname: nickname, email: email, phone: phone, role_ids: roleIds }, function(res) {
         showToast(res.msg);
         if (res.code === 200) { closeModal('modal-user'); loadPCUser(document.getElementById('page-content')); }
       });
@@ -197,7 +197,7 @@ var PCPages = (function () {
   function pcDeleteUser(id) {
     confirmDialog('删除用户', '确定要删除此用户吗？此操作不可恢复。').then(function(ok) {
       if (!ok) return;
-      API.post('user/', { action: 'delete', id: id }).then(function(res) {
+      SharedOps.user.delete(id, function(res) {
         showToast(res.msg);
         if (res.code === 200) loadPCUser(document.getElementById('page-content'));
       });
@@ -206,7 +206,7 @@ var PCPages = (function () {
 
   // ==================== 角色管理 ====================
   function loadPCRole(c) {
-    API.get('role/', { limit: 100 }).then(function(res) {
+    SharedOps.role.list(100, function(res) {
       var list = (res.data || {}).list || [];
       c.innerHTML =
         '<div class="page-header">'
@@ -231,7 +231,7 @@ var PCPages = (function () {
   }
 
   function pcAddRole() {
-    API.get('router/').then(function(res) {
+    SharedOps.router.list(function(res) {
       var routers = res.data || [];
       document.getElementById('modal-role-title').textContent = '新增角色';
       document.getElementById('form-role-id').value = '';
@@ -245,7 +245,10 @@ var PCPages = (function () {
   }
 
   function pcEditRole(id) {
-    Promise.all([API.get('role/', { limit: 100 }), API.get('router/')]).then(function(results) {
+    Promise.all([
+      new Promise(function(resolve) { SharedOps.role.list(100, resolve); }),
+      new Promise(function(resolve) { SharedOps.router.list(resolve); })
+    ]).then(function(results) {
       var roleRes = results[0], routerRes = results[1];
       var role = (roleRes.data && roleRes.data.list || []).find(function(r) { return r.id === id; });
       var routers = routerRes.data || [];
@@ -268,15 +271,15 @@ var PCPages = (function () {
     var routerIds = Array.from(document.querySelectorAll('.role-router-cb:checked')).map(function(cb) { return parseInt(cb.value); });
     if (!roleName) { showToast('请输入角色名称'); return; }
     if (id) {
-      API.post('role/', { action: 'update', id: parseInt(id), role_name: roleName, remark: remark }).then(function(updateRes) {
+      SharedOps.role.update(parseInt(id), { role_name: roleName, remark: remark }, function(updateRes) {
         if (updateRes.code !== 200) { showToast(updateRes.msg || '更新角色失败'); return; }
-        API.post('role/', { action: 'routers', role_id: parseInt(id), router_ids: routerIds }).then(function(res) {
+        SharedOps.role.updateRouters(parseInt(id), routerIds, function(res) {
           showToast(res.msg);
           if (res.code === 200) { closeModal('modal-role'); loadPCRole(document.getElementById('page-content')); }
         });
       });
     } else {
-      API.post('role/', { role_name: roleName, remark: remark, router_ids: routerIds }).then(function(res) {
+      SharedOps.role.add({ role_name: roleName, remark: remark, router_ids: routerIds }, function(res) {
         showToast(res.msg);
         if (res.code === 200) { closeModal('modal-role'); loadPCRole(document.getElementById('page-content')); }
       });
@@ -286,7 +289,7 @@ var PCPages = (function () {
   function pcDeleteRole(id) {
     confirmDialog('删除角色', '确定要删除此角色？关联的用户权限将被清除。').then(function(ok) {
       if (!ok) return;
-      API.post('role/', { action: 'delete', id: id }).then(function(res) {
+      SharedOps.role.delete(id, function(res) {
         showToast(res.msg);
         if (res.code === 200) loadPCRole(document.getElementById('page-content'));
       });
@@ -295,7 +298,7 @@ var PCPages = (function () {
 
   // ==================== 路由管理 ====================
   function loadPCRouter(c) {
-    API.get('router/').then(function(res) {
+    SharedOps.router.list(function(res) {
       var list = res.data || [];
       c.innerHTML =
         '<div class="page-header">'
@@ -335,7 +338,7 @@ var PCPages = (function () {
   }
 
   function pcEditRouter(id) {
-    API.get('router/').then(function(res) {
+    SharedOps.router.list(function(res) {
       var r = (res.data || []).find(function(x) { return x.id === id; });
       if (!r) { showToast('路由不存在'); return; }
       
@@ -360,20 +363,23 @@ var PCPages = (function () {
     var icon = document.getElementById('form-router-icon').value.trim();
     var sort = parseInt(document.getElementById('form-router-sort').value) || 0;
     if (!routerName || !routerPath) { showToast('名称和路径不能为空'); return; }
-    var data = { router_name: routerName, router_path: routerPath, icon: icon, sort: sort };
     if (id) {
-      data.action = 'update'; data.id = parseInt(id);
+      SharedOps.router.update(parseInt(id), { router_name: routerName, icon: icon, sort: sort }, function(res) {
+        showToast(res.msg);
+        if (res.code === 200) { closeModal('modal-router'); loadPCRouter(document.getElementById('page-content')); }
+      });
+    } else {
+      SharedOps.router.add({ router_name: routerName, router_path: routerPath, icon: icon, sort: sort }, function(res) {
+        showToast(res.msg);
+        if (res.code === 200) { closeModal('modal-router'); loadPCRouter(document.getElementById('page-content')); }
+      });
     }
-    API.post('router/', data).then(function(res) {
-      showToast(res.msg);
-      if (res.code === 200) { closeModal('modal-router'); loadPCRouter(document.getElementById('page-content')); }
-    });
   }
 
   function pcDeleteRouter(id) {
     confirmDialog('删除路由', '确定要删除此路由？').then(function(ok) {
       if (!ok) return;
-      API.post('router/', { action: 'delete', id: id }).then(function(res) {
+      SharedOps.router.delete(id, function(res) {
         showToast(res.msg);
         if (res.code === 200) loadPCRouter(document.getElementById('page-content'));
       });
@@ -443,12 +449,11 @@ var PCPages = (function () {
     var email    = document.getElementById('pc-profile-email').value.trim();
     var phone    = document.getElementById('pc-profile-phone').value.trim();
     showLoading();
-    API.post('user/', { action: 'profile', nickname: nickname, email: email, phone: phone }).then(function(res) {
+    SharedOps.user.updateProfile({ nickname: nickname, email: email, phone: phone }, function(res) {
       hideLoading();
       showToast(res.msg);
       if (res.code === 200) {
         Storage.set('currentUser', res.data);
-        // 更新顶部显示
         var nickEl = document.getElementById('pc-nickname');
         if (nickEl) nickEl.textContent = res.data.nickname || res.data.username;
         var avatarEl = document.getElementById('pc-avatar');
@@ -465,7 +470,7 @@ var PCPages = (function () {
     if (!oldPwd || !newPwd) { showToast('请填写完整'); return; }
     if (newPwd.length < 6) { showToast('新密码至少6位'); return; }
     if (newPwd !== confirmPwd) { showToast('两次密码不一致'); return; }
-    API.post('user/', { action: 'password', old_password: oldPwd, new_password: newPwd }).then(function(res) {
+    SharedOps.user.changePassword(oldPwd, newPwd, function(res) {
       showToast(res.msg);
     });
   }
