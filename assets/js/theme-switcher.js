@@ -85,7 +85,18 @@
     get: getCurrentTheme,
     toggle: function () {
       var panel = document.getElementById('theme-panel');
-      if (panel) panel.classList.toggle('show');
+      if (!panel) return;
+      var isOpen = panel.classList.contains('show');
+      if (!isOpen) {
+        // 打开前定位到主题按钮附近
+        var btn = document.querySelector('.theme-toggle-btn');
+        if (btn) {
+          var rect = btn.getBoundingClientRect();
+          panel.style.top = (rect.bottom + 8) + 'px';
+          panel.style.right = (window.innerWidth - rect.right) + 'px';
+        }
+      }
+      panel.classList.toggle('show');
     },
     initPC: initPC,
     showMobileSheet: showMobileSheet,
