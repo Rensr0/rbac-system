@@ -51,7 +51,53 @@ var PCPages = (function () {
         + (hasRoute(routers, 'user') ? '<button class="btn btn-primary" onclick="pcNavigate(\'user\')">' + miIcon('group', 'mi-18') + ' 管理用户</button>' : '')
         + (hasRoute(routers, 'role') ? '<button class="btn btn-outline" onclick="pcNavigate(\'role\')">' + miIcon('shield', 'mi-18') + ' 配置角色</button>' : '')
         + (hasRoute(routers, 'router') ? '<button class="btn btn-outline" onclick="pcNavigate(\'router\')">' + miIcon('route', 'mi-18') + ' 路由权限</button>' : '')
-        + '</div></div></div>';
+        + '</div></div></div>'
+        + '<div class="card" style="margin-top:24px"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:300px"></div></div></div>';
+
+      if (window.ApexCharts) {
+        var options = {
+          series: [{
+            name: '用户数',
+            data: [(uR.data && uR.data.total || 0)]
+          }, {
+            name: '角色数',
+            data: [(rR.data && rR.data.total || 0)]
+          }, {
+            name: '路由数',
+            data: [(rtR.data || []).length]
+          }],
+          chart: {
+            type: 'bar',
+            height: 300,
+            toolbar: { show: false }
+          },
+          plotOptions: {
+            bar: {
+              borderRadius: 8,
+              columnWidth: '50%'
+            }
+          },
+          dataLabels: { enabled: false },
+          xaxis: {
+            categories: ['系统数据'],
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+          },
+          yaxis: {
+            labels: { style: { colors: 'var(--text-secondary)' } }
+          },
+          colors: ['var(--primary)', 'var(--success)', 'var(--warning)'],
+          legend: {
+            position: 'top',
+            horizontalAlign: 'right'
+          },
+          tooltip: {
+            theme: 'light'
+          }
+        };
+        var chart = new ApexCharts(document.querySelector('#stats-chart'), options);
+        chart.render();
+      }
     });
   }
 
@@ -291,11 +337,17 @@ var PCPages = (function () {
   }
 
   function pcAddRouter() {
+    var iconSelect = document.getElementById('form-router-icon');
+    if (iconSelect) {
+      var icons = ['home','group','security','route','dashboard','settings','lock','email','phone','calendar_today','search','add','edit','delete','info','warning','error','check','close','menu','person','badge','shield','key','link','sort','toggle_on','toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle','contact_mail','alternate_email','vpn_key','how_to_reg','rocket_launch','chevron_right','edit_note','logout','inbox','search_off','description','folder','analytics','assessment','trending_up','bar_chart','pie_chart','timeline','event','schedule','notifications','favorite','star','share','download','upload','cloud','storage','backup','security','privacy_policy','help','support'];
+      iconSelect.innerHTML = icons.map(function(icon) {
+        return '<option value="' + icon + '">' + icon + '</option>';
+      }).join('');
+    }
     document.getElementById('modal-router-title').textContent = '新增路由';
     document.getElementById('form-router-id').value = '';
     document.getElementById('form-router-name').value = '';
     document.getElementById('form-router-path').value = '';
-    document.getElementById('form-router-icon').value = '';
     document.getElementById('form-router-sort').value = '0';
     openModal('modal-router');
   }
@@ -304,11 +356,19 @@ var PCPages = (function () {
     API.get('router/').then(function(res) {
       var r = (res.data || []).find(function(x) { return x.id === id; });
       if (!r) { showToast('路由不存在'); return; }
+      
+      var iconSelect = document.getElementById('form-router-icon');
+      if (iconSelect) {
+        var icons = ['home','group','security','route','dashboard','settings','lock','email','phone','calendar_today','search','add','edit','delete','info','warning','error','check','close','menu','person','badge','shield','key','link','sort','toggle_on','toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle','contact_mail','alternate_email','vpn_key','how_to_reg','rocket_launch','chevron_right','edit_note','logout','inbox','search_off','description','folder','analytics','assessment','trending_up','bar_chart','pie_chart','timeline','event','schedule','notifications','favorite','star','share','download','upload','cloud','storage','backup','security','privacy_policy','help','support'];
+        iconSelect.innerHTML = icons.map(function(icon) {
+          return '<option value="' + icon + '"' + (r.icon === icon ? ' selected' : '') + '>' + icon + '</option>';
+        }).join('');
+      }
+      
       document.getElementById('modal-router-title').textContent = '编辑路由';
       document.getElementById('form-router-id').value = r.id;
       document.getElementById('form-router-name').value = r.router_name;
       document.getElementById('form-router-path').value = r.router_path;
-      document.getElementById('form-router-icon').value = r.icon || '';
       document.getElementById('form-router-sort').value = r.sort;
       openModal('modal-router');
     });
@@ -346,40 +406,57 @@ var PCPages = (function () {
     var user = Storage.get('currentUser') || {};
     c.innerHTML =
       '<div class="page-header"><h2>个人中心</h2></div>'
-      + '<div style="display:flex;justify-content:center">'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:1200px;width:100%">'
-      + '<div class="card"><div class="card-body" style="padding:32px">'
-      + '<div style="display:flex;align-items:center;gap:24px;margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid var(--border-light)">'
-      + '<div style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:600;flex-shrink:0">' + getInitial(user.nickname || user.username) + '</div>'
+      + '<div style="max-width:1000px;margin:0 auto">'
+      + '<div class="card" style="margin-bottom:24px;overflow:hidden">'
+      + '<div style="background:linear-gradient(135deg,var(--primary),#6C63FF);padding:40px 32px;color:#fff;position:relative">'
+      + '<div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(255,255,255,0.1);border-radius:50%"></div>'
+      + '<div style="position:absolute;bottom:-30px;right:60px;width:100px;height:100px;background:rgba(255,255,255,0.08);border-radius:50%"></div>'
+      + '<div style="display:flex;align-items:center;gap:24px;position:relative">'
+      + '<div style="width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:600;flex-shrink:0;backdrop-filter:blur(10px);border:3px solid rgba(255,255,255,0.3)">' + getInitial(user.nickname || user.username) + '</div>'
       + '<div>'
-      + '<h3 style="margin:0 0 12px;font-size:28px">' + escapeHtml(user.nickname || user.username) + '</h3>'
-      + '<p class="text-secondary" style="margin:0;font-size:16px">' + (user.is_super ? '<span style="color:var(--primary);font-weight:500">超级管理员</span>' : '普通用户') + '</p>'
-      + '</div></div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px"><i class="mi mi-16">badge</i> 账号</label><input class="form-input" style="padding:14px 16px;font-size:15px" value="' + escapeHtml(user.username) + '" disabled></div>'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px"><i class="mi mi-16">email</i> 邮箱</label><input class="form-input" style="padding:14px 16px;font-size:15px" value="' + escapeHtml(user.email || '未设置') + '" disabled></div>'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px"><i class="mi mi-16">phone</i> 手机</label><input class="form-input" style="padding:14px 16px;font-size:15px" value="' + escapeHtml(user.phone || '未设置') + '" disabled></div>'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px"><i class="mi mi-16">calendar_today</i> 最后登录</label><input class="form-input" style="padding:14px 16px;font-size:15px" value="' + (user.last_login ? formatDate(user.last_login) : '首次登录') + '" disabled></div>'
+      + '<h3 style="margin:0 0 8px;font-size:26px;font-weight:700">' + escapeHtml(user.nickname || user.username) + '</h3>'
+      + '<p style="margin:0;font-size:14px;opacity:0.9">' + (user.is_super ? '<span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px">超级管理员</span>' : '<span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px">普通用户</span>') + '</p>'
+      + '<p style="margin:8px 0 0;font-size:13px;opacity:0.75">ID: ' + user.id + ' · 注册于 ' + (user.create_time ? formatDate(user.create_time).split(' ')[0] : '未知') + '</p>'
+      + '</div></div></div>'
+      + '<div style="padding:32px">'
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px">'
+      + '<div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:12px">'
+      + '<div style="font-size:24px;font-weight:700;color:var(--primary);margin-bottom:4px">' + miIcon('badge', 'mi-lg') + '</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary)">账号</div>'
+      + '<div style="font-size:14px;font-weight:500;margin-top:4px">' + escapeHtml(user.username) + '</div>'
       + '</div>'
-      // 编辑资料
-      + '<div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border-light)">'
-      + '<h3 style="margin-bottom:20px;font-size:20px">' + miIcon('edit_note') + ' 编辑资料</h3>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px">昵称</label><input class="form-input" id="pc-profile-nickname" style="padding:14px 16px;font-size:15px" value="' + escapeHtml(user.nickname || '') + '" placeholder="请输入昵称"></div>'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px">邮箱</label><input class="form-input" type="email" id="pc-profile-email" style="padding:14px 16px;font-size:15px" value="' + escapeHtml(user.email || '') + '" placeholder="请输入邮箱"></div>'
+      + '<div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:12px">'
+      + '<div style="font-size:24px;font-weight:700;color:var(--success);margin-bottom:4px">' + miIcon('email', 'mi-lg') + '</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary)">邮箱</div>'
+      + '<div style="font-size:14px;font-weight:500;margin-top:4px">' + (user.email ? escapeHtml(user.email) : '未设置') + '</div>'
       + '</div>'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px">手机</label><input class="form-input" type="tel" id="pc-profile-phone" style="padding:14px 16px;font-size:15px" value="' + escapeHtml(user.phone || '') + '" placeholder="请输入手机号"></div>'
-      + '<button class="btn btn-primary" onclick="PCPages.saveProfile()" style="width:100%;padding:14px;font-size:15px">' + miIcon('save', 'mi-18') + ' 保存资料</button>'
+      + '<div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:12px">'
+      + '<div style="font-size:24px;font-weight:700;color:var(--warning);margin-bottom:4px">' + miIcon('phone', 'mi-lg') + '</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary)">手机</div>'
+      + '<div style="font-size:14px;font-weight:500;margin-top:4px">' + (user.phone ? escapeHtml(user.phone) : '未设置') + '</div>'
       + '</div>'
-      + '</div></div>'
-      // 修改密码
-      + '<div class="card"><div class="card-body" style="padding:32px">'
-      + '<h3 style="margin-bottom:24px;font-size:24px">' + miIcon('lock') + ' 修改密码</h3>'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px">原密码</label><input class="form-input" style="padding:14px 16px;font-size:15px" type="password" id="pc-old-pwd" placeholder="请输入原密码"></div>'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px">新密码</label><input class="form-input" style="padding:14px 16px;font-size:15px" type="password" id="pc-new-pwd" placeholder="请输入新密码（6位以上）"></div>'
-      + '<div class="form-group"><label class="form-label" style="font-size:15px">确认新密码</label><input class="form-input" style="padding:14px 16px;font-size:15px" type="password" id="pc-confirm-pwd" placeholder="再次输入新密码"></div>'
-      + '<button class="btn btn-primary" onclick="PCPages.changePwd()" style="width:100%;padding:16px;font-size:16px">' + miIcon('lock_reset', 'mi-18') + ' 修改密码</button>'
-      + '</div></div></div></div>';
+      + '<div style="text-align:center;padding:16px;background:var(--bg-secondary);border-radius:12px">'
+      + '<div style="font-size:24px;font-weight:700;color:var(--info);margin-bottom:4px">' + miIcon('calendar_today', 'mi-lg') + '</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary)">最后登录</div>'
+      + '<div style="font-size:14px;font-weight:500;margin-top:4px">' + (user.last_login ? formatDate(user.last_login).split(' ')[0] : '首次') + '</div>'
+      + '</div>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">'
+      + '<div>'
+      + '<h3 style="margin:0 0 20px;font-size:18px;display:flex;align-items:center;gap:8px">' + miIcon('edit_note') + ' 编辑资料</h3>'
+      + '<div class="form-group"><label class="form-label">昵称</label><input class="form-input" id="pc-profile-nickname" value="' + escapeHtml(user.nickname || '') + '" placeholder="请输入昵称"></div>'
+      + '<div class="form-group"><label class="form-label">邮箱</label><input class="form-input" type="email" id="pc-profile-email" value="' + escapeHtml(user.email || '') + '" placeholder="请输入邮箱"></div>'
+      + '<div class="form-group"><label class="form-label">手机</label><input class="form-input" type="tel" id="pc-profile-phone" value="' + escapeHtml(user.phone || '') + '" placeholder="请输入手机号"></div>'
+      + '<button class="btn btn-primary" onclick="PCPages.saveProfile()" style="width:100%">' + miIcon('save', 'mi-18') + ' 保存资料</button>'
+      + '</div>'
+      + '<div>'
+      + '<h3 style="margin:0 0 20px;font-size:18px;display:flex;align-items:center;gap:8px">' + miIcon('lock') + ' 修改密码</h3>'
+      + '<div class="form-group"><label class="form-label">原密码</label><input class="form-input" type="password" id="pc-old-pwd" placeholder="请输入原密码"></div>'
+      + '<div class="form-group"><label class="form-label">新密码</label><input class="form-input" type="password" id="pc-new-pwd" placeholder="请输入新密码（6位以上）"></div>'
+      + '<div class="form-group"><label class="form-label">确认新密码</label><input class="form-input" type="password" id="pc-confirm-pwd" placeholder="再次输入新密码"></div>'
+      + '<button class="btn btn-primary" onclick="PCPages.changePwd()" style="width:100%">' + miIcon('lock_reset', 'mi-18') + ' 修改密码</button>'
+      + '</div>'
+      + '</div></div></div>';
   }
 
   function pcSaveProfile() {

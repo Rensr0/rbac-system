@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="../assets/css/pc.css?v=3.0.0">
   <link rel="stylesheet" href="../assets/css/app.css?v=3.0.0">
   <link rel="stylesheet" href="../assets/css/themes.css?v=3.0.0">
+  <script src="../assets/js/apexcharts.min.js"></script>
 </head>
 <body>
 
@@ -37,9 +38,21 @@
     <div class="topbar">
       <div class="topbar-left"><h1 id="page-title">系统首页</h1></div>
       <div class="topbar-right">
-        <div class="user-info">
+        <button class="theme-toggle-btn" onclick="ThemeSwitcher.toggle()" title="切换主题"><i class="mi">palette</i></button>
+        <div class="user-info" id="pc-user-info">
           <div class="user-avatar" id="pc-avatar">A</div>
           <span id="pc-nickname">管理员</span>
+          <i class="mi mi-sm" style="margin-left:4px;color:var(--text-tertiary)">expand_more</i>
+        </div>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="dropdown-item" onclick="pcNavigate(\'mine\')">
+            <i class="mi mi-16">account_circle</i>
+            <span>个人中心</span>
+          </div>
+          <div class="dropdown-item" onclick="logoutPC()">
+            <i class="mi mi-16" style="color:var(--danger)">logout</i>
+            <span>退出登录</span>
+          </div>
         </div>
       </div>
     </div>
@@ -54,7 +67,7 @@
   <div class="app-navbar">
     <div class="navbar-back" id="navbar-back" style="display:none"><i class="mi mi-light">arrow_back</i></div>
     <div class="navbar-title">首页</div>
-    <div class="navbar-action" id="navbar-action"></div>
+    <div class="navbar-action" id="navbar-action"><i class="mi mi-light" style="font-size:20px;cursor:pointer" onclick="ThemeSwitcher.showMobileSheet()">palette</i></div>
   </div>
   <div class="app-pages" id="app-pages"></div>
   <div class="app-tabbar" id="app-tabbar"></div>
@@ -62,6 +75,12 @@
 
 <!-- PC 端弹窗容器 -->
 <div id="modal-container"></div>
+
+<!-- PC 端主题切换面板 -->
+<div class="theme-panel" id="theme-panel">
+  <div class="theme-panel-title">选择主题</div>
+  <div class="theme-grid" id="theme-grid"></div>
+</div>
 
 <script src="../assets/js/core.js?v=3.0.0"></script>
 <script src="../assets/js/theme-switcher.js?v=3.0.0"></script>
@@ -85,6 +104,18 @@
       document.getElementById('pc-avatar').textContent = getInitial(currentUser.nickname || currentUser.username);
 
       if (window.ModalTemplates) ModalTemplates.inject();
+      if (window.ThemeSwitcher) {
+        var themeGrid = document.getElementById('theme-grid');
+        if (themeGrid) {
+          themeGrid.innerHTML = window.ThemeSwitcher.themes.map(function (t) {
+            var current = window.ThemeSwitcher.get();
+            return '<div class="theme-option' + (t.id === current ? ' active' : '') + '" data-theme="' + t.id + '" onclick="ThemeSwitcher.set(\'' + t.id + '\')">'
+              + '<div class="theme-dot" style="background:' + t.dot + '"></div>'
+              + '<div class="theme-label">' + t.name + '</div>'
+              + '</div>';
+          }).join('');
+        }
+      }
 
       API.get('router/', { action: 'user' }).then(function(rRes) {
         if (rRes.code === 200) {

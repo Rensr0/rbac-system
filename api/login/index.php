@@ -78,8 +78,8 @@ function handleCaptcha() {
         imagecolorallocate($img, 30, 150, 150),   // 青
     ];
 
-    $fontSize = 22;
-    $x = 18;
+    $fontSize = 128;
+    $x = 20;
     for ($i = 0; $i < strlen($code); $i++) {
         $angle = random_int(-25, 25);
         $y = random_int(28, 38);

@@ -512,6 +512,349 @@
     });
   };
 
+  // ==================== 用户操作 ====================
+  window.showAddUserSheet = function () {
+    appShowLoading();
+    API.get('role/', { limit: 100 }).then(function (res) {
+      appHideLoading();
+      var roles = res.code === 200 ? (res.data || {}).list || [] : [];
+      var roleOptions = roles.map(function (r) {
+        return '<option value="' + r.id + '">' + escapeHtml(r.role_name) + '</option>';
+      }).join('');
+
+      var overlay = document.createElement('div');
+      overlay.className = 'app-action-sheet-overlay show';
+      overlay.innerHTML =
+        '<div class="app-action-sheet" style="transform:translateY(0)">'
+        + '<div class="sheet-handle"></div>'
+        + '<div class="sheet-title">添加用户</div>'
+        + '<div style="padding:0 16px 16px">'
+        + '<div class="app-form">'
+        + '<div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="add-username" placeholder="字母数字下划线"></div>'
+        + '<div class="app-form-item"><div class="form-label">密码</div><input class="form-input" type="password" id="add-password" placeholder="至少6位"></div>'
+        + '<div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="add-nickname" placeholder="选填"></div>'
+        + '<div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" type="email" id="add-email" placeholder="选填"></div>'
+        + '<div class="app-form-item"><div class="form-label">角色</div><select class="form-select" id="add-role">' + roleOptions + '</select></div>'
+        + '</div>'
+        + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitAddUser()">确认添加</button>'
+        + '</div>'
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
+      document.body.appendChild(overlay);
+      window.closeActionSheet = function () {
+        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
+        setTimeout(function () { overlay.remove(); }, 350);
+      };
+      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+    });
+  };
+
+  window.submitAddUser = function () {
+    var username = document.getElementById('add-username').value.trim();
+    var password = document.getElementById('add-password').value.trim();
+    var nickname = document.getElementById('add-nickname').value.trim();
+    var email = document.getElementById('add-email').value.trim();
+    var roleId = document.getElementById('add-role').value;
+    if (!username || !password) { appToast('请输入账号和密码'); return; }
+    appShowLoading();
+    API.post('user/', { action: 'add', username: username, password: password, nickname: nickname, email: email, role_id: roleId }).then(function (res) {
+      appHideLoading();
+      appToast(res.msg);
+      if (res.code === 200) { closeActionSheet(); AppRouter.navigate('user'); }
+    });
+  };
+
+  window.editUserApp = function (userId) {
+    appShowLoading();
+    Promise.all([
+      API.get('user/', { action: 'detail', id: userId }),
+      API.get('role/', { limit: 100 })
+    ]).then(function (results) {
+      appHideLoading();
+      var userRes = results[0], roleRes = results[1];
+      if (userRes.code !== 200) { appToast(userRes.msg); return; }
+      var user = userRes.data;
+      var roles = roleRes.code === 200 ? (roleRes.data || {}).list || [] : [];
+      var userRoleIds = (user.roles || []).map(function (r) { return r.id; });
+
+      var overlay = document.createElement('div');
+      overlay.className = 'app-action-sheet-overlay show';
+      overlay.innerHTML =
+        '<div class="app-action-sheet" style="transform:translateY(0)">'
+        + '<div class="sheet-handle"></div>'
+        + '<div class="sheet-title">编辑用户</div>'
+        + '<div style="padding:0 16px 16px">'
+        + '<div class="app-form">'
+        + '<div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="edit-nickname" value="' + escapeHtml(user.nickname || '') + '"></div>'
+        + '<div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" type="email" id="edit-email" value="' + escapeHtml(user.email || '') + '"></div>'
+        + '<div class="app-form-item"><div class="form-label">手机</div><input class="form-input" type="tel" id="edit-phone" value="' + escapeHtml(user.phone || '') + '"></div>'
+        + '<div class="app-form-item"><div class="form-label">状态</div><select class="form-select" id="edit-status"><option value="1" ' + (user.status == 1 ? 'selected' : '') + '>正常</option><option value="0" ' + (user.status == 0 ? 'selected' : '') + '>禁用</option></select></div>'
+        + '</div>'
+        + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitEditUser(' + userId + ')">保存修改</button>'
+        + '<button class="app-btn app-btn-danger" style="margin-top:8px" onclick="deleteUserApp(' + userId + ')">删除用户</button>'
+        + '</div>'
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
+      document.body.appendChild(overlay);
+      window.closeActionSheet = function () {
+        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
+        setTimeout(function () { overlay.remove(); }, 350);
+      };
+      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+    });
+  };
+
+  window.submitEditUser = function (userId) {
+    var nickname = document.getElementById('edit-nickname').value.trim();
+    var email = document.getElementById('edit-email').value.trim();
+    var phone = document.getElementById('edit-phone').value.trim();
+    var status = document.getElementById('edit-status').value;
+    appShowLoading();
+    API.post('user/', { action: 'edit', id: userId, nickname: nickname, email: email, phone: phone, status: status }).then(function (res) {
+      appHideLoading();
+      appToast(res.msg);
+      if (res.code === 200) { closeActionSheet(); AppRouter.navigate('user'); }
+    });
+  };
+
+  window.deleteUserApp = function (userId) {
+    confirmDialog('删除用户', '确定要删除该用户吗？此操作不可恢复！').then(function (ok) {
+      if (!ok) return;
+      appShowLoading();
+      API.post('user/', { action: 'delete', id: userId }).then(function (res) {
+        appHideLoading();
+        appToast(res.msg);
+        if (res.code === 200) { closeActionSheet(); AppRouter.navigate('user'); }
+      });
+    });
+  };
+
+  // ==================== 角色操作 ====================
+  window.showAddRoleSheet = function () {
+    appShowLoading();
+    API.get('router/', { limit: 100 }).then(function (res) {
+      appHideLoading();
+      var routers = res.code === 200 ? res.data || [] : [];
+
+      var overlay = document.createElement('div');
+      overlay.className = 'app-action-sheet-overlay show';
+      var routerHtml = routers.map(function (r) {
+        return '<div class="role-switch-item"><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span><label class="switch"><input type="checkbox" value="' + r.id + '"><span class="slider"></span></label></div>';
+      }).join('');
+
+      overlay.innerHTML =
+        '<div class="app-action-sheet" style="transform:translateY(0);max-height:85vh">'
+        + '<div class="sheet-handle"></div>'
+        + '<div class="sheet-title">创建角色</div>'
+        + '<div style="padding:0 16px 16px;max-height:60vh;overflow-y:auto">'
+        + '<div class="app-form">'
+        + '<div class="app-form-item"><div class="form-label">角色名称</div><input class="form-input" id="add-role-name" placeholder="请输入角色名称"></div>'
+        + '<div class="app-form-item"><div class="form-label">备注</div><input class="form-input" id="add-role-remark" placeholder="选填"></div>'
+        + '</div>'
+        + '<div style="margin-top:16px;font-size:14px;font-weight:600;color:var(--text-primary)">选择权限</div>'
+        + '<div style="background:var(--bg-card);border-radius:10px;margin-top:8px;overflow:hidden">' + routerHtml + '</div>'
+        + '</div>'
+        + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitAddRole()">确认创建</button>'
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
+      document.body.appendChild(overlay);
+      window.closeActionSheet = function () {
+        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
+        setTimeout(function () { overlay.remove(); }, 350);
+      };
+      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+    });
+  };
+
+  window.submitAddRole = function () {
+    var roleName = document.getElementById('add-role-name').value.trim();
+    var remark = document.getElementById('add-role-remark').value.trim();
+    var routerIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(function (cb) { return cb.value; });
+    if (!roleName) { appToast('请输入角色名称'); return; }
+    appShowLoading();
+    API.post('role/', { action: 'add', role_name: roleName, remark: remark, router_ids: routerIds }).then(function (res) {
+      appHideLoading();
+      appToast(res.msg);
+      if (res.code === 200) { closeActionSheet(); AppRouter.navigate('role'); }
+    });
+  };
+
+  window.editRoleApp = function (roleId) {
+    appShowLoading();
+    Promise.all([
+      API.get('role/', { action: 'detail', id: roleId }),
+      API.get('router/', { limit: 100 })
+    ]).then(function (results) {
+      appHideLoading();
+      var roleRes = results[0], routerRes = results[1];
+      if (roleRes.code !== 200) { appToast(roleRes.msg); return; }
+      var role = roleRes.data;
+      var routers = routerRes.code === 200 ? routerRes.data || [] : [];
+      var roleRouterIds = (role.routers || []).map(function (r) { return r.id; });
+
+      var routerHtml = routers.map(function (r) {
+        var checked = roleRouterIds.indexOf(r.id) !== -1 ? 'checked' : '';
+        return '<div class="role-switch-item"><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span><label class="switch"><input type="checkbox" value="' + r.id + '" ' + checked + '><span class="slider"></span></label></div>';
+      }).join('');
+
+      var overlay = document.createElement('div');
+      overlay.className = 'app-action-sheet-overlay show';
+      overlay.innerHTML =
+        '<div class="app-action-sheet" style="transform:translateY(0);max-height:85vh">'
+        + '<div class="sheet-handle"></div>'
+        + '<div class="sheet-title">编辑角色</div>'
+        + '<div style="padding:0 16px 16px;max-height:60vh;overflow-y:auto">'
+        + '<div class="app-form">'
+        + '<div class="app-form-item"><div class="form-label">角色名称</div><input class="form-input" id="edit-role-name" value="' + escapeHtml(role.role_name) + '"></div>'
+        + '<div class="app-form-item"><div class="form-label">备注</div><input class="form-input" id="edit-role-remark" value="' + escapeHtml(role.remark || '') + '"></div>'
+        + '</div>'
+        + '<div style="margin-top:16px;font-size:14px;font-weight:600;color:var(--text-primary)">选择权限</div>'
+        + '<div style="background:var(--bg-card);border-radius:10px;margin-top:8px;overflow:hidden">' + routerHtml + '</div>'
+        + '</div>'
+        + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitEditRole(' + roleId + ')">保存修改</button>'
+        + '<button class="app-btn app-btn-danger" style="margin-top:8px" onclick="deleteRoleApp(' + roleId + ')">删除角色</button>'
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
+      document.body.appendChild(overlay);
+      window.closeActionSheet = function () {
+        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
+        setTimeout(function () { overlay.remove(); }, 350);
+      };
+      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+    });
+  };
+
+  window.submitEditRole = function (roleId) {
+    var roleName = document.getElementById('edit-role-name').value.trim();
+    var remark = document.getElementById('edit-role-remark').value.trim();
+    var routerIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(function (cb) { return cb.value; });
+    if (!roleName) { appToast('请输入角色名称'); return; }
+    appShowLoading();
+    API.post('role/', { action: 'edit', id: roleId, role_name: roleName, remark: remark, router_ids: routerIds }).then(function (res) {
+      appHideLoading();
+      appToast(res.msg);
+      if (res.code === 200) { closeActionSheet(); AppRouter.navigate('role'); }
+    });
+  };
+
+  window.deleteRoleApp = function (roleId) {
+    confirmDialog('删除角色', '确定要删除该角色吗？此操作不可恢复！').then(function (ok) {
+      if (!ok) return;
+      appShowLoading();
+      API.post('role/', { action: 'delete', id: roleId }).then(function (res) {
+        appHideLoading();
+        appToast(res.msg);
+        if (res.code === 200) { closeActionSheet(); AppRouter.navigate('role'); }
+      });
+    });
+  };
+
+  // ==================== 路由操作 ====================
+  window.showAddRouterSheet = function () {
+    var iconOptions = ['home','group','security','route','dashboard','settings','lock','email','phone','calendar_today','search','add','edit','delete','info','warning','error','check','close','menu','person','badge','shield','key','link','sort','toggle_on','toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle','contact_mail','alternate_email','vpn_key','how_to_reg'].map(function (icon) {
+      return '<option value="' + icon + '">' + icon + '</option>';
+    }).join('');
+
+    var overlay = document.createElement('div');
+    overlay.className = 'app-action-sheet-overlay show';
+    overlay.innerHTML =
+      '<div class="app-action-sheet" style="transform:translateY(0)">'
+      + '<div class="sheet-handle"></div>'
+      + '<div class="sheet-title">添加路由</div>'
+      + '<div style="padding:0 16px 16px">'
+      + '<div class="app-form">'
+      + '<div class="app-form-item"><div class="form-label">路由名称</div><input class="form-input" id="add-router-name" placeholder="如：用户管理"></div>'
+      + '<div class="app-form-item"><div class="form-label">路由路径</div><input class="form-input" id="add-router-path" placeholder="如：user"></div>'
+      + '<div class="app-form-item"><div class="form-label">图标</div><select class="form-select" id="add-router-icon">' + iconOptions + '</select></div>'
+      + '<div class="app-form-item"><div class="form-label">排序</div><input class="form-input" type="number" id="add-router-sort" value="10"></div>'
+      + '<div class="app-form-item"><div class="form-label">状态</div><select class="form-select" id="add-router-status"><option value="1">启用</option><option value="0">禁用</option></select></div>'
+      + '</div>'
+      + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitAddRouter()">确认添加</button>'
+      + '</div>'
+      + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
+    document.body.appendChild(overlay);
+    window.closeActionSheet = function () {
+      overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
+      setTimeout(function () { overlay.remove(); }, 350);
+    };
+    overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+  };
+
+  window.submitAddRouter = function () {
+    var routerName = document.getElementById('add-router-name').value.trim();
+    var routerPath = document.getElementById('add-router-path').value.trim();
+    var icon = document.getElementById('add-router-icon').value;
+    var sort = document.getElementById('add-router-sort').value;
+    var status = document.getElementById('add-router-status').value;
+    if (!routerName || !routerPath) { appToast('请输入路由名称和路径'); return; }
+    appShowLoading();
+    API.post('router/', { action: 'add', router_name: routerName, router_path: routerPath, icon: icon, sort: sort, status: status }).then(function (res) {
+      appHideLoading();
+      appToast(res.msg);
+      if (res.code === 200) { closeActionSheet(); AppRouter.navigate('router'); }
+    });
+  };
+
+  window.editRouterApp = function (routerId) {
+    appShowLoading();
+    API.get('router/', { action: 'detail', id: routerId }).then(function (res) {
+      appHideLoading();
+      if (res.code !== 200) { appToast(res.msg); return; }
+      var router = res.data;
+
+      var iconOptions = ['home','group','security','route','dashboard','settings','lock','email','phone','calendar_today','search','add','edit','delete','info','warning','error','check','close','menu','person','badge','shield','key','link','sort','toggle_on','toggle_off','verified_user','admin_panel_settings','manage_accounts','supervised_user_circle','contact_mail','alternate_email','vpn_key','how_to_reg'].map(function (icon) {
+        return '<option value="' + icon + '"' + (router.icon === icon ? ' selected' : '') + '>' + icon + '</option>';
+      }).join('');
+
+      var overlay = document.createElement('div');
+      overlay.className = 'app-action-sheet-overlay show';
+      overlay.innerHTML =
+        '<div class="app-action-sheet" style="transform:translateY(0)">'
+        + '<div class="sheet-handle"></div>'
+        + '<div class="sheet-title">编辑路由</div>'
+        + '<div style="padding:0 16px 16px">'
+        + '<div class="app-form">'
+        + '<div class="app-form-item"><div class="form-label">路由名称</div><input class="form-input" id="edit-router-name" value="' + escapeHtml(router.router_name) + '"></div>'
+        + '<div class="app-form-item"><div class="form-label">路由路径</div><input class="form-input" id="edit-router-path" value="' + escapeHtml(router.router_path) + '" readonly style="background:var(--bg-secondary)"></div>'
+        + '<div class="app-form-item"><div class="form-label">图标</div><select class="form-select" id="edit-router-icon">' + iconOptions + '</select></div>'
+        + '<div class="app-form-item"><div class="form-label">排序</div><input class="form-input" type="number" id="edit-router-sort" value="' + router.sort + '"></div>'
+        + '<div class="app-form-item"><div class="form-label">状态</div><select class="form-select" id="edit-router-status"><option value="1" ' + (router.status == 1 ? 'selected' : '') + '>启用</option><option value="0" ' + (router.status == 0 ? 'selected' : '') + '>禁用</option></select></div>'
+        + '</div>'
+        + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitEditRouter(' + routerId + ')">保存修改</button>'
+        + '<button class="app-btn app-btn-danger" style="margin-top:8px" onclick="deleteRouterApp(' + routerId + ')">删除路由</button>'
+        + '</div>'
+        + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div></div>';
+      document.body.appendChild(overlay);
+      window.closeActionSheet = function () {
+        overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
+        setTimeout(function () { overlay.remove(); }, 350);
+      };
+      overlay.onclick = function (e) { if (e.target === overlay) closeActionSheet(); };
+    });
+  };
+
+  window.submitEditRouter = function (routerId) {
+    var routerName = document.getElementById('edit-router-name').value.trim();
+    var icon = document.getElementById('edit-router-icon').value;
+    var sort = document.getElementById('edit-router-sort').value;
+    var status = document.getElementById('edit-router-status').value;
+    if (!routerName) { appToast('请输入路由名称'); return; }
+    appShowLoading();
+    API.post('router/', { action: 'edit', id: routerId, router_name: routerName, icon: icon, sort: sort, status: status }).then(function (res) {
+      appHideLoading();
+      appToast(res.msg);
+      if (res.code === 200) { closeActionSheet(); AppRouter.navigate('router'); }
+    });
+  };
+
+  window.deleteRouterApp = function (routerId) {
+    confirmDialog('删除路由', '确定要删除该路由吗？此操作不可恢复！').then(function (ok) {
+      if (!ok) return;
+      appShowLoading();
+      API.post('router/', { action: 'delete', id: routerId }).then(function (res) {
+        appHideLoading();
+        appToast(res.msg);
+        if (res.code === 200) { closeActionSheet(); AppRouter.navigate('router'); }
+      });
+    });
+  };
+
   // ==================== 导出 & 初始化 ====================
   window.AppRouter = AppRouter;
   document.addEventListener('DOMContentLoaded', function () { AppRouter.init(); });

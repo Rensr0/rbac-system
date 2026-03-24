@@ -91,13 +91,15 @@
       align-items: center;
       gap: 10px;
     }
-    .captcha-row .form-input { flex: 1; }
+    .captcha-row .form-input { flex: 1; min-width: 0; }
     .captcha-row img {
+      width: 120px;
       height: 42px;
       border-radius: var(--radius-sm);
       cursor: pointer;
       border: 1px solid var(--border);
       transition: opacity 0.2s;
+      flex-shrink: 0;
     }
     .captcha-row img:hover { opacity: 0.8; }
     /* 记住密码 */
@@ -299,8 +301,8 @@
     </div>
     <div class="login-input-wrap" style="gap:6px">
       <span class="input-icon"><i class="mi mi-18">visibility</i></span>
-      <input class="login-input" type="text" id="app-captcha" placeholder="验证码" maxlength="4" style="flex:1">
-      <img id="app-captcha-img" onclick="refreshCaptcha('app')" style="height:38px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.15)">
+      <input class="login-input" type="text" id="app-captcha" placeholder="验证码" maxlength="4" style="flex:1;min-width:0">
+      <img id="app-captcha-img" onclick="refreshCaptcha('app')" style="border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.15);flex-shrink:0">
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:0 4px">
       <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,0.6);cursor:pointer">
