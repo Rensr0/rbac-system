@@ -16,7 +16,9 @@ var ModalTemplates = (function () {
     + '<div class="form-group"><label class="form-label">昵称</label><input class="form-input" id="form-user-nickname" placeholder="请输入昵称"></div>'
     + '<div class="form-group"><label class="form-label">邮箱</label><input class="form-input" id="form-user-email" placeholder="选填"></div>'
     + '<div class="form-group"><label class="form-label">手机</label><input class="form-input" id="form-user-phone" placeholder="选填"></div>'
-    + '<div class="form-group"><label class="form-label">分配角色</label><div class="tree-selector" id="form-user-roles"></div></div>'
+    + '<div class="form-group"><label class="form-label">分配角色</label>'
+    + '<input class="form-input" type="text" id="form-user-role-search" placeholder="搜索角色..." oninput="filterRoleList(this.value)" style="margin-bottom:8px">'
+    + '<div class="tree-selector" id="form-user-roles"></div></div>'
     + '</div>'
     + '<div class="modal-footer">'
     + '<button class="btn btn-outline" onclick="closeModal(\'modal-user\')">取消</button>'
@@ -31,7 +33,9 @@ var ModalTemplates = (function () {
     + '<input type="hidden" id="form-role-id">'
     + '<div class="form-group"><label class="form-label">角色名称</label><input class="form-input" id="form-role-name" placeholder="请输入角色名称"></div>'
     + '<div class="form-group"><label class="form-label">备注</label><input class="form-input" id="form-role-remark" placeholder="选填"></div>'
-    + '<div class="form-group"><label class="form-label">绑定权限</label><div class="tree-selector" id="form-role-routers"></div></div>'
+    + '<div class="form-group"><label class="form-label">绑定权限</label>'
+    + '<input class="form-input" type="text" id="form-role-router-search" placeholder="搜索权限..." oninput="filterRouterList(this.value)" style="margin-bottom:8px">'
+    + '<div class="tree-selector" id="form-role-routers"></div></div>'
     + '</div>'
     + '<div class="modal-footer">'
     + '<button class="btn btn-outline" onclick="closeModal(\'modal-role\')">取消</button>'
@@ -62,3 +66,22 @@ var ModalTemplates = (function () {
 
   return { inject: inject };
 })();
+
+// ==================== 列表搜索过滤 ====================
+window.filterRoleList = function(keyword) {
+  var items = document.querySelectorAll('#form-user-roles .tree-item');
+  keyword = (keyword || '').toLowerCase();
+  items.forEach(function(item) {
+    var text = item.textContent.toLowerCase();
+    item.style.display = keyword === '' || text.indexOf(keyword) !== -1 ? '' : 'none';
+  });
+};
+
+window.filterRouterList = function(keyword) {
+  var items = document.querySelectorAll('#form-role-routers .tree-item');
+  keyword = (keyword || '').toLowerCase();
+  items.forEach(function(item) {
+    var text = item.textContent.toLowerCase();
+    item.style.display = keyword === '' || text.indexOf(keyword) !== -1 ? '' : 'none';
+  });
+};

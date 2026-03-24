@@ -227,28 +227,39 @@ var PCPages = (function () {
     var roleIds = Array.from(document.querySelectorAll('.user-role-cb:checked')).map(function(cb) { return parseInt(cb.value); });
     if (!username) { showToast('请输入账号'); return; }
 
-    if (id) {
-      SharedOps.user.update(parseInt(id), { nickname: nickname, email: email, phone: phone }, function(updateRes) {
-        if (updateRes.code !== 200) { showToast(updateRes.msg || '更新用户失败'); return; }
-        // 如果编辑的是当前登录用户，同步更新 localStorage 和顶栏
-        var current = Storage.get('currentUser');
-        if (current && current.id === parseInt(id) && updateRes.data) {
-          Storage.set('currentUser', updateRes.data);
-          var nickEl = document.getElementById('pc-nickname');
-          if (nickEl) nickEl.textContent = updateRes.data.nickname || updateRes.data.username;
-          var avatarEl = document.getElementById('pc-avatar');
-          if (avatarEl) avatarEl.textContent = getInitial(updateRes.data.nickname || updateRes.data.username);
-        }
-        SharedOps.user.updateRoles(parseInt(id), roleIds, function(res) {
+    function doSave() {
+      if (id) {
+        SharedOps.user.update(parseInt(id), { nickname: nickname, email: email, phone: phone }, function(updateRes) {
+          if (updateRes.code !== 200) { showToast(updateRes.msg || '更新用户失败'); return; }
+          // 如果编辑的是当前登录用户，同步更新 localStorage 和顶栏
+          var current = Storage.get('currentUser');
+          if (current && current.id === parseInt(id) && updateRes.data) {
+            Storage.set('currentUser', updateRes.data);
+            var nickEl = document.getElementById('pc-nickname');
+            if (nickEl) nickEl.textContent = updateRes.data.nickname || updateRes.data.username;
+            var avatarEl = document.getElementById('pc-avatar');
+            if (avatarEl) avatarEl.textContent = getInitial(updateRes.data.nickname || updateRes.data.username);
+          }
+          SharedOps.user.updateRoles(parseInt(id), roleIds, function(res) {
+            showToast(res.msg);
+            if (res.code === 200) { closeModal('modal-user'); loadPCUser(document.getElementById('page-content')); }
+          });
+        });
+      } else {
+        SharedOps.user.add({ username: username, password: password || '123456', nickname: nickname, email: email, phone: phone, role_ids: roleIds }, function(res) {
           showToast(res.msg);
           if (res.code === 200) { closeModal('modal-user'); loadPCUser(document.getElementById('page-content')); }
         });
+      }
+    }
+
+    if (id) {
+      confirmDialog('保存修改', '确定要保存对该用户的修改吗？').then(function(ok) {
+        if (!ok) return;
+        doSave();
       });
     } else {
-      SharedOps.user.add({ username: username, password: password || '123456', nickname: nickname, email: email, phone: phone, role_ids: roleIds }, function(res) {
-        showToast(res.msg);
-        if (res.code === 200) { closeModal('modal-user'); loadPCUser(document.getElementById('page-content')); }
-      });
+      doSave();
     }
   }
 
