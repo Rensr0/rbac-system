@@ -1,10 +1,8 @@
 /**
- * core.js - 核心请求库 + 权限工具 + 通用 UI 组件
+ * core.js v2.0 - 核心请求库 + 权限工具 + 通用 UI 组件
  */
-const API = (function () {
-  // 自动检测 API 基础路径：
-  // 根目录(index.html) → 'api'
-  // pages/ 子目录(home.html) → '../api'
+var API = (function () {
+  // 自动检测 API 基础路径
   var path = window.location.pathname;
   var BASE = path.indexOf('/pages/') !== -1 ? '../api' : 'api';
 
@@ -14,16 +12,15 @@ const API = (function () {
     var data = options.data || null;
     var params = options.params || {};
 
-    // 构建 URL
-    let fullUrl = `${BASE}/${url}`;
-    const queryStr = Object.entries(params)
-      .filter(([, v]) => v !== null && v !== undefined && v !== '')
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    var fullUrl = BASE + '/' + url;
+    var queryStr = Object.entries(params)
+      .filter(function (pair) { return pair[1] !== null && pair[1] !== undefined && pair[1] !== ''; })
+      .map(function (pair) { return encodeURIComponent(pair[0]) + '=' + encodeURIComponent(pair[1]); })
       .join('&');
-    if (queryStr) fullUrl += `?${queryStr}`;
+    if (queryStr) fullUrl += '?' + queryStr;
 
-    const fetchOptions = {
-      method,
+    var fetchOptions = {
+      method: method,
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
     };
@@ -32,72 +29,68 @@ const API = (function () {
     }
 
     return fetch(fullUrl, fetchOptions)
-      .then(function(res) {
-        // 先检查响应类型，避免 HTML 错误页污染 JSON 解析
+      .then(function (res) {
         var contentType = res.headers.get('content-type') || '';
         if (contentType.indexOf('application/json') === -1) {
-          return res.text().then(function(html) {
+          return res.text().then(function (html) {
             console.error('API 返回非 JSON:', html.substring(0, 200));
             return { code: 500, msg: '服务器返回了异常内容', data: null };
           });
         }
         return res.json();
       })
-      .then(function(json) {
-        return json;
-      })
-      .catch(function(err) {
+      .catch(function (err) {
         console.error('API Error:', err);
         return { code: 500, msg: err.message || '网络请求失败', data: null };
       });
   }
 
   return {
-    get: (url, params) => request(url, { method: 'GET', params }),
-    post: (url, data) => request(url, { method: 'POST', data }),
-    put: (url, data) => request(url, { method: 'PUT', data }),
-    del: (url, data) => request(url, { method: 'DELETE', data }),
+    get: function (url, params) { return request(url, { method: 'GET', params: params }); },
+    post: function (url, data) { return request(url, { method: 'POST', data: data }); },
+    put: function (url, data) { return request(url, { method: 'PUT', data: data }); },
+    del: function (url, data) { return request(url, { method: 'DELETE', data: data }); },
   };
 })();
 
 // ==================== 本地存储 ====================
-const Storage = {
-  get(key) {
+var Storage = {
+  get: function (key) {
     try { return JSON.parse(localStorage.getItem(key)); }
-    catch { return null; }
+    catch (e) { return null; }
   },
-  set(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
-  remove(key) { localStorage.removeItem(key); },
+  set: function (key, val) { localStorage.setItem(key, JSON.stringify(val)); },
+  remove: function (key) { localStorage.removeItem(key); },
 };
 
 // ==================== Toast ====================
-function showToast(msg, duration = 2000) {
-  // PC 端
-  let container = document.querySelector('.toast-container');
+function showToast(msg, duration) {
+  duration = duration || 2000;
+  var container = document.querySelector('.toast-container');
   if (!container) {
     container = document.createElement('div');
     container.className = 'toast-container';
     document.body.appendChild(container);
   }
-  const toast = document.createElement('div');
+  var toast = document.createElement('div');
   toast.className = 'toast';
   toast.textContent = msg;
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), duration);
+  setTimeout(function () { toast.remove(); }, duration);
 }
 
-// 手机端 APP 风格 Toast
-function appToast(msg, duration = 2000) {
-  const toast = document.createElement('div');
+function appToast(msg, duration) {
+  duration = duration || 2000;
+  var toast = document.createElement('div');
   toast.className = 'app-toast';
   toast.textContent = msg;
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), duration);
+  setTimeout(function () { toast.remove(); }, duration);
 }
 
 // ==================== Loading ====================
 function showLoading() {
-  let mask = document.querySelector('.loading-mask');
+  var mask = document.querySelector('.loading-mask');
   if (!mask) {
     mask = document.createElement('div');
     mask.className = 'loading-mask';
@@ -108,12 +101,12 @@ function showLoading() {
 }
 
 function hideLoading() {
-  const mask = document.querySelector('.loading-mask');
+  var mask = document.querySelector('.loading-mask');
   if (mask) mask.classList.remove('show');
 }
 
 function appShowLoading() {
-  let el = document.querySelector('.app-loading');
+  var el = document.querySelector('.app-loading');
   if (!el) {
     el = document.createElement('div');
     el.className = 'app-loading';
@@ -124,72 +117,73 @@ function appShowLoading() {
 }
 
 function appHideLoading() {
-  const el = document.querySelector('.app-loading');
+  var el = document.querySelector('.app-loading');
   if (el) el.classList.remove('show');
 }
 
 // ==================== 确认弹窗 ====================
 function confirmDialog(title, content) {
-  return new Promise((resolve) => {
-    const isMobileDevice = window.innerWidth <= 768;
-    const overlay = document.createElement('div');
-    
+  return new Promise(function (resolve) {
+    var isMobileDevice = window.innerWidth <= 768;
+    var overlay = document.createElement('div');
+
     if (isMobileDevice) {
       overlay.className = 'app-dialog-overlay show';
-      overlay.innerHTML = `
-        <div class="app-dialog">
-          <div class="dialog-title">${title}</div>
-          <div class="dialog-content">${content}</div>
-          <div class="dialog-actions">
-            <button class="dialog-btn" id="dlg-cancel">取消</button>
-            <button class="dialog-btn primary" id="dlg-ok">确定</button>
-          </div>
-        </div>
-      `;
+      overlay.innerHTML =
+        '<div class="app-dialog">'
+        + '<div class="dialog-title">' + title + '</div>'
+        + '<div class="dialog-content">' + content + '</div>'
+        + '<div class="dialog-actions">'
+        + '<button class="dialog-btn" id="dlg-cancel">取消</button>'
+        + '<button class="dialog-btn primary" id="dlg-ok">确定</button>'
+        + '</div></div>';
     } else {
       overlay.className = 'modal-overlay';
-      overlay.id = 'confirm-modal';
-      overlay.innerHTML = `
-        <div class="modal">
-          <div class="modal-header">
-            <h3>${title}</h3>
-          </div>
-          <div class="modal-body">
-            <p>${content}</p>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-outline" id="dlg-cancel">取消</button>
-            <button class="btn btn-primary" id="dlg-ok">确定</button>
-          </div>
-        </div>
-      `;
+      overlay.innerHTML =
+        '<div class="modal">'
+        + '<div class="modal-header"><h3>' + title + '</h3></div>'
+        + '<div class="modal-body"><p>' + content + '</p></div>'
+        + '<div class="modal-footer">'
+        + '<button class="btn btn-outline" id="dlg-cancel">取消</button>'
+        + '<button class="btn btn-primary" id="dlg-ok">确定</button>'
+        + '</div></div>';
     }
-    
+
     document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add('show'));
-    
-    overlay.querySelector('#dlg-cancel').onclick = () => { 
+
+    // 触发动画：PC 端需要 .show，手机端已在 classList 中
+    if (!isMobileDevice) {
+      requestAnimationFrame(function () { overlay.classList.add('show'); });
+    }
+
+    overlay.querySelector('#dlg-cancel').onclick = function () {
       overlay.classList.remove('show');
-      setTimeout(() => overlay.remove(), 250);
-      resolve(false); 
+      setTimeout(function () { overlay.remove(); }, 250);
+      resolve(false);
     };
-    overlay.querySelector('#dlg-ok').onclick = () => { 
+    overlay.querySelector('#dlg-ok').onclick = function () {
       overlay.classList.remove('show');
-      setTimeout(() => overlay.remove(), 250);
-      resolve(true); 
+      setTimeout(function () { overlay.remove(); }, 250);
+      resolve(true);
     };
   });
 }
 
 // ==================== 弹窗（Modal） ====================
 function openModal(id) {
-  const el = document.getElementById(id);
-  if (el) { el.style.display = 'flex'; requestAnimationFrame(() => el.classList.add('show')); }
+  var el = document.getElementById(id);
+  if (el) {
+    el.style.display = 'flex';
+    requestAnimationFrame(function () { el.classList.add('show'); });
+  }
 }
 
 function closeModal(id) {
-  const el = document.getElementById(id);
-  if (el) { el.classList.remove('show'); setTimeout(() => el.style.display = 'none', 250); }
+  var el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('show');
+    setTimeout(function () { el.style.display = 'none'; }, 250);
+  }
 }
 
 // ==================== 设备检测 ====================
@@ -200,47 +194,44 @@ function isMobile() {
 // ==================== 工具函数 ====================
 function escapeHtml(str) {
   if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function formatDate(d) {
   if (!d) return '-';
-  const date = new Date(d);
-  return date.getFullYear() + '-' +
-    String(date.getMonth()+1).padStart(2,'0') + '-' +
-    String(date.getDate()).padStart(2,'0') + ' ' +
-    String(date.getHours()).padStart(2,'0') + ':' +
-    String(date.getMinutes()).padStart(2,'0');
+  var date = new Date(d);
+  if (isNaN(date.getTime())) return '-';
+  return date.getFullYear() + '-'
+    + String(date.getMonth() + 1).padStart(2, '0') + '-'
+    + String(date.getDate()).padStart(2, '0') + ' '
+    + String(date.getHours()).padStart(2, '0') + ':'
+    + String(date.getMinutes()).padStart(2, '0');
 }
 
 function getInitial(name) {
   return name ? name.charAt(0).toUpperCase() : '?';
 }
 
-// ==================== 手机端 Action Sheet ====================
+// ==================== 手机端 Action Sheet（通用） ====================
 function showActionSheet(html) {
-  return new Promise((resolve) => {
-    const overlay = document.createElement('div');
+  return new Promise(function (resolve) {
+    var overlay = document.createElement('div');
     overlay.className = 'app-action-sheet-overlay';
-    overlay.innerHTML = `<div class="app-action-sheet">${html}</div>`;
-    
+    overlay.innerHTML = '<div class="app-action-sheet">' + html + '</div>';
+
     document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add('show'));
-    
-    const sheet = overlay.querySelector('.app-action-sheet');
-    
-    overlay.onclick = (e) => {
+    requestAnimationFrame(function () { overlay.classList.add('show'); });
+
+    overlay.onclick = function (e) {
       if (e.target === overlay) {
         closeActionSheet();
         resolve(null);
       }
     };
-    
-    function closeActionSheet() {
-      sheet.classList.remove('show');
-      setTimeout(() => overlay.remove(), 300);
-    }
-    
-    window.closeActionSheet = closeActionSheet;
+
+    window.closeActionSheet = function () {
+      overlay.querySelector('.app-action-sheet').classList.remove('show');
+      setTimeout(function () { overlay.remove(); }, 300);
+    };
   });
 }
