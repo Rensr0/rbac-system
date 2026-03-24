@@ -12,7 +12,15 @@
 require_once __DIR__ . '/../common.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+// 兼容 action 从 GET 参数和 POST body 两种方式传入
 $action = isset($_GET['action']) ? $_GET['action'] : '';
+if (empty($action) && $method === 'POST') {
+    $input = file_get_contents('php://input');
+    $body = json_decode($input, true);
+    if (is_array($body) && isset($body['action'])) {
+        $action = $body['action'];
+    }
+}
 
 switch ($method) {
     case 'POST':
@@ -30,163 +38,61 @@ switch ($method) {
 }
 
 /**
- * 生成验证码图片（彩色扭曲文字，提高机器人门槛）
- * 支持 GD 扩展（PNG）和 SVG 回退
+ * 生成验证码（暂时返回占位图，验证码功能待修复后启用）
  */
 function handleCaptcha() {
+    // 生成 4 位随机验证码（不含易混淆字符）
+    $chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz';
     $code = '';
-    $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
     for ($i = 0; $i < 4; $i++) {
         $code .= $chars[random_int(0, strlen($chars) - 1)];
     }
-
     $_SESSION['captcha_code'] = strtolower($code);
     $_SESSION['captcha_time'] = time();
 
-    // 优先使用 GD 扩展生成 PNG，不可用时回退到 SVG
-    if (extension_loaded('gd') && function_exists('imagecreatetruecolor')) {
-        generateCaptchaGD($code);
-    } else {
-        generateCaptchaSVG($code);
-    }
-    exit;
-}
+    // 生成带干扰线和噪点的 SVG 验证码
+    $colors = ['#333', '#555', '#444', '#666'];
+    $bgColors = ['#f0f2f7', '#e8eaf0', '#f5f5fa', '#eaeff5'];
+    $bg = $bgColors[random_int(0, count($bgColors) - 1)];
 
-/**
- * 使用 GD 扩展生成 PNG 验证码
- */
-function generateCaptchaGD($code) {
-    $width = 240;
-    $height = 80;
-    $img = imagecreatetruecolor($width, $height);
-
-    // 背景渐变
-    for ($x = 0; $x < $width; $x++) {
-        $r = (int)(240 + sin($x * 0.03) * 10);
-        $g = (int)(242 + sin($x * 0.04) * 8);
-        $b = (int)(247 + sin($x * 0.02) * 5);
-        $color = imagecolorallocate($img, $r, $g, $b);
-        imageline($img, $x, 0, $x, $height, $color);
-    }
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80">';
+    $svg .= '<rect width="100%" height="100%" fill="' . $bg . '"/>';
 
     // 干扰线
-    for ($i = 0; $i < 6; $i++) {
-        $lineColor = imagecolorallocate($img, random_int(150, 220), random_int(150, 220), random_int(150, 220));
-        imageline($img, random_int(0, $width), random_int(0, $height),
-                  random_int(0, $width), random_int(0, $height), $lineColor);
+    for ($i = 0; $i < 3; $i++) {
+        $x1 = random_int(10, 50);
+        $y1 = random_int(5, 75);
+        $x2 = random_int(190, 230);
+        $y2 = random_int(5, 75);
+        $lineColor = $colors[random_int(0, count($colors) - 1)];
+        $svg .= '<line x1="' . $x1 . '" y1="' . $y1 . '" x2="' . $x2 . '" y2="' . $y2 . '" stroke="' . $lineColor . '" stroke-width="1" opacity="0.3"/>';
     }
 
-    // 干扰点
-    for ($i = 0; $i < 60; $i++) {
-        $dotColor = imagecolorallocate($img, random_int(100, 230), random_int(100, 230), random_int(100, 230));
-        imagefilledellipse($img, random_int(0, $width), random_int(0, $height), random_int(1, 3), random_int(1, 3), $dotColor);
+    // 噪点
+    for ($i = 0; $i < 20; $i++) {
+        $cx = random_int(5, 235);
+        $cy = random_int(5, 75);
+        $svg .= '<circle cx="' . $cx . '" cy="' . $cy . '" r="1" fill="#999" opacity="0.4"/>';
     }
 
-    // 彩色文字 - 每个字符不同颜色、不同角度
-    $colors = [
-        imagecolorallocate($img, 200, 50, 50),   // 红
-        imagecolorallocate($img, 50, 120, 200),   // 蓝
-        imagecolorallocate($img, 80, 160, 60),    // 绿
-        imagecolorallocate($img, 180, 80, 200),   // 紫
-        imagecolorallocate($img, 200, 140, 30),   // 橙
-        imagecolorallocate($img, 30, 150, 150),   // 青
-    ];
-
-    $fontSize = 42;
-    $x = 28;
-    for ($i = 0; $i < strlen($code); $i++) {
-        $angle = random_int(-18, 18);
-        $y = random_int(52, 62);
-        $color = $colors[array_rand($colors)];
-
-        // 尝试 TTF 字体，回退到内置字体
-        $fontPaths = [
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-            '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
-            '/usr/share/fonts/TTF/DejaVuSans-Bold.ttf',
-            '/System/Library/Fonts/Helvetica.ttc',
-            '/usr/share/fonts/truetype/ubuntu/Ubuntu-Bold.ttf',
-            '/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc',
-        ];
-        $fontFound = false;
-        foreach ($fontPaths as $fp) {
-            if (file_exists($fp)) {
-                imagettftext($img, $fontSize, $angle, $x, $y, $color, $fp, $code[$i]);
-                $fontFound = true;
-                break;
-            }
-        }
-        if (!$fontFound) {
-            imagestring($img, 6, $x, $y - 24, $code[$i], $color);
-        }
-        $x += random_int(38, 50);
+    // 绘制每个字符（随机位置偏移和旋转）
+    $chars_arr = mb_str_split($code);
+    $startX = 30;
+    foreach ($chars_arr as $idx => $ch) {
+        $x = $startX + $idx * 50 + random_int(-3, 3);
+        $y = 45 + random_int(-8, 8);
+        $rotate = random_int(-15, 15);
+        $fontSize = random_int(28, 36);
+        $charColor = $colors[random_int(0, count($colors) - 1)];
+        $svg .= '<text x="' . $x . '" y="' . $y . '" font-family="Arial,sans-serif" font-size="' . $fontSize . '" font-weight="bold" fill="' . $charColor . '" text-anchor="middle" dominant-baseline="central" transform="rotate(' . $rotate . ',' . $x . ',' . $y . ')">' . htmlspecialchars($ch) . '</text>';
     }
 
-    // 背景噪点
-    for ($i = 0; $i < 200; $i++) {
-        $c = imagecolorallocate($img, random_int(180, 240), random_int(180, 240), random_int(180, 240));
-        imagesetpixel($img, random_int(0, $width), random_int(0, $height), $c);
-    }
-
-    header('Content-Type: image/png');
-    header('Cache-Control: no-store, no-cache');
-    imagepng($img);
-    imagedestroy($img);
-}
-
-/**
- * SVG 回退方案 - 不依赖 GD 扩展
- */
-function generateCaptchaSVG($code) {
-    $width = 240;
-    $height = 80;
-
-    $charColors = ['#C83232', '#3278C8', '#50A03C', '#B450C8', '#C88C1E', '#1E9696'];
-    $chars = str_split($code);
-
-    // 生成干扰线
-    $lines = '';
-    for ($i = 0; $i < 6; $i++) {
-        $x1 = random_int(0, $width);
-        $y1 = random_int(0, $height);
-        $x2 = random_int(0, $width);
-        $y2 = random_int(0, $height);
-        $c = sprintf('#%02x%02x%02x', random_int(150, 220), random_int(150, 220), random_int(150, 220));
-        $lines .= "<line x1=\"$x1\" y1=\"$y1\" x2=\"$x2\" y2=\"$y2\" stroke=\"$c\" stroke-width=\"1\"/>";
-    }
-
-    // 生成干扰点
-    $dots = '';
-    for ($i = 0; $i < 40; $i++) {
-        $cx = random_int(0, $width);
-        $cy = random_int(0, $height);
-        $r = random_int(1, 2);
-        $c = sprintf('#%02x%02x%02x', random_int(100, 200), random_int(100, 200), random_int(100, 200));
-        $dots .= "<circle cx=\"$cx\" cy=\"$cy\" r=\"$r\" fill=\"$c\"/>";
-    }
-
-    // 生成文字
-    $textElements = '';
-    $x = 35;
-    foreach ($chars as $ch) {
-        $y = random_int(48, 58);
-        $angle = random_int(-18, 18);
-        $color = $charColors[array_rand($charColors)];
-        $size = random_int(36, 44);
-        $textElements .= "<g transform=\"translate($x,$y) rotate($angle)\">";
-        $textElements .= "<text font-family=\"Arial,Helvetica,sans-serif\" font-size=\"$size\" font-weight=\"bold\" fill=\"$color\" text-anchor=\"middle\" dominant-baseline=\"central\">$ch</text>";
-        $textElements .= "</g>";
-        $x += random_int(42, 55);
-    }
-
-    $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"$width\" height=\"$height\">";
-    $svg .= "<rect width=\"100%\" height=\"100%\" fill=\"#f0f2f7\"/>";
-    $svg .= $lines . $dots . $textElements;
-    $svg .= "</svg>";
+    $svg .= '</svg>';
 
     header('Content-Type: image/svg+xml');
     header('Cache-Control: no-store, no-cache');
     echo $svg;
+    exit;
 }
 
 function handleLogin() {
@@ -205,18 +111,15 @@ function handleLogin() {
         error('输入内容过长');
     }
 
-    // 验证码检查
     $expectedCaptcha = isset($_SESSION['captcha_code']) ? $_SESSION['captcha_code'] : '';
     $captchaTime = isset($_SESSION['captcha_time']) ? $_SESSION['captcha_time'] : 0;
     if (empty($expectedCaptcha) || time() - $captchaTime > 300) {
         error('验证码已过期，请刷新');
     }
     if (strtolower($captcha) !== $expectedCaptcha) {
-        // 错误后清除验证码
         unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
         error('验证码错误');
     }
-    // 验证通过后清除
     unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
 
     try {
@@ -283,7 +186,6 @@ function handleRegister() {
     $email    = trim(isset($data['email']) ? $data['email'] : '');
     $captcha  = trim(isset($data['captcha']) ? $data['captcha'] : '');
 
-    // 验证码检查
     $expectedCaptcha = isset($_SESSION['captcha_code']) ? $_SESSION['captcha_code'] : '';
     $captchaTime = isset($_SESSION['captcha_time']) ? $_SESSION['captcha_time'] : 0;
     if (empty($expectedCaptcha) || time() - $captchaTime > 300) {
@@ -339,7 +241,6 @@ function handleForgot() {
     $email    = trim(isset($data['email']) ? $data['email'] : '');
     $captcha  = trim(isset($data['captcha']) ? $data['captcha'] : '');
 
-    // 验证码检查
     $expectedCaptcha = isset($_SESSION['captcha_code']) ? $_SESSION['captcha_code'] : '';
     $captchaTime = isset($_SESSION['captcha_time']) ? $_SESSION['captcha_time'] : 0;
     if (empty($expectedCaptcha) || time() - $captchaTime > 300) {

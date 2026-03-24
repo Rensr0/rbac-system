@@ -11,7 +11,9 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = getParam('action', '');
 
 switch ($method) {
-    case 'GET':    getRoleList(); break;
+    case 'GET':
+        $action === 'detail' ? getRoleDetail() : getRoleList();
+        break;
     case 'POST':
         if ($action === 'routers') { assignRouters(); }
         elseif ($action === 'update') { updateRole(); }
@@ -56,6 +58,38 @@ function getRoleList() {
         success(array('list' => $list, 'total' => $total, 'page' => $p['page'], 'limit' => $p['limit']));
     } catch (Exception $e) {
         error('获取角色列表失败');
+    }
+}
+
+function getRoleDetail() {
+    $id = intval(getParam('id', 0));
+    if ($id <= 0) { error('参数错误'); }
+
+    try {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT * FROM roles WHERE id = ?");
+        $stmt->execute(array($id));
+        $role = $stmt->fetch();
+        if (!$role) { error('角色不存在'); }
+
+        $stmt2 = $db->prepare("
+            SELECT r.id, r.router_name, r.router_path, r.icon
+            FROM routers r
+            INNER JOIN role_router rr ON rr.router_id = r.id
+            WHERE rr.role_id = ? AND r.status = 1
+            ORDER BY r.sort ASC
+        ");
+        $stmt2->execute(array($id));
+        $role['routers'] = $stmt2->fetchAll();
+        $role['router_ids'] = array_column($role['routers'], 'id');
+
+        $stmt3 = $db->prepare("SELECT COUNT(*) as cnt FROM user_role WHERE role_id = ?");
+        $stmt3->execute(array($id));
+        $role['user_count'] = intval($stmt3->fetch()['cnt']);
+
+        success($role);
+    } catch (Exception $e) {
+        error('获取角色详情失败');
     }
 }
 

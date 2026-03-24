@@ -17,6 +17,7 @@ switch ($method) {
     case 'POST':
         if ($action === 'update' || $action === 'edit') { updateRouter(); }
         elseif ($action === 'delete') { deleteRouter(); }
+        elseif ($action === 'add') { createRouter(); }
         else { createRouter(); }
         break;
     case 'PUT':    updateRouter(); break;

@@ -162,7 +162,9 @@ function updateUser() {
             error('没有需要更新的字段');
         }
 
-        writeLog('user_update', "更新用户 ID=$id");
+        $logDetail = "更新用户 ID=$id";
+        if ($status !== null) { $logDetail .= ', 状态=' . ($status ? '启用' : '禁用'); }
+        writeLog('user_update', $logDetail);
         success(null, '更新成功');
     } catch (Exception $e) {
         error('更新用户失败');
