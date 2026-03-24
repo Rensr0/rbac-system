@@ -379,6 +379,26 @@
   .pc-only { display: none; }
 }
 
+/* ========== 批量操作栏 ========== */
+.batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--primary-glow);
+  border: 1px solid rgba(79,110,247,0.2);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  animation: fadeInUp 0.3s ease;
+}
+.batch-bar.hidden { display: none; }
+.batch-bar .batch-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+.batch-bar .batch-count strong { color: var(--primary); }
+
 /* ========== 404 页面 ========== */
 .page-404 {
   display: flex;

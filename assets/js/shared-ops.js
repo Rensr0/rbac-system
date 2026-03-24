@@ -63,6 +63,14 @@ var SharedOps = (function () {
     }).then(function (res) { cb(res); });
   }
 
+  function batchUpdateStatus(ids, status, cb) {
+    API.post('user/', {
+      action: 'batch_status',
+      ids: ids,
+      status: status
+    }).then(function (res) { cb(res); });
+  }
+
   // ==================== 角色操作 ====================
 
   function getRoles(limit, cb) {
@@ -148,7 +156,8 @@ var SharedOps = (function () {
       detail: getUserDetail,
       search: searchUsers,
       updateProfile: updateProfile,
-      changePassword: changePassword
+      changePassword: changePassword,
+      batchUpdateStatus: batchUpdateStatus
     },
     role: {
       list: getRoles,

@@ -27,6 +27,7 @@ switch ($method) {
         elseif ($action === 'profile') { updateProfile(); }
         elseif ($action === 'update') { updateUser(); }
         elseif ($action === 'delete') { deleteUser(); }
+        elseif ($action === 'batch_status') { batchUpdateStatus(); }
         else { createUser(); }
         break;
     case 'PUT': updateUser(); break;
@@ -283,6 +284,41 @@ function assignRoles() {
         success(null, '角色分配成功');
     } catch (Exception $e) {
         error('分配角色失败');
+    }
+}
+
+function batchUpdateStatus() {
+    requireSuper();
+
+    $data = getJsonBody();
+    $ids = isset($data['ids']) ? $data['ids'] : array();
+    $status = isset($data['status']) ? intval($data['status']) : -1;
+
+    if (empty($ids)) { error('请选择至少一个用户'); }
+    if (!in_array($status, array(0, 1), true)) { error('状态值无效（0=禁用，1=启用）'); }
+
+    $currentUser = getCurrentUser();
+    $idList = array();
+    foreach ($ids as $id) {
+        $id = intval($id);
+        if ($id > 0 && $id !== $currentUser['id']) { // 不能修改自己
+            $idList[] = $id;
+        }
+    }
+
+    if (empty($idList)) { error('没有有效的用户ID'); }
+
+    try {
+        $db = getDB();
+        $placeholders = implode(',', array_fill(0, count($idList), '?'));
+        $db->prepare("UPDATE admin_users SET status = ? WHERE id IN ($placeholders)")->execute(array_merge(array($status), $idList));
+
+        $statusText = $status ? '启用' : '禁用';
+        $count = count($idList);
+        writeLog('user_update', "批量{$statusText} {$count} 个用户");
+        success(array('count' => $count), "已{$statusText} {$count} 个用户");
+    } catch (Exception $e) {
+        error('批量操作失败');
     }
 }
 
