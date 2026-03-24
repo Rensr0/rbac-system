@@ -484,7 +484,7 @@ var PCPages = (function () {
       + '<div>'
       + '<h3 style="margin:0 0 20px;font-size:18px;display:flex;align-items:center;gap:8px">' + mi('lock') + ' 修改密码</h3>'
       + '<div class="form-group"><label class="form-label">原密码</label><input class="form-input" type="password" id="pc-old-pwd" placeholder="请输入原密码"></div>'
-      + '<div class="form-group"><label class="form-label">新密码</label><input class="form-input" type="password" id="pc-new-pwd" placeholder="请输入新密码（6位以上）"></div>'
+      + '<div class="form-group"><label class="form-label">新密码</label><input class="form-input" type="password" id="pc-new-pwd" placeholder="请输入新密码（6位以上）" oninput="updatePwdStrength(\'pc-new-pwd\')">' + pwdStrengthHtml('pc-new-pwd') + '</div>'
       + '<div class="form-group"><label class="form-label">确认新密码</label><input class="form-input" type="password" id="pc-confirm-pwd" placeholder="再次输入新密码"></div>'
       + '<button class="btn btn-primary" onclick="PCPages.changePwd()" style="width:100%">' + mi('lock_reset', 'mi-18') + ' 修改密码</button>'
       + '</div>'
@@ -519,8 +519,19 @@ var PCPages = (function () {
     if (newPwd !== confirmPwd) { showToast('两次密码不一致'); return; }
     SharedOps.user.changePassword(oldPwd, newPwd, function(res) {
       showToast(res.msg);
+      if (res.code === 200) {
+        document.getElementById('pc-old-pwd').value = '';
+        document.getElementById('pc-new-pwd').value = '';
+        document.getElementById('pc-confirm-pwd').value = '';
+      }
     });
   }
+
+  window.updatePwdStrength = function(inputId) {
+    bindPwdStrength(inputId);
+    var input = document.getElementById(inputId);
+    if (input) input.dispatchEvent(new Event('input'));
+  };
 
   // ==================== 辅助函数 ====================
   function hasRoute(routers, path) {

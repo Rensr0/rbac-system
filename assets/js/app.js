@@ -519,7 +519,7 @@
       + '<div style="padding:0 16px 16px">'
       + '<div class="app-form">'
       + '<div class="app-form-item"><div class="form-label">原密码</div><input class="form-input" type="password" id="old-pwd" placeholder="请输入原密码"></div>'
-      + '<div class="app-form-item"><div class="form-label">新密码</div><input class="form-input" type="password" id="new-pwd" placeholder="请输入新密码"></div>'
+      + '<div class="app-form-item"><div class="form-label">新密码</div><input class="form-input" type="password" id="new-pwd" placeholder="请输入新密码" oninput="bindPwdStrength(\'new-pwd\')">' + pwdStrengthHtml('new-pwd') + '</div>'
       + '<div class="app-form-item"><div class="form-label">确认</div><input class="form-input" type="password" id="confirm-pwd" placeholder="再次输入新密码"></div>'
       + '</div>'
       + '<button class="app-btn app-btn-primary" style="margin-top:12px" onclick="submitChangePwd()">确认修改</button>'

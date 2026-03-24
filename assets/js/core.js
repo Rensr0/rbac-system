@@ -407,6 +407,51 @@ function getCaptchaUrl() {
   return API.get('login/', { action: 'captcha' });
 }
 
+// ==================== 密码强度检测 ====================
+function checkPwdStrength(pwd) {
+  if (!pwd) return { level: 0, text: '', color: '' };
+  var score = 0;
+  if (pwd.length >= 6) score++;
+  if (pwd.length >= 10) score++;
+  if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+  if (/\d/.test(pwd)) score++;
+  if (/[^a-zA-Z0-9]/.test(pwd)) score++;
+
+  if (score <= 1) return { level: 1, text: '弱', color: '#ff6b6b' };
+  if (score <= 3) return { level: 2, text: '中', color: '#ffa726' };
+  return { level: 3, text: '强', color: '#66bb6a' };
+}
+
+function pwdStrengthHtml(inputId) {
+  return '<div class="pwd-strength" id="' + inputId + '-strength" style="display:none">'
+    + '<div style="display:flex;gap:4px;margin-top:6px">'
+    + '<div class="str-bar" style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>'
+    + '<div class="str-bar" style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>'
+    + '<div class="str-bar" style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>'
+    + '</div>'
+    + '<span class="str-text" style="font-size:11px;margin-top:2px;display:block;color:var(--text-secondary)"></span>'
+    + '</div>';
+}
+
+function bindPwdStrength(inputId) {
+  var input = document.getElementById(inputId);
+  var container = document.getElementById(inputId + '-strength');
+  if (!input || !container) return;
+  input.addEventListener('input', function() {
+    var val = input.value;
+    if (!val) { container.style.display = 'none'; return; }
+    container.style.display = 'block';
+    var result = checkPwdStrength(val);
+    var bars = container.querySelectorAll('.str-bar');
+    var text = container.querySelector('.str-text');
+    bars.forEach(function(bar, i) {
+      bar.style.background = i < result.level ? result.color : 'var(--border)';
+    });
+    text.textContent = '密码强度：' + result.text;
+    text.style.color = result.color;
+  });
+}
+
 // ==================== 网络状态监听 ====================
 (function() {
   var offlineToast = null;
