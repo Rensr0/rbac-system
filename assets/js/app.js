@@ -95,11 +95,14 @@
 
       tabDefs.push({ page: 'mine', icon: 'account_circle', label: '我的' });
 
+      var overflowTabs = [];
       if (tabDefs.length > 5) {
         var home = tabDefs[0];
         var mine = tabDefs[tabDefs.length - 1];
-        var middle = tabDefs.slice(1, tabDefs.length - 1).slice(0, 3);
-        tabDefs = [home].concat(middle, [mine]);
+        var middle = tabDefs.slice(1, tabDefs.length - 1);
+        overflowTabs = middle.slice(3);
+        var visibleMiddle = middle.slice(0, 3);
+        tabDefs = [home].concat(visibleMiddle, [mine]);
       }
 
       tabDefs.forEach(function (tab, i) {
@@ -109,6 +112,42 @@
         div.innerHTML = '<span class="tab-icon">' + renderIcon(tab.icon) + '</span><span class="tab-label">' + escapeHtml(tab.label) + '</span>';
         tabBar.appendChild(div);
       });
+
+      // 如果有溢出的 Tab，添加"更多"按钮
+      if (overflowTabs.length > 0) {
+        var moreBtn = document.createElement('div');
+        moreBtn.className = 'tab-item tab-more';
+        moreBtn.innerHTML = '<span class="tab-icon">' + mi('more_horiz') + '</span><span class="tab-label">更多</span>';
+        moreBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var self = this;
+          var existing = document.querySelector('.more-tabs-sheet');
+          if (existing) { existing.remove(); return; }
+
+          var sheetHtml = overflowTabs.map(function(t) {
+            return '<div class="app-list-item" onclick="AppRouter.navigate(\'' + t.page + '\');this.closest(\'.more-tabs-sheet\').remove()">'
+              + '<div class="item-icon">' + renderIcon(t.icon) + '</div>'
+              + '<div class="item-content"><div class="item-title">' + escapeHtml(t.label) + '</div></div>'
+              + '<div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
+              + '</div>';
+          }).join('');
+
+          var sheet = document.createElement('div');
+          sheet.className = 'more-tabs-sheet';
+          sheet.style.cssText = 'position:fixed;bottom:56px;left:0;right:0;background:var(--bg-card);border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,0.15);z-index:1000;padding:8px 0;max-height:50vh;overflow-y:auto;animation:slideUp 0.2s ease';
+          sheet.innerHTML = '<div style="text-align:center;padding:8px 0 4px;font-size:12px;color:var(--text-secondary)">更多功能</div>' + sheetHtml;
+          document.body.appendChild(sheet);
+
+          // 点击外部关闭
+          setTimeout(function() {
+            document.addEventListener('click', function handler() {
+              sheet.remove();
+              document.removeEventListener('click', handler);
+            }, { once: true });
+          }, 10);
+        });
+        tabBar.appendChild(moreBtn);
+      }
 
       this.bindTabBar();
     },
