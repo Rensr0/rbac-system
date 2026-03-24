@@ -443,3 +443,66 @@
   .page-404 .code { font-size: 80px; }
   .page-404 .title { font-size: 20px; }
 }
+
+/* ========== 权限级别样式 ========== */
+.perm-row {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px !important;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+.perm-row-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.perm-router-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.perm-badges {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.perm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.perm-badge input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  cursor: pointer;
+}
+.perm-view  { background: rgba(0,122,255,0.08); color: var(--primary, #007aff); }
+.perm-edit  { background: rgba(255,149,0,0.08); color: var(--warning, #ff9500); }
+.perm-delete { background: rgba(255,59,48,0.08); color: var(--danger, #ff3b30); }
+.perm-badge:has(input:checked) { font-weight: 600; }
+.perm-view:has(input:checked)  { background: rgba(0,122,255,0.18); }
+.perm-edit:has(input:checked)  { background: rgba(255,149,0,0.18); }
+.perm-delete:has(input:checked) { background: rgba(255,59,48,0.18); }
+.perm-badge:has(input:disabled) { opacity: 0.5; cursor: default; }
+
+/* 角色列表权限标签 */
+.perm-badge-view   { background: rgba(0,122,255,0.15); color: var(--primary, #007aff); padding: 0 4px; border-radius: 3px; }
+.perm-badge-edit   { background: rgba(255,149,0,0.15); color: var(--warning, #ff9500); padding: 0 4px; border-radius: 3px; }
+.perm-badge-delete { background: rgba(255,59,48,0.15); color: var(--danger, #ff3b30); padding: 0 4px; border-radius: 3px; }
+
+/* 角色弹窗搜索 */
+#form-role-router-search {
+  margin-bottom: 8px;
+}

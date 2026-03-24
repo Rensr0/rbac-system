@@ -56,17 +56,31 @@ function getUserRouters() {
         $db = getDB();
         if ((isset($user['is_super']) ? $user['is_super'] : 0) == 1) {
             $stmt = $db->query("SELECT * FROM routers WHERE status = 1 ORDER BY sort ASC");
+            $list = $stmt->fetchAll();
+            // 超级管理员拥有全部权限
+            foreach ($list as &$r) {
+                $r['perms'] = array('view', 'edit', 'delete');
+                $r['permissions'] = 7;
+            }
+            unset($r);
         } else {
             $stmt = $db->prepare("
-                SELECT DISTINCT r.* FROM routers r
+                SELECT DISTINCT r.*, MAX(rr.permissions) as permissions FROM routers r
                 INNER JOIN role_router rr ON rr.router_id = r.id
                 INNER JOIN user_role ur ON ur.role_id = rr.role_id
                 WHERE ur.user_id = ? AND r.status = 1
+                GROUP BY r.id
                 ORDER BY r.sort ASC
             ");
             $stmt->execute(array($user['id']));
+            $list = $stmt->fetchAll();
+            foreach ($list as &$r) {
+                $r['permissions'] = intval($r['permissions']);
+                $r['perms'] = bitmaskToPerms($r['permissions']);
+            }
+            unset($r);
         }
-        success($stmt->fetchAll());
+        success($list);
     } catch (Exception $e) {
         error('获取用户路由失败');
     }

@@ -404,36 +404,33 @@ var PCPages = (function () {
         if (!ok) { input.value = ''; return; }
 
         showLoading();
-        var successCount = 0;
-        var failCount = 0;
-        var errors = [];
-        var index = 0;
-
-        function importNext() {
-          if (index >= rows.length) {
-            hideLoading();
-            var msg = '导入完成：成功 ' + successCount + ' 个';
-            if (failCount > 0) msg += '，失败 ' + failCount + ' 个（' + errors.join('; ') + '）';
-            showToast(msg, 4000);
-            input.value = '';
-            if (successCount > 0) loadPCUser(document.getElementById('page-content'));
-            return;
-          }
-
-          var row = rows[index];
-          index++;
-          SharedOps.user.add(row, function(res) {
-            if (res.code === 200) {
-              successCount++;
-            } else {
-              failCount++;
-              if (errors.length < 3) errors.push(row.username + ': ' + (res.msg || '失败'));
+        // 使用批量导入接口
+        API.post('user/', {
+          action: 'batch_import',
+          users: rows,
+          default_password: '123456'
+        }).then(function(res) {
+          hideLoading();
+          if (res.code === 200) {
+            var d = res.data || {};
+            var msg = '导入完成：成功 ' + d.success_count + ' 个';
+            if (d.fail_count > 0) {
+              msg += '，失败 ' + d.fail_count + ' 个';
+              if (d.errors && d.errors.length > 0) {
+                msg += '\n' + d.errors.join('\n');
+              }
             }
-            importNext();
-          });
-        }
-
-        importNext();
+            showToast(msg, 5000);
+            if (d.success_count > 0) loadPCUser(document.getElementById('page-content'));
+          } else {
+            showToast(res.msg || '导入失败');
+          }
+          input.value = '';
+        }).catch(function() {
+          hideLoading();
+          showToast('导入请求失败');
+          input.value = '';
+        });
       });
     };
     reader.readAsText(file);
@@ -484,11 +481,21 @@ var PCPages = (function () {
         + '<div class="card"><div class="table-wrap"><table>'
         + '<thead><tr><th>ID</th><th>角色名称</th><th>备注</th><th>用户数</th><th>权限列表</th>' + (isSuper ? '<th>操作</th>' : '') + '</tr></thead>'
         + '<tbody>' + list.map(function(r) {
+          // 显示权限级别
+          var permLabels = (r.routers || []).map(function(rt) {
+            var perms = rt.perms || [];
+            var permStr = '';
+            if (perms.indexOf('edit') !== -1) permStr = '编';
+            else if (perms.indexOf('delete') !== -1) permStr = '删';
+            else permStr = '看';
+            var cls = perms.indexOf('delete') !== -1 ? 'perm-badge-delete' : (perms.indexOf('edit') !== -1 ? 'perm-badge-edit' : 'perm-badge-view');
+            return '<span class="badge badge-info" style="margin:1px">' + renderIcon(rt.icon) + ' ' + escapeHtml(rt.router_name) + '<span class="' + cls + '" style="font-size:10px;margin-left:2px">' + permStr + '</span></span>';
+          }).join(' ');
           return '<tr>'
             + '<td>' + r.id + '</td><td><strong>' + escapeHtml(r.role_name) + '</strong></td>'
             + '<td class="text-secondary">' + escapeHtml(r.remark || '-') + '</td>'
             + '<td>' + (r.user_count || 0) + '</td>'
-            + '<td>' + ((r.routers || []).map(function(rt) { return '<span class="badge badge-info">' + renderIcon(rt.icon) + ' ' + escapeHtml(rt.router_name) + '</span>'; }).join(' ') || '<span class="text-secondary">无</span>') + '</td>'
+            + '<td>' + (permLabels || '<span class="text-secondary">无</span>') + '</td>'
             + (isSuper ? '<td><div class="action-btns">'
             + '<button class="btn btn-sm btn-outline" onclick="PCPages.editRole(' + r.id + ')">' + mi('edit', 'mi-14') + ' 编辑</button>'
             + (r.id !== 1 ? '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteRole(' + r.id + ')">' + mi('delete', 'mi-14') + ' 删除</button>' : '')
@@ -506,7 +513,16 @@ var PCPages = (function () {
       var nEl = document.getElementById('form-role-name'); nEl.value = ''; nEl.disabled = false;
       document.getElementById('form-role-remark').value = '';
       document.getElementById('form-role-routers').innerHTML = routers.map(function(r) {
-        return '<div class="tree-item"><input type="checkbox" value="' + r.id + '" class="role-router-cb"><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span></div>';
+        return '<div class="tree-item perm-row" data-router-id="' + r.id + '">'
+          + '<div class="perm-row-header">'
+          + '<input type="checkbox" value="' + r.id + '" class="role-router-cb" onchange="PCPages.toggleRoutePerms(this)">'
+          + '<span class="perm-router-name">' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span>'
+          + '</div>'
+          + '<div class="perm-badges">'
+          + '<label class="perm-badge perm-view"><input type="checkbox" value="view" class="perm-level-cb" data-level="view" disabled> 查看</label>'
+          + '<label class="perm-badge perm-edit"><input type="checkbox" value="edit" class="perm-level-cb" data-level="edit" disabled> 编辑</label>'
+          + '<label class="perm-badge perm-delete"><input type="checkbox" value="delete" class="perm-level-cb" data-level="delete" disabled> 删除</label>'
+          + '</div></div>';
       }).join('');
       openModal('modal-role');
     });
@@ -521,14 +537,39 @@ var PCPages = (function () {
       var role = (roleRes.data && roleRes.data.list || []).find(function(r) { return r.id === id; });
       var routers = routerRes.data || [];
       if (!role) { showToast('角色不存在'); return; }
-      // 兼容两种数据格式：router_ids (数组) 或 routers (对象数组)
-      var roleRouterIds = role.router_ids || (role.routers || []).map(function(r) { return r.id; });
+
+      // 构建 router_id → permissions 映射
+      var permMap = {};
+      (role.routers || []).forEach(function(rt) {
+        var perms = rt.perms || [];
+        if (perms.length === 0 && rt.permissions) {
+          // 从 bitmask 还原
+          var m = rt.permissions;
+          perms = [];
+          if (m & 1) perms.push('view');
+          if (m & 2) perms.push('edit');
+          if (m & 4) perms.push('delete');
+        }
+        permMap[rt.id] = perms;
+      });
+
       document.getElementById('modal-role-title').textContent = '编辑角色';
       document.getElementById('form-role-id').value = role.id;
       var nEl = document.getElementById('form-role-name'); nEl.value = role.role_name; nEl.disabled = (id === 1);
       document.getElementById('form-role-remark').value = role.remark || '';
       document.getElementById('form-role-routers').innerHTML = routers.map(function(r) {
-        return '<div class="tree-item"><input type="checkbox" value="' + r.id + '" class="role-router-cb" ' + (roleRouterIds.indexOf(r.id) !== -1 ? 'checked' : '') + '><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span></div>';
+        var perms = permMap[r.id] || [];
+        var checked = perms.length > 0;
+        return '<div class="tree-item perm-row" data-router-id="' + r.id + '">'
+          + '<div class="perm-row-header">'
+          + '<input type="checkbox" value="' + r.id + '" class="role-router-cb" ' + (checked ? 'checked' : '') + ' onchange="PCPages.toggleRoutePerms(this)">'
+          + '<span class="perm-router-name">' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span>'
+          + '</div>'
+          + '<div class="perm-badges">'
+          + '<label class="perm-badge perm-view"><input type="checkbox" value="view" class="perm-level-cb" data-level="view" ' + (perms.indexOf('view') !== -1 ? 'checked' : '') + ' onchange="PCPages.onPermLevelChange(this)" ' + (checked ? '' : 'disabled') + '> 查看</label>'
+          + '<label class="perm-badge perm-edit"><input type="checkbox" value="edit" class="perm-level-cb" data-level="edit" ' + (perms.indexOf('edit') !== -1 ? 'checked' : '') + ' onchange="PCPages.onPermLevelChange(this)" ' + (checked ? '' : 'disabled') + '> 编辑</label>'
+          + '<label class="perm-badge perm-delete"><input type="checkbox" value="delete" class="perm-level-cb" data-level="delete" ' + (perms.indexOf('delete') !== -1 ? 'checked' : '') + ' onchange="PCPages.onPermLevelChange(this)" ' + (checked ? '' : 'disabled') + '> 删除</label>'
+          + '</div></div>';
       }).join('');
       openModal('modal-role');
     });
@@ -538,18 +579,33 @@ var PCPages = (function () {
     var id = document.getElementById('form-role-id').value;
     var roleName = document.getElementById('form-role-name').value.trim();
     var remark = document.getElementById('form-role-remark').value.trim();
-    var routerIds = Array.from(document.querySelectorAll('.role-router-cb:checked')).map(function(cb) { return parseInt(cb.value); });
     if (!roleName) { showToast('请输入角色名称'); return; }
+
+    // 收集路由权限数据
+    var routerPerms = [];
+    document.querySelectorAll('.role-router-cb:checked').forEach(function(cb) {
+      var routerId = parseInt(cb.value);
+      var row = cb.closest('.perm-row');
+      var perms = [];
+      if (row) {
+        row.querySelectorAll('.perm-level-cb:checked').forEach(function(lcb) {
+          perms.push(lcb.value);
+        });
+      }
+      if (perms.length === 0) perms = ['view']; // 至少给予查看权限
+      routerPerms.push({ router_id: routerId, perms: perms });
+    });
+
     if (id) {
       SharedOps.role.update(parseInt(id), { role_name: roleName, remark: remark }, function(updateRes) {
         if (updateRes.code !== 200) { showToast(updateRes.msg || '更新角色失败'); return; }
-        SharedOps.role.updateRouters(parseInt(id), routerIds, function(res) {
+        SharedOps.role.updateRouters(parseInt(id), routerPerms, function(res) {
           showToast(res.msg);
           if (res.code === 200) { closeModal('modal-role'); loadPCRole(document.getElementById('page-content')); }
         });
       });
     } else {
-      SharedOps.role.add({ role_name: roleName, remark: remark, router_ids: routerIds }, function(res) {
+      SharedOps.role.add({ role_name: roleName, remark: remark, router_perms: routerPerms }, function(res) {
         showToast(res.msg);
         if (res.code === 200) { closeModal('modal-role'); loadPCRole(document.getElementById('page-content')); }
       });
@@ -763,7 +819,45 @@ var PCPages = (function () {
     if (input) input.dispatchEvent(new Event('input'));
   };
 
-  // ==================== 辅助函数 ====================
+  // ==================== 权限级别联动 ====================
+  function toggleRoutePerms(cb) {
+    var row = cb.closest('.perm-row');
+    if (!row) return;
+    var levelCbs = row.querySelectorAll('.perm-level-cb');
+    if (cb.checked) {
+      levelCbs.forEach(function(lcb) { lcb.disabled = false; });
+      // 默认勾选查看
+      var viewCb = row.querySelector('.perm-level-cb[data-level="view"]');
+      if (viewCb && !viewCb.checked) viewCb.checked = true;
+    } else {
+      levelCbs.forEach(function(lcb) { lcb.checked = false; lcb.disabled = true; });
+    }
+  }
+
+  function onPermLevelChange(cb) {
+    var row = cb.closest('.perm-row');
+    if (!row) return;
+    var viewCb   = row.querySelector('.perm-level-cb[data-level="view"]');
+    var editCb   = row.querySelector('.perm-level-cb[data-level="edit"]');
+    var deleteCb = row.querySelector('.perm-level-cb[data-level="delete"]');
+    // 级联：编辑需要查看，删除需要编辑
+    if (cb === deleteCb && deleteCb.checked) {
+      editCb.checked = true;
+      viewCb.checked = true;
+    }
+    if (cb === editCb && editCb.checked) {
+      viewCb.checked = true;
+    }
+    if (cb === editCb && !editCb.checked) {
+      deleteCb.checked = false;
+    }
+    if (cb === viewCb && !viewCb.checked) {
+      editCb.checked = false;
+      deleteCb.checked = false;
+    }
+  }
+
+  // ==================== 搜索过滤 ====================
   function hasRoute(routers, path) {
     return routers.some(function(r) { return r.router_path === path; });
   }
@@ -848,6 +942,8 @@ var PCPages = (function () {
     saveRole: saveRole,
     saveRouter: saveRouter,
     loadLog: loadPCLog,
+    toggleRoutePerms: toggleRoutePerms,
+    onPermLevelChange: onPermLevelChange,
     updateBatchBar: updateBatchBar,
     toggleAll: toggleAll,
     clearSelection: clearSelection,

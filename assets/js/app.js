@@ -420,7 +420,15 @@
             + '</div>'
             + ((r.routers || []).length > 0
               ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">'
-                + r.routers.map(function (rt) { return '<span class="badge badge-info">' + renderIcon(rt.icon) + ' ' + escapeHtml(rt.router_name) + '</span>'; }).join('')
+                + r.routers.map(function (rt) {
+                  var perms = rt.perms || [];
+                  var permStr = '';
+                  if (perms.indexOf('delete') !== -1) permStr = '全';
+                  else if (perms.indexOf('edit') !== -1) permStr = '编';
+                  else permStr = '看';
+                  var cls = perms.indexOf('delete') !== -1 ? 'perm-badge-delete' : (perms.indexOf('edit') !== -1 ? 'perm-badge-edit' : 'perm-badge-view');
+                  return '<span class="badge badge-info">' + renderIcon(rt.icon) + ' ' + escapeHtml(rt.router_name) + '<span class="' + cls + '" style="font-size:10px;margin-left:2px">' + permStr + '</span></span>';
+                }).join('')
                 + '</div>'
               : '')
             + '</div>';
@@ -768,7 +776,14 @@
       var routers = res.code === 200 ? res.data || [] : [];
 
       var routerHtml = routers.map(function (r) {
-        return '<div class="role-switch-item"><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span><label class="switch"><input type="checkbox" value="' + r.id + '"><span class="slider"></span></label></div>';
+        return '<div class="role-perm-item" data-router-id="' + r.id + '">'
+          + '<div class="role-perm-header"><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span>'
+          + '<label class="switch"><input type="checkbox" class="role-router-cb-app" value="' + r.id + '" onchange="toggleAppRoutePerms(this)"><span class="slider"></span></label></div>'
+          + '<div class="role-perm-levels">'
+          + '<label class="perm-lv"><input type="checkbox" value="view" class="perm-lv-cb" disabled checked> 看</label>'
+          + '<label class="perm-lv"><input type="checkbox" value="edit" class="perm-lv-cb" disabled> 编</label>'
+          + '<label class="perm-lv"><input type="checkbox" value="delete" class="perm-lv-cb" disabled> 删</label>'
+          + '</div></div>';
       }).join('');
 
       createActionSheet(
@@ -789,13 +804,57 @@
     });
   };
 
+  // 移动端权限级别联动
+  window.toggleAppRoutePerms = function(cb) {
+    var row = cb.closest('.role-perm-item');
+    if (!row) return;
+    var levels = row.querySelectorAll('.perm-lv-cb');
+    if (cb.checked) {
+      levels.forEach(function(l) { l.disabled = false; });
+      var viewCb = row.querySelector('.perm-lv-cb[value="view"]');
+      if (viewCb && !viewCb.checked) viewCb.checked = true;
+    } else {
+      levels.forEach(function(l) { l.checked = false; l.disabled = true; });
+    }
+  };
+
+  window.onAppPermLevelChange = function(cb) {
+    var row = cb.closest('.role-perm-item');
+    if (!row) return;
+    var viewCb   = row.querySelector('.perm-lv-cb[value="view"]');
+    var editCb   = row.querySelector('.perm-lv-cb[value="edit"]');
+    var deleteCb = row.querySelector('.perm-lv-cb[value="delete"]');
+    if (cb === deleteCb && deleteCb.checked) { editCb.checked = true; viewCb.checked = true; }
+    if (cb === editCb && editCb.checked) { viewCb.checked = true; }
+    if (cb === editCb && !editCb.checked) { deleteCb.checked = false; }
+    if (cb === viewCb && !viewCb.checked) { editCb.checked = false; deleteCb.checked = false; }
+  };
+
+  // 收集移动端权限数据
+  function collectAppRouterPerms() {
+    var routerPerms = [];
+    document.querySelectorAll('.role-router-cb-app:checked').forEach(function(cb) {
+      var routerId = parseInt(cb.value);
+      var row = cb.closest('.role-perm-item');
+      var perms = [];
+      if (row) {
+        row.querySelectorAll('.perm-lv-cb:checked').forEach(function(lcb) {
+          perms.push(lcb.value);
+        });
+      }
+      if (perms.length === 0) perms = ['view'];
+      routerPerms.push({ router_id: routerId, perms: perms });
+    });
+    return routerPerms;
+  }
+
   window.submitAddRole = function () {
     var roleName = document.getElementById('add-role-name').value.trim();
     var remark = document.getElementById('add-role-remark').value.trim();
-    var routerIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(function (cb) { return cb.value; });
+    var routerPerms = collectAppRouterPerms();
     if (!roleName) { appToast('请输入角色名称'); return; }
     appShowLoading();
-    SharedOps.role.add({ role_name: roleName, remark: remark, router_ids: routerIds }, function (res) {
+    SharedOps.role.add({ role_name: roleName, remark: remark, router_perms: routerPerms }, function (res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) { closeActionSheet(); AppRouter.navigate('role'); }
@@ -813,11 +872,32 @@
       if (roleRes.code !== 200) { appToast(roleRes.msg); return; }
       var role = roleRes.data;
       var routers = routerRes.code === 200 ? routerRes.data || [] : [];
-      var roleRouterIds = (role.routers || []).map(function (r) { return r.id; });
+
+      // 构建 router_id → permissions 映射
+      var permMap = {};
+      (role.routers || []).forEach(function(rt) {
+        var perms = rt.perms || [];
+        if (perms.length === 0 && rt.permissions) {
+          var m = rt.permissions;
+          perms = [];
+          if (m & 1) perms.push('view');
+          if (m & 2) perms.push('edit');
+          if (m & 4) perms.push('delete');
+        }
+        permMap[rt.id] = perms;
+      });
 
       var routerHtml = routers.map(function (r) {
-        var checked = roleRouterIds.indexOf(r.id) !== -1 ? 'checked' : '';
-        return '<div class="role-switch-item"><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span><label class="switch"><input type="checkbox" value="' + r.id + '" ' + checked + '><span class="slider"></span></label></div>';
+        var perms = permMap[r.id] || [];
+        var checked = perms.length > 0;
+        return '<div class="role-perm-item" data-router-id="' + r.id + '">'
+          + '<div class="role-perm-header"><span>' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span>'
+          + '<label class="switch"><input type="checkbox" class="role-router-cb-app" value="' + r.id + '" ' + (checked ? 'checked' : '') + ' onchange="toggleAppRoutePerms(this)"><span class="slider"></span></label></div>'
+          + '<div class="role-perm-levels">'
+          + '<label class="perm-lv"><input type="checkbox" value="view" class="perm-lv-cb" onchange="onAppPermLevelChange(this)" ' + (perms.indexOf('view') !== -1 ? 'checked' : '') + ' ' + (checked ? '' : 'disabled') + '> 看</label>'
+          + '<label class="perm-lv"><input type="checkbox" value="edit" class="perm-lv-cb" onchange="onAppPermLevelChange(this)" ' + (perms.indexOf('edit') !== -1 ? 'checked' : '') + ' ' + (checked ? '' : 'disabled') + '> 编</label>'
+          + '<label class="perm-lv"><input type="checkbox" value="delete" class="perm-lv-cb" onchange="onAppPermLevelChange(this)" ' + (perms.indexOf('delete') !== -1 ? 'checked' : '') + ' ' + (checked ? '' : 'disabled') + '> 删</label>'
+          + '</div></div>';
       }).join('');
 
       createActionSheet(
@@ -842,12 +922,12 @@
   window.submitEditRole = function (roleId) {
     var roleName = document.getElementById('edit-role-name').value.trim();
     var remark = document.getElementById('edit-role-remark').value.trim();
-    var routerIds = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(function (cb) { return cb.value; });
+    var routerPerms = collectAppRouterPerms();
     if (!roleName) { appToast('请输入角色名称'); return; }
     appShowLoading();
     SharedOps.role.update(roleId, { role_name: roleName, remark: remark }, function (updateRes) {
       if (updateRes.code !== 200) { appHideLoading(); appToast(updateRes.msg); return; }
-      SharedOps.role.updateRouters(roleId, routerIds, function (res) {
+      SharedOps.role.updateRouters(roleId, routerPerms, function (res) {
         appHideLoading();
         appToast(res.msg);
         if (res.code === 200) { closeActionSheet(); AppRouter.navigate('role'); }

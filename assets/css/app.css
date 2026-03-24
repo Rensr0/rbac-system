@@ -786,3 +786,58 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ========== 移动端权限级别样式 ========== */
+.role-perm-item {
+  padding: 10px 16px;
+  border-bottom: 0.5px solid var(--border-light);
+}
+.role-perm-item:last-child { border-bottom: none; }
+.role-perm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.role-perm-header > span {
+  font-size: 14px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.role-perm-levels {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  padding-left: 4px;
+}
+.perm-lv {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.perm-lv input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  cursor: pointer;
+}
+.perm-lv:nth-child(1) { background: rgba(0,122,255,0.08); color: #007aff; }
+.perm-lv:nth-child(2) { background: rgba(255,149,0,0.08); color: #ff9500; }
+.perm-lv:nth-child(3) { background: rgba(255,59,48,0.08); color: #ff3b30; }
+.perm-lv:has(input:checked) { font-weight: 600; }
+.perm-lv:nth-child(1):has(input:checked) { background: rgba(0,122,255,0.18); }
+.perm-lv:nth-child(2):has(input:checked) { background: rgba(255,149,0,0.18); }
+.perm-lv:nth-child(3):has(input:checked) { background: rgba(255,59,48,0.18); }
+.perm-lv:has(input:disabled) { opacity: 0.5; }
+
+/* 权限级别徽章 */
+.perm-badge-view   { background: rgba(0,122,255,0.15); color: #007aff; padding: 0 4px; border-radius: 3px; }
+.perm-badge-edit   { background: rgba(255,149,0,0.15); color: #ff9500; padding: 0 4px; border-radius: 3px; }
+.perm-badge-delete { background: rgba(255,59,48,0.15); color: #ff3b30; padding: 0 4px; border-radius: 3px; }

@@ -78,11 +78,17 @@ var SharedOps = (function () {
   }
 
   function addRole(data, cb) {
-    API.post('role/', {
+    var postData = {
       role_name: data.role_name,
-      remark: data.remark || '',
-      router_ids: data.router_ids || []
-    }).then(function (res) { cb(res); });
+      remark: data.remark || ''
+    };
+    // 新格式：router_perms
+    if (data.router_perms) {
+      postData.router_perms = data.router_perms;
+    } else if (data.router_ids) {
+      postData.router_ids = data.router_ids;
+    }
+    API.post('role/', postData).then(function (res) { cb(res); });
   }
 
   function updateRole(id, data, cb) {
@@ -93,9 +99,10 @@ var SharedOps = (function () {
     }).then(function (res) { cb(res); });
   }
 
-  function updateRoleRouters(roleId, routerIds, cb) {
+  function updateRoleRouters(roleId, routerPerms, cb) {
+    // routerPerms: [{ router_id, perms: ['view','edit','delete'] }, ...]
     API.post('role/', {
-      action: 'routers', role_id: roleId, router_ids: routerIds
+      action: 'routers', role_id: roleId, router_perms: routerPerms
     }).then(function (res) { cb(res); });
   }
 

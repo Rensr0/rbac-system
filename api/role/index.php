@@ -47,7 +47,7 @@ function getRoleList() {
 
         foreach ($list as &$role) {
             $stmt2 = $db->prepare("
-                SELECT r.id, r.router_name, r.router_path, r.icon
+                SELECT r.id, r.router_name, r.router_path, r.icon, rr.permissions
                 FROM routers r
                 INNER JOIN role_router rr ON rr.router_id = r.id
                 WHERE rr.role_id = ? AND r.status = 1
@@ -56,6 +56,12 @@ function getRoleList() {
             $stmt2->execute(array($role['id']));
             $role['routers'] = $stmt2->fetchAll();
             $role['router_ids'] = array_column($role['routers'], 'id');
+            // 将 permissions 位掩码转为数组
+            foreach ($role['routers'] as &$rt) {
+                $rt['perms'] = bitmaskToPerms(intval($rt['permissions']));
+                $rt['permissions'] = intval($rt['permissions']);
+            }
+            unset($rt);
 
             $stmt3 = $db->prepare("SELECT COUNT(*) as cnt FROM user_role WHERE role_id = ?");
             $stmt3->execute(array($role['id']));
@@ -80,7 +86,7 @@ function getRoleDetail() {
         if (!$role) { error('角色不存在'); }
 
         $stmt2 = $db->prepare("
-            SELECT r.id, r.router_name, r.router_path, r.icon
+            SELECT r.id, r.router_name, r.router_path, r.icon, rr.permissions
             FROM routers r
             INNER JOIN role_router rr ON rr.router_id = r.id
             WHERE rr.role_id = ? AND r.status = 1
@@ -89,6 +95,11 @@ function getRoleDetail() {
         $stmt2->execute(array($id));
         $role['routers'] = $stmt2->fetchAll();
         $role['router_ids'] = array_column($role['routers'], 'id');
+        foreach ($role['routers'] as &$rt) {
+            $rt['perms'] = bitmaskToPerms(intval($rt['permissions']));
+            $rt['permissions'] = intval($rt['permissions']);
+        }
+        unset($rt);
 
         $stmt3 = $db->prepare("SELECT COUNT(*) as cnt FROM user_role WHERE role_id = ?");
         $stmt3->execute(array($id));
@@ -107,6 +118,8 @@ function createRole() {
     $roleName  = trim(isset($data['role_name']) ? $data['role_name'] : '');
     $remark    = trim(isset($data['remark']) ? $data['remark'] : '');
     $routerIds = isset($data['router_ids']) ? $data['router_ids'] : array();
+    // 新格式：router_perms = [{ router_id, perms: ['view','edit'] }, ...]
+    $routerPerms = isset($data['router_perms']) ? $data['router_perms'] : array();
 
     if (empty($roleName)) { error('角色名称不能为空'); }
     if (!validateLength($roleName, 1, 50)) { error('角色名称长度需在 1-50 位之间'); }
@@ -118,8 +131,20 @@ function createRole() {
         $stmt->execute(array($roleName, $remark));
         $roleId = $db->lastInsertId();
 
-        if (!empty($routerIds)) {
-            $stmt2 = $db->prepare("INSERT INTO role_router (role_id, router_id) VALUES (?, ?)");
+        if (!empty($routerPerms)) {
+            // 新格式：带权限
+            $stmt2 = $db->prepare("INSERT INTO role_router (role_id, router_id, permissions) VALUES (?, ?, ?)");
+            foreach ($routerPerms as $rp) {
+                $rid = intval(isset($rp['router_id']) ? $rp['router_id'] : 0);
+                if ($rid <= 0) continue;
+                $perms = isset($rp['perms']) ? $rp['perms'] : array('view');
+                $mask = permsToBitmask($perms);
+                if ($mask === 0) $mask = PERM_VIEW;
+                $stmt2->execute(array($roleId, $rid, $mask));
+            }
+        } elseif (!empty($routerIds)) {
+            // 兼容旧格式：只有 router_ids，默认全部权限
+            $stmt2 = $db->prepare("INSERT INTO role_router (role_id, router_id, permissions) VALUES (?, ?, 7)");
             foreach ($routerIds as $rid) {
                 $stmt2->execute(array($roleId, intval($rid)));
             }
@@ -199,6 +224,8 @@ function assignRouters() {
     $data = getJsonBody();
     $roleId    = intval(isset($data['role_id']) ? $data['role_id'] : 0);
     $routerIds = isset($data['router_ids']) ? $data['router_ids'] : array();
+    // 新格式：router_perms = [{ router_id, perms: ['view','edit','delete'] }, ...]
+    $routerPerms = isset($data['router_perms']) ? $data['router_perms'] : array();
 
     if ($roleId <= 0) { error('参数错误'); }
 
@@ -206,14 +233,26 @@ function assignRouters() {
         $db = getDB();
         $db->prepare("DELETE FROM role_router WHERE role_id = ?")->execute(array($roleId));
 
-        if (!empty($routerIds)) {
-            $stmt = $db->prepare("INSERT INTO role_router (role_id, router_id) VALUES (?, ?)");
+        if (!empty($routerPerms)) {
+            // 新格式：带权限
+            $stmt = $db->prepare("INSERT INTO role_router (role_id, router_id, permissions) VALUES (?, ?, ?)");
+            foreach ($routerPerms as $rp) {
+                $rid = intval(isset($rp['router_id']) ? $rp['router_id'] : 0);
+                if ($rid <= 0) continue;
+                $perms = isset($rp['perms']) ? $rp['perms'] : array('view');
+                $mask = permsToBitmask($perms);
+                if ($mask === 0) $mask = PERM_VIEW;
+                $stmt->execute(array($roleId, $rid, $mask));
+            }
+        } elseif (!empty($routerIds)) {
+            // 兼容旧格式：只有 router_ids，默认全部权限
+            $stmt = $db->prepare("INSERT INTO role_router (role_id, router_id, permissions) VALUES (?, ?, 7)");
             foreach ($routerIds as $rid) {
                 $stmt->execute(array($roleId, intval($rid)));
             }
         }
 
-        writeLog('role_assign_router', "角色 ID=$roleId 绑定路由");
+        writeLog('role_assign_router', "角色 ID=$roleId 绑定路由权限");
         success(null, '权限绑定成功');
     } catch (Exception $e) {
         error('绑定权限失败');

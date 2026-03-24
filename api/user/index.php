@@ -28,6 +28,7 @@ switch ($method) {
         elseif ($action === 'update') { updateUser(); }
         elseif ($action === 'delete') { deleteUser(); }
         elseif ($action === 'batch_status') { batchUpdateStatus(); }
+        elseif ($action === 'batch_import') { batchImportUsers(); }
         else { createUser(); }
         break;
     case 'PUT': updateUser(); break;
@@ -320,6 +321,57 @@ function batchUpdateStatus() {
     } catch (Exception $e) {
         error('批量操作失败');
     }
+}
+
+function batchImportUsers() {
+    requireSuper();
+
+    $data = getJsonBody();
+    $users = isset($data['users']) ? $data['users'] : array();
+    $defaultPwd = isset($data['default_password']) ? $data['default_password'] : '123456';
+
+    if (empty($users)) { error('没有要导入的用户数据'); }
+    if (count($users) > 500) { error('单次导入不超过500个用户'); }
+
+    $db = getDB();
+    $successCount = 0;
+    $failCount = 0;
+    $errors = array();
+
+    foreach ($users as $u) {
+        $username = trim(isset($u['username']) ? $u['username'] : '');
+        if (empty($username)) { $failCount++; $errors[] = '空账号'; continue; }
+        if (!validateUsername($username)) { $failCount++; $errors[] = "$username: 账号格式不合法"; continue; }
+
+        $password = !empty(trim($u['password'])) ? trim($u['password']) : $defaultPwd;
+        $nickname = trim(isset($u['nickname']) ? $u['nickname'] : '');
+        $email    = trim(isset($u['email']) ? $u['email'] : '');
+        $phone    = trim(isset($u['phone']) ? $u['phone'] : '');
+
+        if (!validateEmail($email)) { $failCount++; $errors[] = "$username: 邮箱格式错误"; continue; }
+        if (!validateLength($nickname, 0, 50)) { $failCount++; $errors[] = "$username: 昵称过长"; continue; }
+
+        try {
+            $stmt = $db->prepare("SELECT id FROM admin_users WHERE username = ?");
+            $stmt->execute(array($username));
+            if ($stmt->fetch()) { $failCount++; $errors[] = "$username: 账号已存在"; continue; }
+
+            $hashed = encryptPassword($password);
+            $stmt = $db->prepare("INSERT INTO admin_users (username, password, nickname, email, phone) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute(array($username, $hashed, $nickname, $email, $phone));
+            $successCount++;
+        } catch (Exception $e) {
+            $failCount++;
+            $errors[] = "$username: 导入失败";
+        }
+    }
+
+    writeLog('user_create', "批量导入用户: 成功 $successCount 个, 失败 $failCount 个");
+    success(array(
+        'success_count' => $successCount,
+        'fail_count' => $failCount,
+        'errors' => array_slice($errors, 0, 10) // 最多返回10条错误
+    ), "导入完成：成功 {$successCount} 个，失败 {$failCount} 个");
 }
 
 function changePassword() {

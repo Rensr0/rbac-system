@@ -77,22 +77,24 @@ INSERT INTO `routers` (`id`, `router_name`, `router_path`, `icon`, `sort`, `stat
 (5, '个人中心', 'mine', 'account_circle', 5, 1);
 
 -- ----------------------------
--- 角色-路由关联表
+-- 角色-路由关联表（含权限细分）
+-- permissions: 位掩码 1=查看 2=编辑 4=删除，7=全部权限
 -- ----------------------------
 DROP TABLE IF EXISTS `role_router`;
 CREATE TABLE `role_router` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `role_id` int(11) NOT NULL DEFAULT 0 COMMENT '角色ID',
   `router_id` int(11) NOT NULL DEFAULT 0 COMMENT '路由ID',
+  `permissions` int(11) NOT NULL DEFAULT 1 COMMENT '权限位掩码:1=查看 2=编辑 4=删除 7=全部',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_role_router` (`role_id`, `router_id`),
   KEY `idx_router_id` (`router_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色路由关联表';
 
-INSERT INTO `role_router` (`role_id`, `router_id`) VALUES
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5),
-(2, 1), (2, 2), (2, 5),
-(3, 1), (3, 2), (3, 5);
+INSERT INTO `role_router` (`role_id`, `router_id`, `permissions`) VALUES
+(1, 1, 7), (1, 2, 7), (1, 3, 7), (1, 4, 7), (1, 5, 7),
+(2, 1, 7), (2, 2, 3), (2, 5, 7),
+(3, 1, 7), (3, 2, 1), (3, 5, 7);
 
 -- ----------------------------
 -- 用户-角色关联表

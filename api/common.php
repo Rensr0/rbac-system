@@ -117,6 +117,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/config/database.php';
 
+// ==================== 数据库自动迁移 ====================
+try {
+    $db = getDB();
+    // 检查 role_router 表是否有 permissions 列
+    $col = $db->query("SHOW COLUMNS FROM role_router LIKE 'permissions'")->fetch();
+    if (!$col) {
+        $db->exec("ALTER TABLE role_router ADD COLUMN permissions INT NOT NULL DEFAULT 1 COMMENT '权限位掩码:1=查看 2=编辑 4=删除 7=全部'");
+        $db->exec("UPDATE role_router SET permissions = 7");
+    }
+} catch (Exception $e) {
+    // 迁移失败不影响启动（新表会在 install.sql 中创建）
+}
+
 // ==================== 响应函数 ====================
 
 function jsonResponse($code, $msg, $data = null) {
@@ -220,6 +233,29 @@ function requireSuper() {
 
 // ==================== 权限验证 ====================
 
+// 权限位掩码常量
+define('PERM_VIEW', 1);
+define('PERM_EDIT', 2);
+define('PERM_DELETE', 4);
+define('PERM_ALL', 7);
+
+// 权限数组 ↔ 位掩码 互转
+function permsToBitmask($perms) {
+    $mask = 0;
+    if (in_array('view', $perms))   $mask |= PERM_VIEW;
+    if (in_array('edit', $perms))   $mask |= PERM_EDIT;
+    if (in_array('delete', $perms)) $mask |= PERM_DELETE;
+    return $mask;
+}
+
+function bitmaskToPerms($mask) {
+    $perms = array();
+    if ($mask & PERM_VIEW)   $perms[] = 'view';
+    if ($mask & PERM_EDIT)   $perms[] = 'edit';
+    if ($mask & PERM_DELETE) $perms[] = 'delete';
+    return $perms;
+}
+
 function hasPermission($routerPath) {
     $user = getCurrentUser();
     if (!$user) return false;
@@ -231,7 +267,7 @@ function hasPermission($routerPath) {
             SELECT COUNT(*) as cnt FROM role_router rr
             INNER JOIN user_role ur ON ur.role_id = rr.role_id
             INNER JOIN routers r ON r.id = rr.router_id
-            WHERE ur.user_id = ? AND r.router_path = ? AND r.status = 1
+            WHERE ur.user_id = ? AND r.router_path = ? AND r.status = 1 AND rr.permissions > 0
         ");
         $stmt->execute(array($user['id'], $routerPath));
         $row = $stmt->fetch();
@@ -241,9 +277,38 @@ function hasPermission($routerPath) {
     }
 }
 
+// 检查用户对某路由是否有特定权限级别
+function hasPermLevel($routerPath, $level) {
+    $user = getCurrentUser();
+    if (!$user) return false;
+    if ((isset($user['is_super']) ? $user['is_super'] : 0) == 1) return true;
+
+    try {
+        $db = getDB();
+        $stmt = $db->prepare("
+            SELECT MAX(rr.permissions) as max_perm FROM role_router rr
+            INNER JOIN user_role ur ON ur.role_id = rr.role_id
+            INNER JOIN routers r ON r.id = rr.router_id
+            WHERE ur.user_id = ? AND r.router_path = ? AND r.status = 1
+        ");
+        $stmt->execute(array($user['id'], $routerPath));
+        $row = $stmt->fetch();
+        if (!$row || !$row['max_perm']) return false;
+        return ($row['max_perm'] & $level) == $level;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
 function requirePermission($routerPath) {
     if (!hasPermission($routerPath)) {
         forbidden();
+    }
+}
+
+function requirePermLevel($routerPath, $level) {
+    if (!hasPermLevel($routerPath, $level)) {
+        forbidden('没有操作权限');
     }
 }
 
