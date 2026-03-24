@@ -85,6 +85,26 @@
       font-size: 12px;
       color: var(--text-tertiary);
     }
+    /* 密码显示/隐藏 */
+    .pwd-wrap {
+      position: relative;
+    }
+    .pwd-wrap .form-input { padding-right: 40px; }
+    .pwd-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+    }
+    .pwd-toggle:hover { color: var(--primary); }
+    .pwd-toggle .mi { font-size: 20px; }
     /* 验证码行 */
     .captcha-row {
       display: flex;
@@ -98,10 +118,14 @@
       border-radius: var(--radius-sm);
       cursor: pointer;
       border: 1px solid var(--border);
-      transition: opacity 0.2s;
+      transition: opacity 0.2s, transform 0.2s;
       flex-shrink: 0;
     }
     .captcha-row img:hover { opacity: 0.8; }
+    .captcha-row img.refreshing {
+      opacity: 0.5;
+      transform: scale(0.95);
+    }
     /* 记住密码 */
     .remember-row {
       display: flex;
@@ -143,15 +167,15 @@
       cursor: pointer;
       border-bottom: 2px solid transparent;
       margin-bottom: -2px;
-      transition: all 0.2s;
+      transition: all 0.25s;
     }
     .login-tabs .tab.active {
       color: var(--primary);
       border-bottom-color: var(--primary);
       font-weight: 600;
     }
-    .login-panel { display: none; }
-    .login-panel.active { display: block; }
+    .login-panel { display: none; opacity: 0; transform: translateY(8px); transition: opacity 0.25s, transform 0.25s; }
+    .login-panel.active { display: block; opacity: 1; transform: translateY(0); }
     .login-hint {
       display: flex;
       align-items: center;
@@ -207,7 +231,10 @@
       </div>
       <div class="form-group">
         <label class="form-label"><i class="mi mi-16">lock</i> 密码</label>
-        <input class="form-input" type="password" id="pc-password" placeholder="请输入密码" autocomplete="current-password">
+        <div class="pwd-wrap">
+          <input class="form-input" type="password" id="pc-password" placeholder="请输入密码" autocomplete="current-password">
+          <button class="pwd-toggle" type="button" onclick="togglePwd(this)"><i class="mi mi-18">visibility</i></button>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label"><i class="mi mi-16">visibility</i> 验证码</label>
@@ -237,7 +264,10 @@
       </div>
       <div class="form-group">
         <label class="form-label">密码</label>
-        <input class="form-input" type="password" id="reg-password" placeholder="至少6位">
+        <div class="pwd-wrap">
+          <input class="form-input" type="password" id="reg-password" placeholder="至少6位">
+          <button class="pwd-toggle" type="button" onclick="togglePwd(this)"><i class="mi mi-18">visibility</i></button>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">昵称</label>
@@ -295,9 +325,10 @@
       <span class="input-icon"><i class="mi mi-18">person</i></span>
       <input class="login-input" type="text" id="app-username" placeholder="请输入账号" autocomplete="username">
     </div>
-    <div class="login-input-wrap">
+    <div class="login-input-wrap" style="position:relative">
       <span class="input-icon"><i class="mi mi-18">lock</i></span>
-      <input class="login-input" type="password" id="app-password" placeholder="请输入密码" autocomplete="current-password">
+      <input class="login-input" type="password" id="app-password" placeholder="请输入密码" autocomplete="current-password" style="padding-right:40px">
+      <button class="pwd-toggle" type="button" onclick="togglePwd(this)" style="right:12px"><i class="mi mi-18" style="color:rgba(255,255,255,0.5)">visibility</i></button>
     </div>
     <div class="login-input-wrap" style="gap:6px">
       <span class="input-icon"><i class="mi mi-18">visibility</i></span>
@@ -330,7 +361,7 @@
     <div style="padding:0 16px 16px">
       <div class="app-form">
         <div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="app-reg-username" placeholder="字母数字下划线"></div>
-        <div class="app-form-item"><div class="form-label">密码</div><input class="form-input" type="password" id="app-reg-password" placeholder="至少6位"></div>
+        <div class="app-form-item"><div class="form-label">密码</div><div style="position:relative"><input class="form-input" type="password" id="app-reg-password" placeholder="至少6位" style="padding-right:40px"><button class="pwd-toggle" type="button" onclick="togglePwd(this)" style="right:12px"><i class="mi mi-18" style="color:rgba(255,255,255,0.5)">visibility</i></button></div></div>
         <div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-reg-nickname" placeholder="选填"></div>
         <div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-reg-email" placeholder="选填"></div>
         <div class="app-form-item"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-reg-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-reg-captcha-img" onclick="refreshCaptcha('app-reg')" style="height:36px;border-radius:6px;cursor:pointer;border:1px solid var(--border)"></div></div>
@@ -376,7 +407,26 @@ function refreshCaptcha(prefix) {
     'app-forgot': 'app-forgot-captcha-img'
   };
   var el = document.getElementById(imgMap[prefix]);
-  if (el) el.src = suffix;
+  if (el) {
+    el.classList.add('refreshing');
+    el.src = suffix;
+    el.onload = function() { el.classList.remove('refreshing'); };
+    el.onerror = function() { el.classList.remove('refreshing'); };
+  }
+}
+
+// ==================== 密码显示/隐藏 ====================
+function togglePwd(btn) {
+  var input = btn.parentElement.querySelector('input');
+  if (!input) return;
+  var icon = btn.querySelector('.mi');
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) icon.textContent = 'visibility_off';
+  } else {
+    input.type = 'password';
+    if (icon) icon.textContent = 'visibility';
+  }
 }
 
 // 初始化所有验证码
@@ -389,7 +439,12 @@ function switchLoginTab(tab) {
   });
   document.querySelectorAll('.login-panel').forEach(function(p) { p.classList.remove('active'); });
   var panel = document.getElementById('panel-' + tab);
-  if (panel) panel.classList.add('active');
+  if (panel) {
+    // 延迟一帧以触发过渡动画
+    requestAnimationFrame(function() {
+      panel.classList.add('active');
+    });
+  }
   refreshCaptcha(tab === 'login' ? 'pc' : tab);
 }
 
@@ -473,7 +528,10 @@ function pcRegister() {
   API.post('login/', { action: 'register', username: username, password: password, nickname: nickname, email: email, captcha: captcha }).then(function(res) {
     hideLoading();
     showToast(res.msg);
-    if (res.code === 200) { switchLoginTab('login'); }
+    if (res.code === 200) {
+      showToast('注册成功，请登录');
+      switchLoginTab('login');
+    }
     refreshCaptcha('reg');
   });
 }
@@ -490,7 +548,10 @@ function pcForgot() {
   API.post('login/', { action: 'forgot', username: username, email: email, captcha: captcha }).then(function(res) {
     hideLoading();
     showToast(res.msg);
-    if (res.code === 200) { switchLoginTab('login'); }
+    if (res.code === 200) {
+      showToast('密码已重置为 123456，请及时修改');
+      switchLoginTab('login');
+    }
     refreshCaptcha('forgot');
   });
 }
@@ -546,7 +607,10 @@ function appRegister() {
   API.post('login/', { action: 'register', username: username, password: password, nickname: nickname, email: email, captcha: captcha }).then(function(res) {
     appHideLoading();
     appToast(res.msg);
-    if (res.code === 200) { closeAppSheet('app-register-overlay'); }
+    if (res.code === 200) {
+      appToast('注册成功，请登录');
+      closeAppSheet('app-register-overlay');
+    }
     refreshCaptcha('app-reg');
   });
 }
@@ -560,7 +624,10 @@ function appForgot() {
   API.post('login/', { action: 'forgot', username: username, email: email, captcha: captcha }).then(function(res) {
     appHideLoading();
     appToast(res.msg);
-    if (res.code === 200) { closeAppSheet('app-forgot-overlay'); }
+    if (res.code === 200) {
+      appToast('密码已重置为 123456，请及时修改');
+      closeAppSheet('app-forgot-overlay');
+    }
     refreshCaptcha('app-forgot');
   });
 }
