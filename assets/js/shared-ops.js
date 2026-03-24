@@ -130,6 +130,14 @@ var SharedOps = (function () {
     API.post('router/', { action: 'delete', id: id }).then(function (res) { cb(res); });
   }
 
+  // ==================== 日志操作 ====================
+
+  function getLogs(keyword, page, limit, action, cb) {
+    var params = { keyword: keyword || '', page: page || 1, limit: limit || 20 };
+    if (action) params.log_action = action;
+    API.get('log/', params).then(function (res) { cb(res); });
+  }
+
   // ==================== 导出 ====================
   return {
     user: {
@@ -155,6 +163,9 @@ var SharedOps = (function () {
       add: addRouter,
       update: updateRouter,
       delete: deleteRouter
+    },
+    log: {
+      search: getLogs
     }
   };
 })();
