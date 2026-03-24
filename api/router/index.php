@@ -14,7 +14,11 @@ switch ($method) {
     case 'GET':
         $action === 'user' ? getUserRouters() : getRouterList();
         break;
-    case 'POST':   createRouter(); break;
+    case 'POST':
+        if ($action === 'update') { updateRouter(); }
+        elseif ($action === 'delete') { deleteRouter(); }
+        else { createRouter(); }
+        break;
     case 'PUT':    updateRouter(); break;
     case 'DELETE': deleteRouter(); break;
     default: error('不支持的请求方式', 405);

@@ -17,9 +17,11 @@ switch ($method) {
     case 'POST':
         if ($action === 'roles') { assignRoles(); }
         elseif ($action === 'password') { changePassword(); }
+        elseif ($action === 'update') { updateUser(); }
+        elseif ($action === 'delete') { deleteUser(); }
         else { createUser(); }
         break;
-    case 'PUT':  updateUser(); break;
+    case 'PUT': updateUser(); break;
     case 'DELETE': deleteUser(); break;
     default: error('不支持的请求方式', 405);
 }

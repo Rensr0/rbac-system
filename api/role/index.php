@@ -13,7 +13,10 @@ $action = getParam('action', '');
 switch ($method) {
     case 'GET':    getRoleList(); break;
     case 'POST':
-        $action === 'routers' ? assignRouters() : createRole();
+        if ($action === 'routers') { assignRouters(); }
+        elseif ($action === 'update') { updateRole(); }
+        elseif ($action === 'delete') { deleteRole(); }
+        else { createRole(); }
         break;
     case 'PUT':    updateRole(); break;
     case 'DELETE': deleteRole(); break;

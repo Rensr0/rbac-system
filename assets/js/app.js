@@ -465,13 +465,13 @@
     const roleIds = Array.from(document.querySelectorAll('.edit-role-cb:checked')).map(cb => parseInt(cb.value));
 
     appShowLoading();
-    const res1 = await API.put('user/', { id, nickname, email, phone, status });
+    const res1 = await API.post('user/', { action: 'update', id, nickname, email, phone, status });
     const res2 = await API.post('user/', { action: 'roles', user_id: id, role_ids: roleIds });
     appHideLoading();
 
     appToast(res1.code === 200 && res2.code === 200 ? '保存成功' : (res1.msg || res2.msg));
-    if (res1.code === 200) {
-      document.querySelector('.app-action-sheet')?.remove();
+    if (res1.code === 200 && res2.code === 200) {
+      closeActionSheet();
       loadPage_user();
     }
   };
@@ -481,7 +481,7 @@
     if (!ok) return;
 
     appShowLoading();
-    const res = await API.del('user/', { id });
+    const res = await API.post('user/', { action:'delete', id });
     appHideLoading();
 
     appToast(res.msg);
@@ -667,13 +667,13 @@
     const routerIds = Array.from(document.querySelectorAll('.edit-role-router-cb:checked')).map(cb => parseInt(cb.value));
 
     appShowLoading();
-    const res1 = await API.put('role/', { id, role_name: roleName, remark });
+    const res1 = await API.post('role/', { action: 'update', id, role_name: roleName, remark });
     const res2 = await API.post('role/', { action: 'routers', role_id: id, router_ids: routerIds });
     appHideLoading();
 
     appToast(res1.code === 200 && res2.code === 200 ? '保存成功' : (res1.msg || res2.msg));
-    if (res1.code === 200) {
-      document.querySelector('.app-action-sheet')?.remove();
+    if (res1.code === 200 && res2.code === 200) {
+      closeActionSheet();
       loadPage_role();
     }
   };
@@ -683,7 +683,7 @@
     if (!ok) return;
 
     appShowLoading();
-    const res = await API.del('role/', { id });
+    const res = await API.post('role/', { action:'delete', id });
     appHideLoading();
 
     appToast(res.msg);
@@ -865,7 +865,7 @@
     if (!name || !path) { appToast('名称和路径不能为空'); return; }
 
     appShowLoading();
-    const res = await API.put('router/', { id, router_name: name, router_path: path, icon, sort, status });
+    const res = await API.post('router/', { action: 'update', id, router_name: name, router_path: path, icon, sort, status });
     appHideLoading();
 
     appToast(res.msg);
@@ -880,12 +880,12 @@
     if (!ok) return;
 
     appShowLoading();
-    const res = await API.del('router/', { id });
+    const res = await API.post('router/', { action:'delete', id });
     appHideLoading();
 
     appToast(res.msg);
     if (res.code === 200) {
-      document.querySelector('.app-action-sheet')?.remove();
+      closeActionSheet();
       loadPage_router();
     }
   };
@@ -1024,7 +1024,7 @@
 
     appToast(res.msg);
     if (res.code === 200) {
-      document.querySelector('.app-action-sheet')?.remove();
+      closeActionSheet();
     }
   };
 
@@ -1032,9 +1032,16 @@
     const ok = await confirmDialog('退出登录', '确定要退出当前账号吗？');
     if (!ok) return;
 
-    await API.del('login/');
+    try {
+      const res = await API.post('login/?action=logout');
+      if (res.code !== 200) {
+        console.warn('退出登录API返回错误:', res.msg);
+      }
+    } catch (err) {
+      console.error('退出登录API调用失败:', err);
+    }
     Storage.remove('currentUser');
-    window.location.href = 'index.html';
+    window.location.href = '../index.html';
   };
 
   // ==================== 初始化 ====================

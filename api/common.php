@@ -144,7 +144,12 @@ function notFound($msg = '资源不存在') {
 // ==================== 请求参数 ====================
 
 function getParam($key, $default = null) {
-    $value = isset($_GET[$key]) ? $_GET[$key] : (isset($_POST[$key]) ? $_POST[$key] : $default);
+    $value = isset($_GET[$key]) ? $_GET[$key] : (isset($_POST[$key]) ? $_POST[$key] : null);
+    if ($value !== null) {
+        return is_string($value) ? trim($value) : $value;
+    }
+    $body = getJsonBody();
+    $value = isset($body[$key]) ? $body[$key] : $default;
     return is_string($value) ? trim($value) : $value;
 }
 

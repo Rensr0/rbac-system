@@ -4,20 +4,30 @@
  * 兼容 PHP 5.6+
  * POST   /api/login/  - 登录
  * GET    /api/login/  - 检查登录状态
- * DELETE /api/login/  - 退出登录
+ * POST   /api/login/?action=logout  - 退出登录
  */
 require_once __DIR__ . '/../common.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+$action = isset($_GET['action']) ? $_GET['action'] : '';
 
 switch ($method) {
-    case 'POST': handleLogin(); break;
+    case 'POST':
+        if ($action === 'logout') {
+            handleLogout();
+        } else {
+            handleLogin();
+        }
+        break;
     case 'GET':  checkLogin(); break;
     case 'DELETE': handleLogout(); break;
     default: error('不支持的请求方式', 405);
 }
 
 function handleLogin() {
+    global $_jsonBodyCache;
+    $_jsonBodyCache = null;
+    
     $data = getJsonBody();
     $username = trim(isset($data['username']) ? $data['username'] : '');
     $password = isset($data['password']) ? $data['password'] : '';

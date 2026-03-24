@@ -11,10 +11,10 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="stylesheet" href="../assets/css/global.css?v=1.0">
-  <link rel="stylesheet" href="../assets/css/pc.css?v=1.0">
-  <link rel="stylesheet" href="../assets/css/app.css?v=1.0">
-  <link rel="stylesheet" href="../assets/css/themes.css?v=1.0">
+  <link rel="stylesheet" href="../assets/css/global.css?v=1.0.7">
+  <link rel="stylesheet" href="../assets/css/pc.css?v=1.0.7">
+  <link rel="stylesheet" href="../assets/css/app.css?v=1.0.7">
+  <link rel="stylesheet" href="../assets/css/themes.css?v=1.0.7">
 </head>
 <body>
 
@@ -255,7 +255,7 @@
 
     let res;
     if (id) {
-      res = await API.put('user/', { id:parseInt(id), nickname, email, phone });
+      res = await API.post('user/', { action:'update', id:parseInt(id), nickname, email, phone });
       await API.post('user/', { action:'roles', user_id:parseInt(id), role_ids:roleIds });
     } else {
       res = await API.post('user/', { username, password:password||'123456', nickname, email, phone, role_ids:roleIds });
@@ -266,7 +266,7 @@
 
   window.pcDeleteUser = async function (id) {
     if (!await confirmDialog('删除用户','确定要删除此用户吗？此操作不可恢复。')) return;
-    const res = await API.del('user/', { id });
+    const res = await API.post('user/', { action:'delete', id });
     showToast(res.msg);
     if (res.code===200) loadPCUser(document.getElementById('page-content'));
   };
@@ -329,7 +329,7 @@
     if (!roleName) { showToast('请输入角色名称'); return; }
     let res;
     if (id) {
-      res = await API.put('role/', { id:parseInt(id), role_name:roleName, remark });
+      res = await API.post('role/', { action:'update', id:parseInt(id), role_name:roleName, remark });
       await API.post('role/', { action:'routers', role_id:parseInt(id), router_ids:routerIds });
     } else {
       res = await API.post('role/', { role_name:roleName, remark, router_ids:routerIds });
@@ -340,7 +340,7 @@
 
   window.pcDeleteRole = async function (id) {
     if (!await confirmDialog('删除角色','确定要删除此角色？关联的用户权限将被清除。')) return;
-    const res = await API.del('role/', { id });
+    const res = await API.post('role/', { action:'delete', id });
     showToast(res.msg);
     if (res.code===200) loadPCRole(document.getElementById('page-content'));
   };
@@ -400,7 +400,7 @@
     const sort = parseInt(document.getElementById('form-router-sort').value)||0;
     if (!routerName||!routerPath) { showToast('名称和路径不能为空'); return; }
     const res = id
-      ? await API.put('router/', { id:parseInt(id), router_name:routerName, router_path:routerPath, icon, sort })
+      ? await API.post('router/', { action:'update', id:parseInt(id), router_name:routerName, router_path:routerPath, icon, sort })
       : await API.post('router/', { router_name:routerName, router_path:routerPath, icon, sort });
     showToast(res.msg);
     if (res.code===200) { closeModal('modal-router'); loadPCRouter(document.getElementById('page-content')); }
@@ -408,7 +408,7 @@
 
   window.pcDeleteRouter = async function (id) {
     if (!await confirmDialog('删除路由','确定要删除此路由？')) return;
-    const res = await API.del('router/', { id });
+    const res = await API.post('router/', { action:'delete', id });
     showToast(res.msg);
     if (res.code===200) loadPCRouter(document.getElementById('page-content'));
   };
@@ -417,22 +417,31 @@
   async function loadPCMine(c) {
     c.innerHTML = `
       <div class="page-header"><h2>个人中心</h2></div>
-      <div class="card" style="max-width:500px"><div class="card-body">
-        <div style="text-align:center;margin-bottom:24px">
-          <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:32px;font-weight:600">${getInitial(currentUser.nickname||currentUser.username)}</div>
-          <h3 style="margin-top:12px">${escapeHtml(currentUser.nickname||currentUser.username)}</h3>
-          <p class="text-secondary">${currentUser.is_super?'超级管理员':'普通用户'}</p>
+      <div style="display:flex;justify-content:center">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:1200px;width:100%">
+          <div class="card"><div class="card-body" style="padding:32px">
+            <div style="display:flex;align-items:center;gap:24px;margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid var(--border-light)">
+              <div style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:600;flex-shrink:0">${getInitial(currentUser.nickname||currentUser.username)}</div>
+              <div>
+                <h3 style="margin:0 0 12px;font-size:28px">${escapeHtml(currentUser.nickname||currentUser.username)}</h3>
+                <p class="text-secondary" style="margin:0;font-size:16px">${currentUser.is_super?'<span style="color:var(--primary);font-weight:500">超级管理员</span>':'普通用户'}</p>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+              <div class="form-group"><label class="form-label" style="font-size:15px">账号</label><input class="form-input" style="padding:14px 16px;font-size:15px" value="${escapeHtml(currentUser.username)}" disabled></div>
+              <div class="form-group"><label class="form-label" style="font-size:15px">邮箱</label><input class="form-input" style="padding:14px 16px;font-size:15px" value="${escapeHtml(currentUser.email||'未设置')}" disabled></div>
+            </div>
+            <div class="form-group"><label class="form-label" style="font-size:15px">最后登录</label><input class="form-input" style="padding:14px 16px;font-size:15px" value="${currentUser.last_login?formatDate(currentUser.last_login):'首次登录'}" disabled></div>
+          </div></div>
+          <div class="card"><div class="card-body" style="padding:32px">
+            <h3 style="margin-bottom:24px;font-size:24px">修改密码</h3>
+            <div class="form-group"><label class="form-label" style="font-size:15px">原密码</label><input class="form-input" style="padding:14px 16px;font-size:15px" type="password" id="pc-old-pwd" placeholder="请输入原密码"></div>
+            <div class="form-group"><label class="form-label" style="font-size:15px">新密码</label><input class="form-input" style="padding:14px 16px;font-size:15px" type="password" id="pc-new-pwd" placeholder="请输入新密码（6位以上）"></div>
+            <div class="form-group"><label class="form-label" style="font-size:15px">确认新密码</label><input class="form-input" style="padding:14px 16px;font-size:15px" type="password" id="pc-confirm-pwd" placeholder="再次输入新密码"></div>
+            <button class="btn btn-primary" onclick="pcChangePwd()" style="width:100%;padding:16px;font-size:16px">修改密码</button>
+          </div></div>
         </div>
-        <div class="form-group"><label class="form-label">账号</label><input class="form-input" value="${escapeHtml(currentUser.username)}" disabled></div>
-        <div class="form-group"><label class="form-label">邮箱</label><input class="form-input" value="${escapeHtml(currentUser.email||'未设置')}" disabled></div>
-        <div class="form-group"><label class="form-label">最后登录</label><input class="form-input" value="${currentUser.last_login?formatDate(currentUser.last_login):'首次登录'}" disabled></div>
-        <hr style="border:none;border-top:1px solid var(--border-light);margin:20px 0">
-        <h4 style="margin-bottom:16px">修改密码</h4>
-        <div class="form-group"><label class="form-label">原密码</label><input class="form-input" type="password" id="pc-old-pwd" placeholder="请输入原密码"></div>
-        <div class="form-group"><label class="form-label">新密码</label><input class="form-input" type="password" id="pc-new-pwd" placeholder="请输入新密码（6位以上）"></div>
-        <div class="form-group"><label class="form-label">确认新密码</label><input class="form-input" type="password" id="pc-confirm-pwd" placeholder="再次输入新密码"></div>
-        <button class="btn btn-primary" onclick="pcChangePwd()">修改密码</button>
-      </div></div>`;
+      </div>`;
   }
 
   window.pcChangePwd = async function () {
@@ -447,7 +456,14 @@
   };
 
   window.logoutPC = async function () {
-    await API.del('login/');
+    try {
+      const res = await API.post('login/?action=logout');
+      if (res.code !== 200) {
+        console.warn('退出登录API返回错误:', res.msg);
+      }
+    } catch (err) {
+      console.error('退出登录API调用失败:', err);
+    }
     Storage.remove('currentUser');
     window.location.href = '../index.html';
   };
