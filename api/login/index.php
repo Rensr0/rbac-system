@@ -31,6 +31,7 @@ switch ($method) {
 
 /**
  * 生成验证码图片（彩色扭曲文字，提高机器人门槛）
+ * 支持 GD 扩展（PNG）和 SVG 回退
  */
 function handleCaptcha() {
     $code = '';
@@ -42,8 +43,21 @@ function handleCaptcha() {
     $_SESSION['captcha_code'] = strtolower($code);
     $_SESSION['captcha_time'] = time();
 
-    $width = 150;
-    $height = 50;
+    // 优先使用 GD 扩展生成 PNG，不可用时回退到 SVG
+    if (extension_loaded('gd') && function_exists('imagecreatetruecolor')) {
+        generateCaptchaGD($code);
+    } else {
+        generateCaptchaSVG($code);
+    }
+    exit;
+}
+
+/**
+ * 使用 GD 扩展生成 PNG 验证码
+ */
+function generateCaptchaGD($code) {
+    $width = 240;
+    $height = 80;
     $img = imagecreatetruecolor($width, $height);
 
     // 背景渐变
@@ -68,7 +82,7 @@ function handleCaptcha() {
         imagefilledellipse($img, random_int(0, $width), random_int(0, $height), random_int(1, 3), random_int(1, 3), $dotColor);
     }
 
-    // 彩色文字 - 每个字符不同颜色、不同角度、不同大小
+    // 彩色文字 - 每个字符不同颜色、不同角度
     $colors = [
         imagecolorallocate($img, 200, 50, 50),   // 红
         imagecolorallocate($img, 50, 120, 200),   // 蓝
@@ -78,11 +92,11 @@ function handleCaptcha() {
         imagecolorallocate($img, 30, 150, 150),   // 青
     ];
 
-    $fontSize = 128;
-    $x = 20;
+    $fontSize = 42;
+    $x = 28;
     for ($i = 0; $i < strlen($code); $i++) {
-        $angle = random_int(-25, 25);
-        $y = random_int(28, 38);
+        $angle = random_int(-18, 18);
+        $y = random_int(52, 62);
         $color = $colors[array_rand($colors)];
 
         // 尝试 TTF 字体，回退到内置字体
@@ -91,6 +105,8 @@ function handleCaptcha() {
             '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
             '/usr/share/fonts/TTF/DejaVuSans-Bold.ttf',
             '/System/Library/Fonts/Helvetica.ttc',
+            '/usr/share/fonts/truetype/ubuntu/Ubuntu-Bold.ttf',
+            '/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc',
         ];
         $fontFound = false;
         foreach ($fontPaths as $fp) {
@@ -101,9 +117,9 @@ function handleCaptcha() {
             }
         }
         if (!$fontFound) {
-            imagestring($img, 5, $x, $y - 15, $code[$i], $color);
+            imagestring($img, 6, $x, $y - 24, $code[$i], $color);
         }
-        $x += random_int(24, 32);
+        $x += random_int(38, 50);
     }
 
     // 背景噪点
@@ -116,7 +132,61 @@ function handleCaptcha() {
     header('Cache-Control: no-store, no-cache');
     imagepng($img);
     imagedestroy($img);
-    exit;
+}
+
+/**
+ * SVG 回退方案 - 不依赖 GD 扩展
+ */
+function generateCaptchaSVG($code) {
+    $width = 240;
+    $height = 80;
+
+    $charColors = ['#C83232', '#3278C8', '#50A03C', '#B450C8', '#C88C1E', '#1E9696'];
+    $chars = str_split($code);
+
+    // 生成干扰线
+    $lines = '';
+    for ($i = 0; $i < 6; $i++) {
+        $x1 = random_int(0, $width);
+        $y1 = random_int(0, $height);
+        $x2 = random_int(0, $width);
+        $y2 = random_int(0, $height);
+        $c = sprintf('#%02x%02x%02x', random_int(150, 220), random_int(150, 220), random_int(150, 220));
+        $lines .= "<line x1=\"$x1\" y1=\"$y1\" x2=\"$x2\" y2=\"$y2\" stroke=\"$c\" stroke-width=\"1\"/>";
+    }
+
+    // 生成干扰点
+    $dots = '';
+    for ($i = 0; $i < 40; $i++) {
+        $cx = random_int(0, $width);
+        $cy = random_int(0, $height);
+        $r = random_int(1, 2);
+        $c = sprintf('#%02x%02x%02x', random_int(100, 200), random_int(100, 200), random_int(100, 200));
+        $dots .= "<circle cx=\"$cx\" cy=\"$cy\" r=\"$r\" fill=\"$c\"/>";
+    }
+
+    // 生成文字
+    $textElements = '';
+    $x = 35;
+    foreach ($chars as $ch) {
+        $y = random_int(48, 58);
+        $angle = random_int(-18, 18);
+        $color = $charColors[array_rand($charColors)];
+        $size = random_int(36, 44);
+        $textElements .= "<g transform=\"translate($x,$y) rotate($angle)\">";
+        $textElements .= "<text font-family=\"Arial,Helvetica,sans-serif\" font-size=\"$size\" font-weight=\"bold\" fill=\"$color\" text-anchor=\"middle\" dominant-baseline=\"central\">$ch</text>";
+        $textElements .= "</g>";
+        $x += random_int(42, 55);
+    }
+
+    $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"$width\" height=\"$height\">";
+    $svg .= "<rect width=\"100%\" height=\"100%\" fill=\"#f0f2f7\"/>";
+    $svg .= $lines . $dots . $textElements;
+    $svg .= "</svg>";
+
+    header('Content-Type: image/svg+xml');
+    header('Cache-Control: no-store, no-cache');
+    echo $svg;
 }
 
 function handleLogin() {

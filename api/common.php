@@ -92,11 +92,18 @@ header('X-XSS-Protection: 1; mode=block');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Cache-Control: no-store, no-cache, must-revalidate');
 
-// CORS 白名单（生产环境请替换为实际域名）
-$allowedOrigins = array('http://localhost', 'http://127.0.0.1');
+// CORS 白名单
+$allowedOrigins = array(
+    'http://localhost',
+    'http://127.0.0.1',
+    'https://panel.shixis.site',
+    'https://shixis.site',
+);
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
 if (in_array($origin, $allowedOrigins, true)) {
     header("Access-Control-Allow-Origin: $origin");
+} elseif (!empty($origin)) {
+    // 未在白名单的来源，不设置 CORS 头（浏览器会阻止）
 }
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
