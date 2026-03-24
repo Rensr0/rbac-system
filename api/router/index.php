@@ -8,7 +8,14 @@ require_once __DIR__ . '/../common.php';
 requireLogin();
 
 $method = $_SERVER['REQUEST_METHOD'];
-$action = getParam('action', '');
+// 兼容 action 从 GET 参数和 POST body (JSON) 两种方式传入
+$action = isset($_GET['action']) ? $_GET['action'] : '';
+if (empty($action) && $method === 'POST') {
+    $body = getJsonBody();
+    if (isset($body['action'])) {
+        $action = $body['action'];
+    }
+}
 
 switch ($method) {
     case 'GET':

@@ -12,12 +12,11 @@
 require_once __DIR__ . '/../common.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
-// 兼容 action 从 GET 参数和 POST body 两种方式传入
+// 兼容 action 从 GET 参数和 POST body (JSON) 两种方式传入
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 if (empty($action) && $method === 'POST') {
-    $input = file_get_contents('php://input');
-    $body = json_decode($input, true);
-    if (is_array($body) && isset($body['action'])) {
+    $body = getJsonBody();
+    if (isset($body['action'])) {
         $action = $body['action'];
     }
 }
