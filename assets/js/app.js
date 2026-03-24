@@ -196,46 +196,63 @@
     var content = document.getElementById('page-home');
     if (!content) return;
 
-    appShowLoading();
-    Promise.all([
-      API.get('user/', { limit: 1 }),
-      API.get('role/', { limit: 100 })
-    ]).then(function (results) {
-      appHideLoading();
-      var userRes = results[0], roleRes = results[1];
-      var userTotal = userRes.code === 200 ? (userRes.data && userRes.data.total || 0) : 0;
-      var roleTotal = roleRes.code === 200 ? (roleRes.data && roleRes.data.total || 0) : 0;
-      var routerCount = AppRouter.userRouters.length;
+    var currentUser = Storage.get('currentUser') || {};
+    var isSuper = currentUser.is_super == 1;
+    var routerCount = AppRouter.userRouters.length;
 
-      var quickActions = '';
-      AppRouter.userRouters.forEach(function (r) {
-        if (r.router_path === 'home' || r.router_path === 'mine') return;
-        quickActions +=
-          '<div class="app-list-item" onclick="AppRouter.navigate(\'' + r.router_path + '\')">'
-          + '<div class="item-icon">' + renderIcon(r.icon) + '</div>'
-          + '<div class="item-content">'
-          + '<div class="item-title">' + escapeHtml(r.router_name) + '</div>'
-          + '<div class="item-desc">点击进入' + escapeHtml(r.router_name) + '</div>'
-          + '</div>'
-          + '<div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
-          + '</div>';
-      });
-
+    var quickActions = '';
+    AppRouter.userRouters.forEach(function (r) {
+      if (r.router_path === 'home' || r.router_path === 'mine') return;
       quickActions +=
-        '<div class="app-list-item" onclick="AppRouter.navigate(\'mine\')">'
-        + '<div class="item-icon">' + mi('account_circle') + '</div>'
+        '<div class="app-list-item" onclick="AppRouter.navigate(\'' + r.router_path + '\')">'
+        + '<div class="item-icon">' + renderIcon(r.icon) + '</div>'
         + '<div class="item-content">'
-        + '<div class="item-title">个人中心</div>'
-        + '<div class="item-desc">查看个人信息、修改密码</div>'
+        + '<div class="item-title">' + escapeHtml(r.router_name) + '</div>'
+        + '<div class="item-desc">点击进入' + escapeHtml(r.router_name) + '</div>'
         + '</div>'
         + '<div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
         + '</div>';
+    });
 
+    quickActions +=
+      '<div class="app-list-item" onclick="AppRouter.navigate(\'mine\')">'
+      + '<div class="item-icon">' + mi('account_circle') + '</div>'
+      + '<div class="item-content">'
+      + '<div class="item-title">个人中心</div>'
+      + '<div class="item-desc">查看个人信息、修改密码</div>'
+      + '</div>'
+      + '<div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
+      + '</div>';
+
+    if (isSuper) {
+      appShowLoading();
+      Promise.all([
+        API.get('user/', { limit: 1 }),
+        API.get('role/', { limit: 100 })
+      ]).then(function (results) {
+        appHideLoading();
+        var userRes = results[0], roleRes = results[1];
+        var userTotal = userRes.code === 200 ? (userRes.data && userRes.data.total || 0) : 0;
+        var roleTotal = roleRes.code === 200 ? (roleRes.data && roleRes.data.total || 0) : 0;
+
+        content.innerHTML =
+          '<div class="app-page-content">'
+          + '<div class="app-stats">'
+          + '<div class="app-stat-card"><div class="stat-num">' + userTotal + '</div><div class="stat-name">系统用户</div></div>'
+          + '<div class="app-stat-card"><div class="stat-num">' + roleTotal + '</div><div class="stat-name">角色数量</div></div>'
+          + '<div class="app-stat-card"><div class="stat-num">' + routerCount + '</div><div class="stat-name">可用功能</div></div>'
+          + '<div class="app-stat-card"><div class="stat-num">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-name">系统状态</div></div>'
+          + '</div>'
+          + '<div class="app-card">'
+          + '<div class="app-card-header"><h3>' + mi('rocket_launch') + ' 快捷操作</h3></div>'
+          + '<div class="app-list">' + quickActions + '</div>'
+          + '</div></div>';
+      });
+    } else {
+      // 普通用户 - 不暴露敏感统计数据
       content.innerHTML =
         '<div class="app-page-content">'
         + '<div class="app-stats">'
-        + '<div class="app-stat-card"><div class="stat-num">' + userTotal + '</div><div class="stat-name">系统用户</div></div>'
-        + '<div class="app-stat-card"><div class="stat-num">' + roleTotal + '</div><div class="stat-name">角色数量</div></div>'
         + '<div class="app-stat-card"><div class="stat-num">' + routerCount + '</div><div class="stat-name">可用功能</div></div>'
         + '<div class="app-stat-card"><div class="stat-num">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-name">系统状态</div></div>'
         + '</div>'
@@ -243,13 +260,15 @@
         + '<div class="app-card-header"><h3>' + mi('rocket_launch') + ' 快捷操作</h3></div>'
         + '<div class="app-list">' + quickActions + '</div>'
         + '</div></div>';
-    });
+    }
   });
 
   // ==================== 用户管理 ====================
   registerPage('user', function () {
     var content = document.getElementById('page-user');
     if (!content) return;
+
+    var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
 
     appShowLoading();
     SharedOps.user.search('', 1, 20, function (res) {
@@ -268,12 +287,21 @@
         + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('inbox', 'mi-xl') + '</div><p>暂无用户数据</p></div>' : '')
         + list.map(function (u) { return renderUserCard(u); }).join('')
         + '</div>'
-        + '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="showAddUserSheet()">' + mi('add', 'mi-18') + ' 添加用户</button></div>'
+        + (isSuper ? '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="showAddUserSheet()">' + mi('add', 'mi-18') + ' 添加用户</button></div>' : '')
         + '</div>';
     });
   });
 
   function renderUserCard(u) {
+    var current = Storage.get('currentUser') || {};
+    var isSuper = current.is_super == 1;
+    var isSelf = current.id === u.id;
+    var editBtn = '';
+    if (isSuper) {
+      editBtn = '<button class="app-btn app-btn-sm app-btn-outline" onclick="editUserApp(' + u.id + ')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + ' 编辑</button>';
+    } else if (isSelf) {
+      editBtn = '<button class="app-btn app-btn-sm app-btn-outline" onclick="AppRouter.navigate(\'mine\')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + ' 编辑</button>';
+    }
     return '<div class="user-card-app" data-id="' + u.id + '">'
       + '<div class="user-avatar-app">' + getInitial(u.nickname || u.username) + '</div>'
       + '<div class="user-info-app">'
@@ -281,7 +309,7 @@
       + '<div class="user-meta-app">@' + escapeHtml(u.username) + ' · ' + ((u.roles || []).map(function (r) { return r.role_name; }).join(', ') || '无角色') + '</div>'
       + '</div>'
       + '<div class="user-actions-app">'
-      + '<button class="app-btn app-btn-sm app-btn-outline" onclick="editUserApp(' + u.id + ')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + ' 编辑</button>'
+      + editBtn
       + '</div></div>';
   }
 
@@ -306,6 +334,8 @@
     var content = document.getElementById('page-role');
     if (!content) return;
 
+    var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
+
     appShowLoading();
     SharedOps.role.list(100, function (res) {
       appHideLoading();
@@ -323,7 +353,7 @@
             + '<div style="font-size:16px;font-weight:600">' + escapeHtml(r.role_name) + '</div>'
             + '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px">' + escapeHtml(r.remark || '暂无备注') + ' · ' + (r.user_count || 0) + ' 个用户 · ' + ((r.routers || []).length) + ' 个权限</div>'
             + '</div>'
-            + '<button class="app-btn app-btn-sm app-btn-outline" onclick="editRoleApp(' + r.id + ')" style="padding:0 12px;height:32px;font-size:12px">' + mi('settings', 'mi-14') + ' 管理</button>'
+            + (isSuper ? '<button class="app-btn app-btn-sm app-btn-outline" onclick="editRoleApp(' + r.id + ')" style="padding:0 12px;height:32px;font-size:12px">' + mi('settings', 'mi-14') + ' 管理</button>' : '')
             + '</div>'
             + ((r.routers || []).length > 0
               ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">'
@@ -333,7 +363,7 @@
             + '</div>';
         }).join('')
         + '</div>'
-        + '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="showAddRoleSheet()">' + mi('add', 'mi-18') + ' 创建角色</button></div>'
+        + (isSuper ? '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="showAddRoleSheet()">' + mi('add', 'mi-18') + ' 创建角色</button></div>' : '')
         + '</div>';
     });
   });
@@ -342,6 +372,8 @@
   registerPage('router', function () {
     var content = document.getElementById('page-router');
     if (!content) return;
+
+    var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
 
     appShowLoading();
     SharedOps.router.list(function (res) {
@@ -364,11 +396,11 @@
             + '</div></div>'
             + '<div style="display:flex;align-items:center;gap:8px">'
             + '<span class="badge ' + (r.status == 1 ? 'badge-success' : 'badge-danger') + '">' + (r.status == 1 ? '启用' : '禁用') + '</span>'
-            + '<button class="app-btn app-btn-sm app-btn-outline" onclick="editRouterApp(' + r.id + ')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + '</button>'
+            + (isSuper ? '<button class="app-btn app-btn-sm app-btn-outline" onclick="editRouterApp(' + r.id + ')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + '</button>' : '')
             + '</div></div></div>';
         }).join('')
         + '</div>'
-        + '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="showAddRouterSheet()">' + mi('add', 'mi-18') + ' 添加路由</button></div>'
+        + (isSuper ? '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="showAddRouterSheet()">' + mi('add', 'mi-18') + ' 添加路由</button></div>' : '')
         + '</div>';
     });
   });

@@ -14,74 +14,99 @@ var PCPages = (function () {
 
   // ==================== 首页 ====================
   function loadHome(c) {
-    Promise.all([
-      API.get('user/', { limit: 1 }),
-      API.get('role/', { limit: 100 }),
-      API.get('router/')
-    ]).then(function(results) {
-      var uR = results[0], rR = results[1], rtR = results[2];
-      var user = Storage.get('currentUser') || {};
-      var routers = window._userRouters || [];
-      c.innerHTML =
-        '<div class="stats-grid">'
-        + '<div class="stat-card"><div class="stat-icon">' + mi('group', 'mi-lg') + '</div><div class="stat-value">' + (uR.data && uR.data.total || 0) + '</div><div class="stat-label">系统用户</div></div>'
-        + '<div class="stat-card"><div class="stat-icon">' + mi('shield', 'mi-lg') + '</div><div class="stat-value">' + (rR.data && rR.data.total || 0) + '</div><div class="stat-label">角色数量</div></div>'
-        + '<div class="stat-card"><div class="stat-icon">' + mi('route', 'mi-lg') + '</div><div class="stat-value">' + ((rtR.data || []).length) + '</div><div class="stat-label">路由权限</div></div>'
-        + '<div class="stat-card"><div class="stat-icon">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-value" style="color:var(--success)">正常</div><div class="stat-label">系统状态</div></div>'
-        + '</div>'
-        + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(user.nickname || user.username) + '</div>'
-        + '<div class="card-body">'
-        + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。通过左侧菜单管理用户、角色和路由权限。</p>'
-        + '<div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">'
-        + (hasRoute(routers, 'user') ? '<button class="btn btn-primary" onclick="pcNavigate(\'user\')">' + mi('group', 'mi-18') + ' 管理用户</button>' : '')
-        + (hasRoute(routers, 'role') ? '<button class="btn btn-outline" onclick="pcNavigate(\'role\')">' + mi('shield', 'mi-18') + ' 配置角色</button>' : '')
-        + (hasRoute(routers, 'router') ? '<button class="btn btn-outline" onclick="pcNavigate(\'router\')">' + mi('route', 'mi-18') + ' 路由权限</button>' : '')
-        + '</div></div></div>'
-        + '<div class="card" style="margin-top:24px"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:300px"></div></div></div>';
+    var currentUser = Storage.get('currentUser') || {};
+    var isSuper = currentUser.is_super == 1;
+    var routers = window._userRouters || [];
 
-      if (window.ApexCharts) {
-        var options = {
-          series: [{
-            name: '用户数',
-            data: [(uR.data && uR.data.total || 0)]
-          }, {
-            name: '角色数',
-            data: [(rR.data && rR.data.total || 0)]
-          }, {
-            name: '路由数',
-            data: [(rtR.data || []).length]
-          }],
-          chart: {
-            type: 'bar',
-            height: 300,
-            toolbar: { show: false }
-          },
-          plotOptions: {
-            bar: {
-              borderRadius: 8,
-              columnWidth: '50%'
+    var promises = [API.get('router/')];
+    if (isSuper) {
+      promises.unshift(API.get('role/', { limit: 100 }));
+      promises.unshift(API.get('user/', { limit: 1 }));
+    }
+
+    Promise.all(promises).then(function(results) {
+      var uR = isSuper ? results[0] : { data: { total: 0 } };
+      var rR = isSuper ? results[1] : { data: { total: 0 } };
+      var rtR = isSuper ? results[2] : results[0];
+      var routerCount = (rtR.data || []).length;
+
+      if (isSuper) {
+        c.innerHTML =
+          '<div class="stats-grid">'
+          + '<div class="stat-card"><div class="stat-icon">' + mi('group', 'mi-lg') + '</div><div class="stat-value">' + (uR.data && uR.data.total || 0) + '</div><div class="stat-label">系统用户</div></div>'
+          + '<div class="stat-card"><div class="stat-icon">' + mi('shield', 'mi-lg') + '</div><div class="stat-value">' + (rR.data && rR.data.total || 0) + '</div><div class="stat-label">角色数量</div></div>'
+          + '<div class="stat-card"><div class="stat-icon">' + mi('route', 'mi-lg') + '</div><div class="stat-value">' + routerCount + '</div><div class="stat-label">路由权限</div></div>'
+          + '<div class="stat-card"><div class="stat-icon">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-value" style="color:var(--success)">正常</div><div class="stat-label">系统状态</div></div>'
+          + '</div>'
+          + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</div>'
+          + '<div class="card-body">'
+          + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。通过左侧菜单管理用户、角色和路由权限。</p>'
+          + '<div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">'
+          + (hasRoute(routers, 'user') ? '<button class="btn btn-primary" onclick="pcNavigate(\'user\')">' + mi('group', 'mi-18') + ' 管理用户</button>' : '')
+          + (hasRoute(routers, 'role') ? '<button class="btn btn-outline" onclick="pcNavigate(\'role\')">' + mi('shield', 'mi-18') + ' 配置角色</button>' : '')
+          + (hasRoute(routers, 'router') ? '<button class="btn btn-outline" onclick="pcNavigate(\'router\')">' + mi('route', 'mi-18') + ' 路由权限</button>' : '')
+          + '</div></div></div>'
+          + '<div class="card" style="margin-top:24px"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:300px"></div></div></div>';
+
+        if (window.ApexCharts) {
+          var options = {
+            series: [{
+              name: '用户数',
+              data: [(uR.data && uR.data.total || 0)]
+            }, {
+              name: '角色数',
+              data: [(rR.data && rR.data.total || 0)]
+            }, {
+              name: '路由数',
+              data: [routerCount]
+            }],
+            chart: {
+              type: 'bar',
+              height: 300,
+              toolbar: { show: false }
+            },
+            plotOptions: {
+              bar: {
+                borderRadius: 8,
+                columnWidth: '50%'
+              }
+            },
+            dataLabels: { enabled: false },
+            xaxis: {
+              categories: ['系统数据'],
+              axisBorder: { show: false },
+              axisTicks: { show: false }
+            },
+            yaxis: {
+              labels: { style: { colors: 'var(--text-secondary)' } }
+            },
+            colors: ['var(--primary)', 'var(--success)', 'var(--warning)'],
+            legend: {
+              position: 'top',
+              horizontalAlign: 'right'
+            },
+            tooltip: {
+              theme: 'light'
             }
-          },
-          dataLabels: { enabled: false },
-          xaxis: {
-            categories: ['系统数据'],
-            axisBorder: { show: false },
-            axisTicks: { show: false }
-          },
-          yaxis: {
-            labels: { style: { colors: 'var(--text-secondary)' } }
-          },
-          colors: ['var(--primary)', 'var(--success)', 'var(--warning)'],
-          legend: {
-            position: 'top',
-            horizontalAlign: 'right'
-          },
-          tooltip: {
-            theme: 'light'
-          }
-        };
-        var chart = new ApexCharts(document.querySelector('#stats-chart'), options);
-        chart.render();
+          };
+          var chart = new ApexCharts(document.querySelector('#stats-chart'), options);
+          chart.render();
+        }
+      } else {
+        // 普通用户仪表盘 - 不暴露敏感统计信息
+        c.innerHTML =
+          '<div class="stats-grid">'
+          + '<div class="stat-card"><div class="stat-icon">' + mi('route', 'mi-lg') + '</div><div class="stat-value">' + routerCount + '</div><div class="stat-label">可用功能</div></div>'
+          + '<div class="stat-card"><div class="stat-icon">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-value" style="color:var(--success)">正常</div><div class="stat-label">系统状态</div></div>'
+          + '</div>'
+          + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</div>'
+          + '<div class="card-body">'
+          + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。您可以通过左侧菜单访问已授权的功能模块。</p>'
+          + '<div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">'
+          + (hasRoute(routers, 'user') ? '<button class="btn btn-primary" onclick="pcNavigate(\'user\')">' + mi('group', 'mi-18') + ' 用户管理</button>' : '')
+          + (hasRoute(routers, 'role') ? '<button class="btn btn-outline" onclick="pcNavigate(\'role\')">' + mi('shield', 'mi-18') + ' 角色管理</button>' : '')
+          + (hasRoute(routers, 'router') ? '<button class="btn btn-outline" onclick="pcNavigate(\'router\')">' + mi('route', 'mi-18') + ' 路由管理</button>' : '')
+          + '</div></div></div>';
       }
     });
   }
@@ -95,10 +120,11 @@ var PCPages = (function () {
       var total = (res.data || {}).total || 0;
       var pages = Math.ceil(total / 10) || 1;
 
+      var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
       c.innerHTML =
         '<div class="page-header">'
         + '<div><h2>用户管理</h2><div class="subtitle">共 ' + total + ' 个用户</div></div>'
-        + '<button class="btn btn-primary" onclick="PCPages.addUser()">' + mi('add', 'mi-18') + ' 新增用户</button>'
+        + (isSuper ? '<button class="btn btn-primary" onclick="PCPages.addUser()">' + mi('add', 'mi-18') + ' 新增用户</button>' : '')
         + '</div>'
         + '<div class="search-bar">'
         + '<input class="form-input" id="pc-user-search" placeholder="搜索用户名/昵称" value="' + escapeHtml(kw) + '" onkeyup="if(event.key===\'Enter\'){PCPages.userPage=1;PCPages.loadUser(document.getElementById(\'page-content\'))}">'
@@ -108,6 +134,8 @@ var PCPages = (function () {
         + '<thead><tr><th>ID</th><th>账号</th><th>昵称</th><th>角色</th><th>状态</th><th>最后登录</th><th>操作</th></tr></thead>'
         + '<tbody>' + (list.length === 0 ? '<tr><td colspan="7" class="text-center text-secondary" style="padding:32px">暂无数据</td></tr>' : '')
         + list.map(function(u) {
+          var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
+          var isSelf = (Storage.get('currentUser') || {}).id === u.id;
           return '<tr>'
             + '<td>' + u.id + '</td>'
             + '<td>' + escapeHtml(u.username) + (u.is_super ? '<span class="badge badge-warning">超级</span>' : '') + '</td>'
@@ -116,8 +144,8 @@ var PCPages = (function () {
             + '<td>' + (u.status == 1 ? '<span class="badge badge-success">正常</span>' : '<span class="badge badge-danger">禁用</span>') + '</td>'
             + '<td class="text-sm text-secondary">' + (u.last_login ? formatDate(u.last_login) : '从未登录') + '</td>'
             + '<td><div class="action-btns">'
-            + '<button class="btn btn-sm btn-outline" onclick="PCPages.editUser(' + u.id + ')">' + mi('edit', 'mi-14') + ' 编辑</button>'
-            + (!u.is_super ? '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteUser(' + u.id + ')">' + mi('delete', 'mi-14') + ' 删除</button>' : '')
+            + (isSuper ? '<button class="btn btn-sm btn-outline" onclick="PCPages.editUser(' + u.id + ')">' + mi('edit', 'mi-14') + ' 编辑</button>' : (isSelf ? '<button class="btn btn-sm btn-outline" onclick="pcNavigate(\'mine\')">' + mi('edit', 'mi-14') + ' 编辑</button>' : ''))
+            + (isSuper && !u.is_super ? '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteUser(' + u.id + ')">' + mi('delete', 'mi-14') + ' 删除</button>' : '')
             + '</div></td></tr>';
         }).join('')
         + '</tbody></table></div></div>'
@@ -215,25 +243,26 @@ var PCPages = (function () {
 
   // ==================== 角色管理 ====================
   function loadPCRole(c) {
+    var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
     SharedOps.role.list(100, function(res) {
       var list = (res.data || {}).list || [];
       c.innerHTML =
         '<div class="page-header">'
         + '<div><h2>角色管理</h2><div class="subtitle">共 ' + list.length + ' 个角色</div></div>'
-        + '<button class="btn btn-primary" onclick="PCPages.addRole()">' + mi('add', 'mi-18') + ' 新增角色</button>'
+        + (isSuper ? '<button class="btn btn-primary" onclick="PCPages.addRole()">' + mi('add', 'mi-18') + ' 新增角色</button>' : '')
         + '</div>'
         + '<div class="card"><div class="table-wrap"><table>'
-        + '<thead><tr><th>ID</th><th>角色名称</th><th>备注</th><th>用户数</th><th>权限列表</th><th>操作</th></tr></thead>'
+        + '<thead><tr><th>ID</th><th>角色名称</th><th>备注</th><th>用户数</th><th>权限列表</th>' + (isSuper ? '<th>操作</th>' : '') + '</tr></thead>'
         + '<tbody>' + list.map(function(r) {
           return '<tr>'
             + '<td>' + r.id + '</td><td><strong>' + escapeHtml(r.role_name) + '</strong></td>'
             + '<td class="text-secondary">' + escapeHtml(r.remark || '-') + '</td>'
             + '<td>' + (r.user_count || 0) + '</td>'
             + '<td>' + ((r.routers || []).map(function(rt) { return '<span class="badge badge-info">' + renderIcon(rt.icon) + ' ' + escapeHtml(rt.router_name) + '</span>'; }).join(' ') || '<span class="text-secondary">无</span>') + '</td>'
-            + '<td><div class="action-btns">'
+            + (isSuper ? '<td><div class="action-btns">'
             + '<button class="btn btn-sm btn-outline" onclick="PCPages.editRole(' + r.id + ')">' + mi('edit', 'mi-14') + ' 编辑</button>'
             + (r.id !== 1 ? '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteRole(' + r.id + ')">' + mi('delete', 'mi-14') + ' 删除</button>' : '')
-            + '</div></td></tr>';
+            + '</div></td>' : '') + '</tr>';
         }).join('')
         + '</tbody></table></div></div>';
     });
@@ -309,15 +338,16 @@ var PCPages = (function () {
 
   // ==================== 路由管理 ====================
   function loadPCRouter(c) {
+    var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
     SharedOps.router.list(function(res) {
       var list = res.data || [];
       c.innerHTML =
         '<div class="page-header">'
         + '<div><h2>路由管理</h2><div class="subtitle">共 ' + list.length + ' 条路由</div></div>'
-        + '<button class="btn btn-primary" onclick="PCPages.addRouter()">' + mi('add', 'mi-18') + ' 新增路由</button>'
+        + (isSuper ? '<button class="btn btn-primary" onclick="PCPages.addRouter()">' + mi('add', 'mi-18') + ' 新增路由</button>' : '')
         + '</div>'
         + '<div class="card"><div class="table-wrap"><table>'
-        + '<thead><tr><th>ID</th><th>图标</th><th>名称</th><th>路径</th><th>排序</th><th>状态</th><th>绑定角色</th><th>操作</th></tr></thead>'
+        + '<thead><tr><th>ID</th><th>图标</th><th>名称</th><th>路径</th><th>排序</th><th>状态</th><th>绑定角色</th>' + (isSuper ? '<th>操作</th>' : '') + '</tr></thead>'
         + '<tbody>' + list.map(function(r) {
           return '<tr>'
             + '<td>' + r.id + '</td><td style="font-size:20px">' + renderIcon(r.icon) + '</td>'
@@ -326,10 +356,10 @@ var PCPages = (function () {
             + '<td>' + r.sort + '</td>'
             + '<td>' + (r.status == 1 ? '<span class="badge badge-success">启用</span>' : '<span class="badge badge-danger">禁用</span>') + '</td>'
             + '<td>' + (r.role_count || 0) + ' 个角色</td>'
-            + '<td><div class="action-btns">'
+            + (isSuper ? '<td><div class="action-btns">'
             + '<button class="btn btn-sm btn-outline" onclick="PCPages.editRouter(' + r.id + ')">' + mi('edit', 'mi-14') + ' 编辑</button>'
             + '<button class="btn btn-sm btn-danger" onclick="PCPages.deleteRouter(' + r.id + ')">' + mi('delete', 'mi-14') + ' 删除</button>'
-            + '</div></td></tr>';
+            + '</div></td>' : '') + '</tr>';
         }).join('')
         + '</tbody></table></div></div>';
     });
