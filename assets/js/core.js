@@ -67,7 +67,19 @@ var API = (function () {
       })
       .catch(function (err) {
         console.error('API Error:', err);
-        return { code: 500, msg: err.message || '网络请求失败', data: null };
+        var msg = '网络请求失败，请检查网络连接';
+        // 区分网络断开和服务器错误
+        if (!navigator.onLine) {
+          msg = '网络已断开，请检查网络连接';
+        } else if (err.message && err.message.indexOf('Failed to fetch') !== -1) {
+          msg = '无法连接到服务器，请稍后重试';
+        }
+        // 显示网络错误提示（仅在非 raw 模式下）
+        if (!raw) {
+          if (typeof showToast === 'function') showToast(msg, 3000);
+          else if (typeof appToast === 'function') appToast(msg, 3000);
+        }
+        return { code: 500, msg: msg, data: null };
       });
   }
 
@@ -394,3 +406,25 @@ function iconSelectHtml(selected, inputId) {
 function getCaptchaUrl() {
   return API.get('login/', { action: 'captcha' });
 }
+
+// ==================== 网络状态监听 ====================
+(function() {
+  var offlineToast = null;
+  function showOfflineTip() {
+    if (offlineToast) return;
+    offlineToast = document.createElement('div');
+    offlineToast.className = 'offline-tip';
+    offlineToast.innerHTML = '<i class="mi mi-16" style="color:#ff6b6b">wifi_off</i> 网络已断开，请检查网络连接';
+    offlineToast.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#1a1a2e;color:#fff;text-align:center;padding:8px;font-size:13px;transition:transform 0.3s;transform:translateY(-100%);display:flex;align-items:center;justify-content:center;gap:6px';
+    document.body.appendChild(offlineToast);
+    requestAnimationFrame(function() { offlineToast.style.transform = 'translateY(0)'; });
+  }
+  function hideOfflineTip() {
+    if (!offlineToast) return;
+    offlineToast.style.transform = 'translateY(-100%)';
+    setTimeout(function() { if (offlineToast) { offlineToast.remove(); offlineToast = null; } }, 300);
+  }
+  window.addEventListener('offline', showOfflineTip);
+  window.addEventListener('online', hideOfflineTip);
+  if (!navigator.onLine) showOfflineTip();
+})();
