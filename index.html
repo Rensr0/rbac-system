@@ -395,7 +395,7 @@ function switchLoginTab(tab) {
 
 // ==================== 已登录检测 ====================
 (function() {
-  API.get('login/').then(function(res) {
+  API.raw('login/').then(function(res) {
     if (res.code === 200) {
       Storage.set('currentUser', res.data);
       window.location.href = 'pages/home.html';

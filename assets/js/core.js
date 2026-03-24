@@ -6,11 +6,26 @@ var API = (function () {
   var path = window.location.pathname;
   var BASE = path.indexOf('/pages/') !== -1 ? '../api' : 'api';
 
+  function redirectToLogin() {
+    // 避免在登录页自身重复重定向（死循环）
+    if (window.location.pathname.indexOf('index.html') !== -1 ||
+        window.location.pathname === '/' ||
+        window.location.pathname.endsWith('/')) {
+      return;
+    }
+    Storage.remove('currentUser');
+    var loginUrl = window.location.pathname.indexOf('/pages/') !== -1
+      ? '../index.html'
+      : 'index.html';
+    window.location.href = loginUrl;
+  }
+
   function request(url, options) {
     options = options || {};
     var method = options.method || 'GET';
     var data = options.data || null;
     var params = options.params || {};
+    var raw = options.raw || false; // raw 模式：不自动处理 401 重定向
 
     var fullUrl = BASE + '/' + url;
     var queryStr = Object.entries(params)
@@ -30,6 +45,11 @@ var API = (function () {
 
     return fetch(fullUrl, fetchOptions)
       .then(function (res) {
+        // 会话过期拦截 - HTTP 状态码检测
+        if (res.status === 401) {
+          if (!raw) redirectToLogin();
+          return { code: 401, msg: '登录已过期', data: null };
+        }
         var contentType = res.headers.get('content-type') || '';
         if (contentType.indexOf('application/json') === -1) {
           return res.text().then(function (html) {
@@ -37,7 +57,13 @@ var API = (function () {
             return { code: 500, msg: '服务器返回了异常内容', data: null };
           });
         }
-        return res.json();
+        return res.json().then(function (json) {
+          // JSON 层面的 401 检测（兼容未设置 HTTP 状态码的情况）
+          if (json.code === 401 && !raw) {
+            redirectToLogin();
+          }
+          return json;
+        });
       })
       .catch(function (err) {
         console.error('API Error:', err);
@@ -46,10 +72,15 @@ var API = (function () {
   }
 
   return {
-    get: function (url, params) { return request(url, { method: 'GET', params: params }); },
+    get: function (url, params, opts) {
+      var options = { method: 'GET', params: params };
+      if (opts) { options.raw = opts.raw; }
+      return request(url, options);
+    },
     post: function (url, data) { return request(url, { method: 'POST', data: data }); },
     put: function (url, data) { return request(url, { method: 'PUT', data: data }); },
     del: function (url, data) { return request(url, { method: 'DELETE', data: data }); },
+    raw: function (url, params) { return request(url, { method: 'GET', params: params, raw: true }); },
   };
 })();
 
@@ -286,6 +317,77 @@ function createActionSheet(innerHtml, opts) {
 
 function closeActionSheet() {
   if (typeof window.closeActionSheet === 'function') window.closeActionSheet();
+}
+
+// ==================== 图标选择器 ====================
+function openIconPicker(inputId, onChange) {
+  var input = document.getElementById(inputId);
+  var current = input ? input.value : '';
+  var mobile = window.innerWidth <= 768;
+
+  var iconGridHtml = KNOWN_ICONS.map(function (icon) {
+    var active = icon === current ? ' active' : '';
+    return '<div class="icon-pick-item' + active + '" data-icon="' + icon + '" title="' + icon + '">'
+      + '<i class="mi">' + icon + '</i>'
+      + '</div>';
+  }).join('');
+
+  if (mobile) {
+    createActionSheet(
+      '<div class="sheet-handle"></div>'
+      + '<div class="sheet-title">选择图标</div>'
+      + '<div style="padding:0 12px 16px">'
+      + '<div class="icon-pick-grid">' + iconGridHtml + '</div>'
+      + '</div>'
+      + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>',
+      { maxHeight: '70vh' }
+    );
+  } else {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML =
+      '<div class="modal" style="max-width:560px">'
+      + '<div class="modal-header"><h3>选择图标</h3><button class="modal-close" onclick="this.closest(\'.modal-overlay\').classList.remove(\'show\');setTimeout(function(){event.target.closest(\'.modal-overlay\').remove()},250)">✕</button></div>'
+      + '<div class="modal-body" style="max-height:60vh;overflow-y:auto">'
+      + '<div class="icon-pick-grid">' + iconGridHtml + '</div>'
+      + '</div></div>';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function () { overlay.classList.add('show'); });
+
+    overlay.onclick = function (e) {
+      if (e.target === overlay) {
+        overlay.classList.remove('show');
+        setTimeout(function () { overlay.remove(); }, 250);
+      }
+    };
+  }
+
+  // 绑定点击事件
+  document.querySelectorAll('.icon-pick-item').forEach(function (item) {
+    item.addEventListener('click', function () {
+      var icon = item.dataset.icon;
+      if (input) input.value = icon;
+      // 更新选中态
+      document.querySelectorAll('.icon-pick-item').forEach(function (i) { i.classList.remove('active'); });
+      document.querySelectorAll('.icon-pick-item[data-icon="' + icon + '"]').forEach(function (i) { i.classList.add('active'); });
+      // 关闭选择器
+      if (mobile) {
+        closeActionSheet();
+      } else {
+        var ov = item.closest('.modal-overlay');
+        if (ov) { ov.classList.remove('show'); setTimeout(function () { ov.remove(); }, 250); }
+      }
+      if (typeof onChange === 'function') onChange(icon);
+    });
+  });
+}
+
+function iconSelectHtml(selected, inputId) {
+  inputId = inputId || '';
+  return '<input type="hidden" id="' + inputId + '" value="' + (selected || '') + '">'
+    + '<div class="icon-pick-trigger" onclick="openIconPicker(\'' + inputId + '\')" id="' + (inputId ? inputId + '-preview' : 'icon-pick-preview') + '">'
+    + (selected ? '<i class="mi">' + selected + '</i> ' + selected : '<i class="mi">palette</i> 选择图标')
+    + '</div>';
 }
 
 // ==================== 验证码工具 ====================

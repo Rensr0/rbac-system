@@ -15,7 +15,7 @@ switch ($method) {
         $action === 'user' ? getUserRouters() : getRouterList();
         break;
     case 'POST':
-        if ($action === 'update') { updateRouter(); }
+        if ($action === 'update' || $action === 'edit') { updateRouter(); }
         elseif ($action === 'delete') { deleteRouter(); }
         else { createRouter(); }
         break;
