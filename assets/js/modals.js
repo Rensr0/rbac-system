@@ -48,6 +48,7 @@ var ModalTemplates = (function () {
     + '<div class="form-group"><label class="form-label">路由路径</label><input class="form-input" id="form-router-path" placeholder="如：user（字母数字短横线）"></div>'
     + '<div class="form-group"><label class="form-label">图标（Material Icons）</label><select class="form-select" id="form-router-icon"></select></div>'
     + '<div class="form-group"><label class="form-label">排序</label><input class="form-input" type="number" id="form-router-sort" value="0" min="0"></div>'
+    + '<div class="form-group"><label class="form-label">状态</label><select class="form-input" id="form-router-status"><option value="1">启用</option><option value="0">禁用</option></select></div>'
     + '</div>'
     + '<div class="modal-footer">'
     + '<button class="btn btn-outline" onclick="closeModal(\'modal-router\')">取消</button>'

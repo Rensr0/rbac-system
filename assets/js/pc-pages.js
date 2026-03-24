@@ -345,6 +345,8 @@ var PCPages = (function () {
     document.getElementById('form-router-name').value = '';
     document.getElementById('form-router-path').value = '';
     document.getElementById('form-router-sort').value = '0';
+    var statusEl = document.getElementById('form-router-status');
+    if (statusEl) statusEl.value = '1';
     openModal('modal-router');
   }
 
@@ -363,6 +365,8 @@ var PCPages = (function () {
       document.getElementById('form-router-name').value = r.router_name;
       document.getElementById('form-router-path').value = r.router_path;
       document.getElementById('form-router-sort').value = r.sort;
+      var statusEl = document.getElementById('form-router-status');
+      if (statusEl) statusEl.value = r.status;
       openModal('modal-router');
     });
   }
@@ -373,14 +377,16 @@ var PCPages = (function () {
     var routerPath = document.getElementById('form-router-path').value.trim();
     var icon = document.getElementById('form-router-icon').value.trim();
     var sort = parseInt(document.getElementById('form-router-sort').value) || 0;
+    var statusEl = document.getElementById('form-router-status');
+    var status = statusEl ? statusEl.value : 1;
     if (!routerName || !routerPath) { showToast('名称和路径不能为空'); return; }
     if (id) {
-      SharedOps.router.update(parseInt(id), { router_name: routerName, router_path: routerPath, icon: icon, sort: sort }, function(res) {
+      SharedOps.router.update(parseInt(id), { router_name: routerName, router_path: routerPath, icon: icon, sort: sort, status: status }, function(res) {
         showToast(res.msg);
         if (res.code === 200) { closeModal('modal-router'); loadPCRouter(document.getElementById('page-content')); }
       });
     } else {
-      SharedOps.router.add({ router_name: routerName, router_path: routerPath, icon: icon, sort: sort }, function(res) {
+      SharedOps.router.add({ router_name: routerName, router_path: routerPath, icon: icon, sort: sort, status: status }, function(res) {
         showToast(res.msg);
         if (res.code === 200) { closeModal('modal-router'); loadPCRouter(document.getElementById('page-content')); }
       });
