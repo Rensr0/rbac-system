@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>登录 - RBAC 权限管理系统</title>
+  <link rel="stylesheet" href="assets/css/global.css?v=1.0">
+  <link rel="stylesheet" href="assets/css/app.css?v=1.0">
+  <link rel="stylesheet" href="assets/css/themes.css?v=1.0">
+  <style>
+    /* PC 登录页 */
+    .pc-login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+    }
+    .pc-login-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .pc-login-card .logo { text-align: center; font-size: 48px; margin-bottom: 16px; }
+    .pc-login-card h2 { text-align: center; font-size: 24px; margin-bottom: 6px; }
+    .pc-login-card .sub { text-align: center; color: #8e8e93; font-size: 14px; margin-bottom: 32px; }
+    .pc-login-card .login-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* 安全提示 */
+    .login-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: rgba(79,110,247,0.06);
+      border-radius: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .pc-login-wrap { display: none; }
+    }
+    @media (min-width: 769px) {
+      .app-login-wrap { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 登录页主题切换浮动按钮 -->
+<button onclick="ThemeSwitcher.toggle()" title="切换主题" style="
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  width:44px;height:44px;border:none;border-radius:50%;
+  background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);
+  font-size:20px;cursor:pointer;transition:transform 0.2s;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+" onmouseover="this.style.transform='scale(1.1) rotate(15deg)'" onmouseout="this.style.transform='scale(1)'">🎨</button>
+<div id="login-theme-panel" style="position:fixed;bottom:76px;right:24px;z-index:999">
+  <div class="theme-panel" id="theme-panel" style="position:fixed;bottom:76px;right:24px;width:260px">
+    <div class="theme-panel-title">选择主题</div>
+    <div class="theme-grid" id="login-theme-grid"></div>
+  </div>
+</div>
+<script>
+  // 登录页初始化主题面板
+  var grid = document.getElementById('login-theme-grid');
+  if (grid && window.ThemeSwitcher) {
+    ThemeSwitcher.themes.forEach(function(t) {
+      var active = ThemeSwitcher.get() === t.id;
+      grid.innerHTML += '<div class="theme-option' + (active ? ' active' : '') + '" data-theme="' + t.id + '" onclick="ThemeSwitcher.set(\'' + t.id + '\')">\
+        <div class="theme-dot" style="background:' + t.dot + '"></div>\
+        <div class="theme-label">' + t.name + '</div></div>';
+    });
+  }
+</script>
+
+<!-- ==================== PC 端登录 ==================== -->
+<div class="pc-login-wrap">
+  <div class="pc-login-card">
+    <div class="logo">🔐</div>
+    <h2>RBAC 权限管理系统</h2>
+    <p class="sub">前后端分离 · 动态权限 · 三端适配</p>
+    <div class="form-group">
+      <label class="form-label">账号</label>
+      <input class="form-input" type="text" id="pc-username" placeholder="请输入管理员账号" value="admin" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">密码</label>
+      <input class="form-input" type="password" id="pc-password" placeholder="请输入密码" value="123456" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary btn-block btn-lg" id="pc-login-btn" onclick="pcLogin()">登 录</button>
+    <div class="login-hint">
+      <span>💡</span>
+      <span>默认账号 admin / 123456，首次登录请修改密码</span>
+    </div>
+    <div class="login-footer">
+      RBAC 权限管理系统 v1.0
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 手机端 APP 风格登录 ==================== -->
+<div class="app-login app-login-wrap">
+  <div class="login-logo">🔐</div>
+  <div class="login-title">RBAC 管理系统</div>
+  <div class="login-sub">前后端分离 · 动态权限管理</div>
+  <div class="login-form">
+    <div class="login-input-wrap">
+      <span class="input-icon">👤</span>
+      <input class="login-input" type="text" id="app-username" placeholder="请输入账号" value="admin" autocomplete="username">
+    </div>
+    <div class="login-input-wrap">
+      <span class="input-icon">🔒</span>
+      <input class="login-input" type="password" id="app-password" placeholder="请输入密码" value="123456" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="app-login-btn" onclick="appLogin()">登 录</button>
+  </div>
+  <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:24px">默认账号：admin / 123456</div>
+  <div style="color:rgba(255,255,255,0.3);font-size:11px;margin-top:8px">v1.0</div>
+</div>
+
+<script src="assets/js/core.js?v=1.1.4"></script>
+<script src="assets/js/theme-switcher.js?v=1.1.4"></script>
+<script>
+// ---- 已登录检测 ----
+(async function() {
+  try {
+    const res = await API.get('login/');
+    if (res.code === 200) {
+      Storage.set('currentUser', res.data);
+      window.location.href = 'pages/home.html';
+    }
+  } catch(e) {}
+})();
+
+// PC 端登录
+async function pcLogin() {
+  const username = document.getElementById('pc-username').value.trim();
+  const password = document.getElementById('pc-password').value.trim();
+  if (!username || !password) { showToast('请输入账号和密码'); return; }
+
+  const btn = document.getElementById('pc-login-btn');
+  btn.disabled = true; btn.textContent = '登录中...'; showLoading();
+
+  const res = await API.post('login/', { username, password });
+  hideLoading(); btn.disabled = false; btn.textContent = '登 录';
+
+  if (res.code === 200) {
+    Storage.set('currentUser', res.data);
+    window.location.href = 'pages/home.html';
+  } else {
+    showToast(res.msg || '登录失败');
+  }
+}
+
+// 手机端登录
+async function appLogin() {
+  const username = document.getElementById('app-username').value.trim();
+  const password = document.getElementById('app-password').value.trim();
+  if (!username || !password) { appToast('请输入账号和密码'); return; }
+
+  const btn = document.getElementById('app-login-btn');
+  btn.disabled = true; btn.textContent = '登录中...'; appShowLoading();
+
+  const res = await API.post('login/', { username, password });
+  appHideLoading(); btn.disabled = false; btn.textContent = '登 录';
+
+  if (res.code === 200) {
+    Storage.set('currentUser', res.data);
+    window.location.href = 'pages/home.html';
+  } else {
+    appToast(res.msg || '登录失败');
+  }
+}
+
+// Enter 键登录
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    isMobile() ? appLogin() : pcLogin();
+  }
+});
+</script>
+</body>
+</html>
