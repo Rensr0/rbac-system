@@ -224,7 +224,13 @@
         var container = document.getElementById('page-' + page);
         if (container) {
           container.querySelector('.app-page-content').innerHTML =
-            '<div class="empty-state"><div class="empty-icon">' + mi('warning', 'mi-xl') + '</div><p>页面加载器未注册</p></div>';
+            '<div class="page-404">'
+            + '<div class="code">404</div>'
+            + '<div class="title">页面不存在</div>'
+            + '<div class="desc">你访问的页面不存在或已被移除。</div>'
+            + '<div class="actions">'
+            + '<button class="app-btn app-btn-primary" onclick="AppRouter.navigate(\'home\')">' + mi('home', 'mi-18') + ' 返回首页</button>'
+            + '</div></div>';
         }
       }
     }
