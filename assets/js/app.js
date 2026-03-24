@@ -245,30 +245,6 @@
     var isSuper = currentUser.is_super == 1;
     var routerCount = AppRouter.userRouters.length;
 
-    var quickActions = '';
-    AppRouter.userRouters.forEach(function (r) {
-      if (r.router_path === 'home' || r.router_path === 'mine') return;
-      quickActions +=
-        '<div class="app-list-item" onclick="AppRouter.navigate(\'' + r.router_path + '\')">'
-        + '<div class="item-icon">' + renderIcon(r.icon) + '</div>'
-        + '<div class="item-content">'
-        + '<div class="item-title">' + escapeHtml(r.router_name) + '</div>'
-        + '<div class="item-desc">点击进入' + escapeHtml(r.router_name) + '</div>'
-        + '</div>'
-        + '<div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
-        + '</div>';
-    });
-
-    quickActions +=
-      '<div class="app-list-item" onclick="AppRouter.navigate(\'mine\')">'
-      + '<div class="item-icon">' + mi('account_circle') + '</div>'
-      + '<div class="item-content">'
-      + '<div class="item-title">个人中心</div>'
-      + '<div class="item-desc">查看个人信息、修改密码</div>'
-      + '</div>'
-      + '<div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
-      + '</div>';
-
     if (isSuper) {
       appShowLoading();
       Promise.all([
@@ -289,9 +265,51 @@
           + '<div class="app-stat-card"><div class="stat-num">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-name">系统状态</div></div>'
           + '</div>'
           + '<div class="app-card">'
-          + '<div class="app-card-header"><h3>' + mi('rocket_launch') + ' 快捷操作</h3></div>'
-          + '<div class="app-list">' + quickActions + '</div>'
+          + '<div class="app-card-header"><h3>' + mi('dashboard') + ' 系统概况</h3></div>'
+          + '<div style="text-align:center;padding:16px 0">'
+          + '<div id="app-stats-chart" style="height:240px"></div>'
+          + '</div>'
+          + '</div>'
+          + '<div class="app-card">'
+          + '<div class="app-card-header"><h3>' + mi('person') + ' 欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</h3></div>'
+          + '<div style="font-size:13px;color:var(--text-secondary);padding:0 0 8px">RBAC 权限管理系统 v3.0 运行正常，请通过底部导航栏访问各功能模块。</div>'
           + '</div></div>';
+
+        // 渲染环形图
+        if (window.ApexCharts) {
+          var hasData = [userTotal, roleTotal, routerCount].some(function(v) { return v > 0; });
+          var chartOptions = {
+            series: hasData ? [userTotal, roleTotal, routerCount] : [1],
+            chart: { type: 'donut', height: 240, toolbar: { show: false } },
+            labels: hasData ? ['用户', '角色', '路由'] : ['暂无数据'],
+            colors: hasData ? ['var(--primary)', 'var(--success)', 'var(--warning)'] : ['#E5E5EA'],
+            plotOptions: {
+              pie: {
+                donut: {
+                  size: '65%',
+                  labels: {
+                    show: true,
+                    total: {
+                      show: true,
+                      label: '总计',
+                      fontSize: '12px',
+                      color: 'var(--text-secondary)',
+                      formatter: function(w) { return w.globals.seriesTotals.reduce(function(a,b){return a+b;}, 0); }
+                    }
+                  }
+                }
+              }
+            },
+            dataLabels: { enabled: false },
+            legend: { position: 'bottom', fontSize: '12px', markers: { width: 8, height: 8, radius: 50 } },
+            stroke: { width: 0 }
+          };
+          var chartEl = document.querySelector('#app-stats-chart');
+          if (chartEl) {
+            var chart = new ApexCharts(chartEl, chartOptions);
+            chart.render();
+          }
+        }
       });
     } else {
       // 普通用户 - 不暴露敏感统计数据
@@ -302,8 +320,8 @@
         + '<div class="app-stat-card"><div class="stat-num">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-name">系统状态</div></div>'
         + '</div>'
         + '<div class="app-card">'
-        + '<div class="app-card-header"><h3>' + mi('rocket_launch') + ' 快捷操作</h3></div>'
-        + '<div class="app-list">' + quickActions + '</div>'
+        + '<div class="app-card-header"><h3>' + mi('person') + ' 欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</h3></div>'
+        + '<div style="font-size:13px;color:var(--text-secondary);padding:0 0 8px">RBAC 权限管理系统 v3.0 运行正常，请通过底部导航栏访问各功能模块。</div>'
         + '</div></div>';
     }
   });

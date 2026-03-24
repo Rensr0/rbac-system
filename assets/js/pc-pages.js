@@ -40,53 +40,68 @@ var PCPages = (function () {
           + '</div>'
           + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</div>'
           + '<div class="card-body">'
-          + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。通过左侧菜单管理用户、角色和路由权限。</p>'
-          + '<div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">'
-          + (hasRoute(routers, 'user') ? '<button class="btn btn-primary" onclick="pcNavigate(\'user\')">' + mi('group', 'mi-18') + ' 管理用户</button>' : '')
-          + (hasRoute(routers, 'role') ? '<button class="btn btn-outline" onclick="pcNavigate(\'role\')">' + mi('shield', 'mi-18') + ' 配置角色</button>' : '')
-          + (hasRoute(routers, 'router') ? '<button class="btn btn-outline" onclick="pcNavigate(\'router\')">' + mi('route', 'mi-18') + ' 路由权限</button>' : '')
-          + '</div></div></div>'
-          + '<div class="card" style="margin-top:24px"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:300px"></div></div></div>';
+          + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。当前系统概况如下：</p>'
+          + '</div></div>'
+          + '<div class="card" style="margin-top:24px"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:320px;display:flex;align-items:center;justify-content:center"></div></div></div>';
 
         if (window.ApexCharts) {
+          var totalUsers = uR.data && uR.data.total || 0;
+          var totalRoles = rR.data && rR.data.total || 0;
+          var chartData = [totalUsers, totalRoles, routerCount];
+          var chartLabels = ['系统用户', '角色数量', '路由权限'];
+          var chartColors = ['var(--primary)', 'var(--success)', 'var(--warning)'];
+
+          // 如果所有数据都为0，显示占位
+          var hasData = chartData.some(function(v) { return v > 0; });
+
           var options = {
-            series: [{
-              name: '用户数',
-              data: [(uR.data && uR.data.total || 0)]
-            }, {
-              name: '角色数',
-              data: [(rR.data && rR.data.total || 0)]
-            }, {
-              name: '路由数',
-              data: [routerCount]
-            }],
+            series: hasData ? chartData : [1],
             chart: {
-              type: 'bar',
-              height: 300,
+              type: 'donut',
+              height: 320,
               toolbar: { show: false }
             },
+            labels: hasData ? chartLabels : ['暂无数据'],
+            colors: hasData ? chartColors : ['#E5E5EA'],
             plotOptions: {
-              bar: {
-                borderRadius: 8,
-                columnWidth: '50%'
+              pie: {
+                donut: {
+                  size: '68%',
+                  labels: {
+                    show: true,
+                    name: { show: true, fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' },
+                    value: { show: true, fontSize: '28px', fontWeight: 700, color: 'var(--primary)' },
+                    total: {
+                      show: true,
+                      label: '总计',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: 'var(--text-secondary)',
+                      formatter: function (w) {
+                        return w.globals.seriesTotals.reduce(function(a, b) { return a + b; }, 0);
+                      }
+                    }
+                  }
+                }
               }
             },
             dataLabels: { enabled: false },
-            xaxis: {
-              categories: ['系统数据'],
-              axisBorder: { show: false },
-              axisTicks: { show: false }
-            },
-            yaxis: {
-              labels: { style: { colors: 'var(--text-secondary)' } }
-            },
-            colors: ['var(--primary)', 'var(--success)', 'var(--warning)'],
             legend: {
-              position: 'top',
-              horizontalAlign: 'right'
+              position: 'bottom',
+              horizontalAlign: 'center',
+              fontSize: '13px',
+              fontWeight: 500,
+              markers: { width: 10, height: 10, radius: 50 },
+              itemMargin: { horizontal: 16, vertical: 8 }
             },
+            stroke: { width: 0 },
             tooltip: {
-              theme: 'light'
+              theme: 'light',
+              y: { formatter: function(val) { return val; } }
+            },
+            states: {
+              hover: { filter: { type: 'lighten', value: 0.1 } },
+              active: { filter: { type: 'darken', value: 0.1 } }
             }
           };
           var chart = new ApexCharts(document.querySelector('#stats-chart'), options);
@@ -102,11 +117,7 @@ var PCPages = (function () {
           + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</div>'
           + '<div class="card-body">'
           + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。您可以通过左侧菜单访问已授权的功能模块。</p>'
-          + '<div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">'
-          + (hasRoute(routers, 'user') ? '<button class="btn btn-primary" onclick="pcNavigate(\'user\')">' + mi('group', 'mi-18') + ' 用户管理</button>' : '')
-          + (hasRoute(routers, 'role') ? '<button class="btn btn-outline" onclick="pcNavigate(\'role\')">' + mi('shield', 'mi-18') + ' 角色管理</button>' : '')
-          + (hasRoute(routers, 'router') ? '<button class="btn btn-outline" onclick="pcNavigate(\'router\')">' + mi('route', 'mi-18') + ' 路由管理</button>' : '')
-          + '</div></div></div>';
+          + '</div></div>';
       }
     });
   }
