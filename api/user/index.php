@@ -157,6 +157,8 @@ function updateUser() {
         if (!empty($sets)) {
             $params[] = $id;
             $db->prepare("UPDATE admin_users SET " . implode(', ', $sets) . " WHERE id = ?")->execute($params);
+        } else {
+            error('没有需要更新的字段');
         }
 
         writeLog('user_update', "更新用户 ID=$id");

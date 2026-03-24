@@ -115,6 +115,8 @@ function updateRole() {
         if (!empty($sets)) {
             $params[] = $id;
             $db->prepare("UPDATE roles SET " . implode(', ', $sets) . " WHERE id = ?")->execute($params);
+        } else {
+            error('没有需要更新的字段');
         }
 
         writeLog('role_update', "更新角色 ID=$id");

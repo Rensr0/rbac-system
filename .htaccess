@@ -1,0 +1,29 @@
+# Apache 伪静态 + 安全规则
+
+# 禁止目录浏览
+Options -Indexes
+
+# 禁止访问敏感文件
+<FilesMatch "\.(env|gitignore|sql)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 禁止访问隐藏文件
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# URL 重写
+RewriteEngine On
+RewriteBase /
+
+# API 路由
+RewriteRule ^api/(.*)$ api/$1 [L,QSA]
+
+# 安全头
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "DENY"
+Header always set X-XSS-Protection "1; mode=block"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"

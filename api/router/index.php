@@ -128,6 +128,8 @@ function updateRouter() {
         if (!empty($sets)) {
             $params[] = $id;
             $db->prepare("UPDATE routers SET " . implode(', ', $sets) . " WHERE id = ?")->execute($params);
+        } else {
+            error('没有需要更新的字段');
         }
 
         writeLog('router_update', "更新路由 ID=$id");

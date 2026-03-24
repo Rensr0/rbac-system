@@ -5,6 +5,7 @@
 var PCPages = (function () {
   var currentUser = null;
   var userRouters = [];
+  var _userPage = 1;
 
   // 初始化用户信息
   function init(user, routers) {
@@ -41,11 +42,10 @@ var PCPages = (function () {
   }
 
   // ==================== 用户管理 ====================
-  var pcUserPage = 1;
 
   function loadPCUser(c, kw) {
     kw = kw || (document.getElementById('pc-user-search') ? document.getElementById('pc-user-search').value : '') || '';
-    API.get('user/', { page: pcUserPage, limit: 10, keyword: kw }).then(function(res) {
+    API.get('user/', { page: _userPage, limit: 10, keyword: kw }).then(function(res) {
       if (res.code !== 200) { showToast(res.msg); return; }
       var list = (res.data || {}).list || [];
       var total = (res.data || {}).total || 0;
@@ -78,9 +78,9 @@ var PCPages = (function () {
         }).join('')
         + '</tbody></table></div></div>'
         + '<div class="pagination">'
-        + '<button ' + (pcUserPage <= 1 ? 'disabled' : '') + ' onclick="PCPages.userPage--;PCPages.loadUser(document.getElementById(\'page-content\'))">上一页</button>'
-        + '<span class="text-sm text-secondary">第 ' + pcUserPage + '/' + pages + ' 页</span>'
-        + '<button ' + (pcUserPage >= pages ? 'disabled' : '') + ' onclick="PCPages.userPage++;PCPages.loadUser(document.getElementById(\'page-content\'))">下一页</button>'
+        + '<button ' + (_userPage <= 1 ? 'disabled' : '') + ' onclick="PCPages.userPage--;PCPages.loadUser(document.getElementById(\'page-content\'))">上一页</button>'
+        + '<span class="text-sm text-secondary">第 ' + _userPage + '/' + pages + ' 页</span>'
+        + '<button ' + (_userPage >= pages ? 'disabled' : '') + ' onclick="PCPages.userPage++;PCPages.loadUser(document.getElementById(\'page-content\'))">下一页</button>'
         + '</div>';
     });
   }
@@ -135,7 +135,8 @@ var PCPages = (function () {
     if (!username) { showToast('请输入账号'); return; }
 
     if (id) {
-      API.post('user/', { action: 'update', id: parseInt(id), nickname: nickname, email: email, phone: phone }).then(function() {
+      API.post('user/', { action: 'update', id: parseInt(id), nickname: nickname, email: email, phone: phone }).then(function(updateRes) {
+        if (updateRes.code !== 200) { showToast(updateRes.msg || '更新用户失败'); return; }
         API.post('user/', { action: 'roles', user_id: parseInt(id), role_ids: roleIds }).then(function(res) {
           showToast(res.msg);
           if (res.code === 200) { closeModal('modal-user'); loadPCUser(document.getElementById('page-content')); }
@@ -223,7 +224,8 @@ var PCPages = (function () {
     var routerIds = Array.from(document.querySelectorAll('.role-router-cb:checked')).map(function(cb) { return parseInt(cb.value); });
     if (!roleName) { showToast('请输入角色名称'); return; }
     if (id) {
-      API.post('role/', { action: 'update', id: parseInt(id), role_name: roleName, remark: remark }).then(function() {
+      API.post('role/', { action: 'update', id: parseInt(id), role_name: roleName, remark: remark }).then(function(updateRes) {
+        if (updateRes.code !== 200) { showToast(updateRes.msg || '更新角色失败'); return; }
         API.post('role/', { action: 'routers', role_id: parseInt(id), router_ids: routerIds }).then(function(res) {
           showToast(res.msg);
           if (res.code === 200) { closeModal('modal-role'); loadPCRole(document.getElementById('page-content')); }
@@ -373,14 +375,13 @@ var PCPages = (function () {
   }
 
   // ==================== 导出 ====================
-  return {
+  var exports = {
     init: init,
     loadHome: loadHome,
     loadUser: loadPCUser,
     loadRole: loadPCRole,
     loadRouter: loadPCRouter,
     loadMine: loadPCMine,
-    userPage: pcUserPage,
     addUser: pcAddUser,
     editUser: pcEditUser,
     deleteUser: pcDeleteUser,
@@ -395,6 +396,12 @@ var PCPages = (function () {
     saveRole: saveRole,
     saveRouter: saveRouter
   };
+  Object.defineProperty(exports, 'userPage', {
+    get: function () { return _userPage; },
+    set: function (v) { _userPage = v; },
+    enumerable: true
+  });
+  return exports;
 })();
 
 // PC 端将 userRouters 存为全局变量供 PCPages 使用
