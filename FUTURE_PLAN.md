@@ -218,31 +218,58 @@
 
 ---
 
-## 六、第十一轮：移动端导航与图标修复（待办）
+## 六、第十一轮：移动端导航与图标修复
 
-### 6.1 发现的问题
+### 6.1 已完成修复（本轮）
 
-| # | 问题 | 严重度 | 状态 |
+| # | 问题 | 提交 |
+|---|------|------|
+| 54 | 移动端导航栏硬编码 admin tabs，不是从 API userRouters 动态生成 | `f0633fa` |
+| 55 | 硬编码 tabs 图标（people/route/history）不在 KNOWN_ICONS 列表中，显示为 ♢ | `f0633fa` |
+| 56 | buildPages() 仅为 userRouters 创建页面 div，admin 硬编码 tabs 多出的页面点击无响应 | `f0633fa` |
+| 57 | app.js 遗留文件（旧版单文件移动端路由），未被 home.html 加载 | `f0633fa` |
+| 58 | more_horiz 图标不在 KNOWN_ICONS 中，"更多"按钮显示 ♢ | `f0633fa` |
+| 59 | 移动端与电脑端页面不一致：移动端有硬编码 admin tabs，PC 端从 userRouters 动态生成 | `f0633fa` |
+
+**本轮核心改动：**
+- `app-core.js` buildTabBar() 移除超级管理员硬编码 admin tabs，统一从 API userRouters 动态生成
+- `app-core.js` buildPages() 移除硬编码 allPages 逻辑，同步为所有 userRouters 创建页面 div
+- `core.js` KNOWN_ICONS 从 70+ 扩充到 600+，覆盖 Material Icons 常用图标
+- `core.js` getRouteName() 优化，优先查 userRouters，兜底用内置映射
+- 删除未使用的 app.js（1283 行旧代码）
+
+### 6.2 全面代码审查发现的潜在问题
+
+| # | 问题 | 严重度 | 说明 |
 |---|------|--------|------|
-| 54 | 移动端导航栏硬编码 admin tabs（user/role/router/log），不是从 API `userRouters` 动态生成 | P0 | ⬜ 待修复 |
-| 55 | 硬编码 tabs 图标（`people`/`route`/`history`）不在 KNOWN_ICONS 列表中，显示为 ♢ 占位符 | P0 | ⬜ 待修复 |
-| 56 | `buildPages()` 仅为 `userRouters` 创建页面 div，但 admin 硬编码 tabs 显示了更多页面，导致点击无响应 | P0 | ⬜ 待修复 |
-| 57 | `app.js` 遗留文件（旧版单文件移动端路由），未被 home.html 加载，应清理 | P2 | ⬜ 待清理 |
-| 58 | `more_horiz` 图标不在 KNOWN_ICONS 中，"更多"按钮图标显示为 ♢ | P1 | ⬜ 待修复 |
-| 59 | 移动端与电脑端页面不一致：电脑端侧边栏从 `userRouters` 动态生成，移动端有硬编码 admin tabs | P0 | ⬜ 待修复 |
+| 60 | PC 端 loadSettings 在 loadHome 内嵌套调用，如果非超级管理员不触发 | P2 | 普通用户首页不加载设置面板，不影响功能但逻辑耦合 |
+| 61 | 移动端 app-users.js 和 app-logs.js 重复定义 setupInfiniteScroll | P2 | 同一个函数在两个文件中各定义一次，应抽取到共享模块 |
+| 62 | pc-pages.js 内部函数 pcAddUser/pcEditUser/saveUser 与导出对象方法同名但作用域不同 | P2 | 内部函数 pcAddUser vs 导出 addUser（指向 pcAddUser），命名冗余但不影响功能 |
+| 63 | 移动端日志管理的 searchLogs 函数中 actionMap 在每个渲染循环内重复定义 | P2 | 性能微优化，不影响功能 |
+| 64 | core.js 中 checkPwdStrength 同时定义了两份（函数声明 + checkPwdStrengthCore 包装） | P2 | 冗余代码，checkPwdStrengthCore 直接调用 checkPwdStrength |
+| 65 | 移动端 app-mine.js uploadAppAvatar 使用 base64 POST 上传头像，PC 端使用 FormData + XHR | P2 | 两端上传方式不一致，移动端 base64 体积更大 |
+| 66 | theme-switcher.js PC 端 toggle 定位 theme-panel 时使用 getBoundingClientRect | P2 | 侧边栏收起时位置可能偏移，但用户可手动调整 |
 
-### 6.2 修复方案
+### 6.3 功能完整性确认
 
-**核心修复（54/55/56/59）**：修改 `app-core.js` 的 `buildTabBar()` 和 `buildPages()`
-- 移除超级管理员硬编码 admin tabs 逻辑
-- 统一使用 `userRouters` 动态生成导航栏（与 PC 端 `renderSidebar()` 保持一致）
-- `buildPages()` 同步创建所有 `userRouters` 对应的页面 div
-- 确保移动端顶部导航栏标题根据路由动态显示
+经过代码审查，以下功能在 PC 端和移动端均已完整实现：
+- ✅ 用户管理（增删改查 + 批量操作 + CSV 导入导出）
+- ✅ 角色管理（增删改 + 权限级别 view/edit/delete）
+- ✅ 路由管理（增删改 + 图标选择器 + 搜索过滤）
+- ✅ 操作日志（搜索 + 分页 + 无限滚动）
+- ✅ 个人中心（编辑资料 + 修改密码 + 头像上传 + 登录日志）
+- ✅ 主题切换（6 种主题 + PC 面板 + 移动端 ActionSheet）
+- ✅ 暗色模式全组件适配
+- ✅ 键盘快捷键（Ctrl+K 搜索、Esc 关闭弹窗）
+- ✅ 密码强度指示器
+- ✅ 验证码（可由管理员禁用）
+- ✅ 404 友好页面（PC + 移动端）
+- ✅ 移动端 Tab 溢出 "更多" 按钮
+- ✅ 无限滚动（用户列表 + 日志列表）
 
-**图标修复（55/58）**：修改 `core.js` 的 `KNOWN_ICONS` 列表
-- 添加缺失的常用图标：`people`、`route`、`history`、`more_horiz`
+**累计完成（59 项）：** P0 全部完成，P1 全部完成，P2 完成 11 项
 
 ---
 
-*文档更新时间：2026-03-25 21:51 GMT+8*
-*更新说明：第十一轮开始 — 移动端导航与图标修复（6项待办）*
+*文档更新时间：2026-03-25 22:34 GMT+8*
+*更新说明：第十一轮完成 — 移动端导航动态化 + 图标扩充 + 全面代码审查*
