@@ -233,6 +233,7 @@
             + '</div></div>';
         }
       }
+      if (window._checkIconFont) setTimeout(_checkIconFont, 50);
     }
   };
 

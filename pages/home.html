@@ -162,6 +162,7 @@
     };
     if (loaders[page]) {
       loaders[page](container);
+      if (window._checkIconFont) setTimeout(_checkIconFont, 50);
     } else {
       container.innerHTML =
         '<div class="page-404">'

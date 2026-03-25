@@ -117,11 +117,61 @@ function miSpan(name, text, cls) {
 }
 
 function renderIcon(iconText) {
+  var fontOk = !(document.fonts && document.fonts.check) || document.fonts.check('1em "Material Icons"');
+  if (!fontOk) {
+    return '<i class="mi mi-fallback">\u2662</i>';
+  }
   if (KNOWN_ICONS.indexOf(iconText) !== -1) {
     return '<i class="mi">' + iconText + '</i>';
   }
   return iconText || '<i class="mi">description</i>';
 }
+
+// ===== Material Icons 字体加载失败检测 + 占位符 fallback =====
+(function () {
+  var FONT_NAME = '1em "Material Icons"';
+  var PLACEHOLDER = '\u2662'; // ♢
+  var checked = false;
+
+  function applyFallback() {
+    document.querySelectorAll('.mi').forEach(function (el) {
+      if (!el.classList.contains('mi-fallback')) {
+        el.textContent = PLACEHOLDER;
+        el.classList.add('mi-fallback');
+      }
+    });
+  }
+
+  function checkAndApply() {
+    if (checked) return;
+    checked = true;
+    if (document.fonts && document.fonts.check) {
+      if (!document.fonts.check(FONT_NAME)) {
+        applyFallback();
+      }
+      // 字体加载完成后再检查一次
+      document.fonts.ready.then(function () {
+        if (!document.fonts.check(FONT_NAME)) {
+          applyFallback();
+        }
+      });
+    }
+  }
+
+  // DOM ready 后检测
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkAndApply);
+  } else {
+    checkAndApply();
+  }
+
+  // 暴露方法供动态渲染后调用
+  window._checkIconFont = function () {
+    if (document.fonts && document.fonts.check && !document.fonts.check(FONT_NAME)) {
+      applyFallback();
+    }
+  };
+})();
 
 function iconSelectHtml(selected) {
   return KNOWN_ICONS.map(function (icon) {

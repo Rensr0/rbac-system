@@ -4,8 +4,10 @@
   font-style: normal;
   font-weight: 400;
   src: url('../fonts/MaterialIcons-Regular.woff2') format('woff2');
+  font-display: block;
 }
 
+/* 字体加载失败时的 fallback：隐藏文字，由 JS 注入占位符 */
 .mi {
   font-family: 'Material Icons';
   font-weight: normal;
@@ -24,6 +26,12 @@
   font-feature-settings: 'liga';
   vertical-align: middle;
   user-select: none;
+}
+
+/* 字体未加载时的 fallback 状态 */
+.mi-fallback {
+  font-family: inherit !important;
+  font-style: normal !important;
 }
 
 .mi-sm { font-size: 20px; }
