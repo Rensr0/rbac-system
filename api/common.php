@@ -42,7 +42,7 @@ set_exception_handler(function ($e) {
     logError($errorMsg, 'FATAL');
     
     header('Content-Type: application/json; charset=utf-8');
-    $debugMode = getenv('APP_DEBUG') === 'true';
+    $debugMode = envGet('APP_DEBUG') === 'true';
     $response = [
         'code' => 500,
         'msg'  => $debugMode ? $e->getMessage() : '服务器内部错误',

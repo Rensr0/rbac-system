@@ -22,21 +22,39 @@ function loadEnv($file = null) {
         $key = trim($key);
         $value = trim($value);
         
-        if (!array_key_exists($key, $_SERVER) && !array_key_exists($key, $_ENV)) {
-            putenv("$key=$value");
-            $_ENV[$key] = $value;
-            $_SERVER[$key] = $value;
+        // 去除引号
+        if ((substr($value, 0, 1) === '"' && substr($value, -1) === '"') ||
+            (substr($value, 0, 1) === "'" && substr($value, -1) === "'")) {
+            $value = substr($value, 1, -1);
+        }
+        
+        // 兼容禁用 putenv 的环境
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
+        if (function_exists('putenv')) {
+            @putenv("$key=$value");
         }
     }
 }
 
+// 兼容禁用 getenv 的环境
+function envGet($key, $default = '') {
+    if (isset($_ENV[$key])) return $_ENV[$key];
+    if (isset($_SERVER[$key])) return $_SERVER[$key];
+    if (function_exists('getenv')) {
+        $v = getenv($key);
+        if ($v !== false) return $v;
+    }
+    return $default;
+}
+
 loadEnv();
 
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_PORT', getenv('DB_PORT') ?: '3306');
-define('DB_NAME', getenv('DB_NAME') ?: 'rbac_system');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '123456');
+define('DB_HOST', envGet('DB_HOST', 'localhost'));
+define('DB_PORT', envGet('DB_PORT', '3306'));
+define('DB_NAME', envGet('DB_NAME', 'rbac_system'));
+define('DB_USER', envGet('DB_USER', 'root'));
+define('DB_PASS', envGet('DB_PASS', '123456'));
 define('DB_CHARSET', 'utf8mb4');
 
 /**
