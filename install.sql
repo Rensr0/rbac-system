@@ -128,4 +128,23 @@ CREATE TABLE `operation_logs` (
   KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
 
+-- ----------------------------
+-- 系统设置表
+-- ----------------------------
+DROP TABLE IF EXISTS `system_settings`;
+CREATE TABLE `system_settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(100) NOT NULL DEFAULT '' COMMENT '设置键名',
+  `setting_value` text COMMENT '设置值',
+  `setting_type` varchar(20) NOT NULL DEFAULT 'string' COMMENT '类型:string/int/bool',
+  `label` varchar(100) NOT NULL DEFAULT '' COMMENT '显示名称',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_key` (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统设置表';
+
+INSERT INTO `system_settings` (`setting_key`, `setting_value`, `setting_type`, `label`) VALUES
+('captcha_enabled', '1', 'bool', '登录验证码');
+
 SET FOREIGN_KEY_CHECKS = 1;

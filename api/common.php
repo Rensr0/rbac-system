@@ -126,8 +126,24 @@ try {
         $db->exec("ALTER TABLE role_router ADD COLUMN permissions INT NOT NULL DEFAULT 1 COMMENT '权限位掩码:1=查看 2=编辑 4=删除 7=全部'");
         $db->exec("UPDATE role_router SET permissions = 7");
     }
+    // 检查 system_settings 表是否存在
+    $tbl = $db->query("SHOW TABLES LIKE 'system_settings'")->fetch();
+    if (!$tbl) {
+        $db->exec("CREATE TABLE IF NOT EXISTS system_settings (
+            id INT NOT NULL AUTO_INCREMENT,
+            setting_key VARCHAR(100) NOT NULL DEFAULT '',
+            setting_value TEXT,
+            setting_type VARCHAR(20) NOT NULL DEFAULT 'string',
+            label VARCHAR(100) NOT NULL DEFAULT '',
+            create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uk_key (setting_key)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $db->exec("INSERT INTO system_settings (setting_key, setting_value, setting_type, label) VALUES ('captcha_enabled', '1', 'bool', '登录验证码')");
+    }
 } catch (Exception $e) {
-    // 迁移失败不影响启动（新表会在 install.sql 中创建）
+    // 迁移失败不影响启动
 }
 
 // ==================== 响应函数 ====================
@@ -309,6 +325,27 @@ function requirePermission($routerPath) {
 function requirePermLevel($routerPath, $level) {
     if (!hasPermLevel($routerPath, $level)) {
         forbidden('没有操作权限');
+    }
+}
+
+// ==================== 系统设置 ====================
+
+function getSetting($key, $default = null) {
+    try {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT setting_value, setting_type FROM system_settings WHERE setting_key = ? LIMIT 1");
+        $stmt->execute(array($key));
+        $row = $stmt->fetch();
+        if (!$row) return $default;
+        $val = $row['setting_value'];
+        if ($row['setting_type'] === 'bool') {
+            return ($val === '1' || $val === 'true');
+        } elseif ($row['setting_type'] === 'int') {
+            return intval($val);
+        }
+        return $val;
+    } catch (Exception $e) {
+        return $default;
     }
 }
 

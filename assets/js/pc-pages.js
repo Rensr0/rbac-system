@@ -42,7 +42,8 @@ var PCPages = (function () {
           + '<div class="card-body">'
           + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。当前系统概况如下：</p>'
           + '</div></div>'
-          + '<div class="card" style="margin-top:24px"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:320px;display:flex;align-items:center;justify-content:center"></div></div></div>';
+          + '<div class="card" style="margin-top:24px"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:320px;display:flex;align-items:center;justify-content:center"></div></div></div>'
+          + '<div class="card" style="margin-top:24px"><div class="card-header">' + mi('settings', 'mi-18') + ' 系统设置</div><div class="card-body" id="settings-panel"><div class="text-center" style="padding:16px"><div class="spinner"></div></div></div></div>';
 
         if (window.ApexCharts) {
           var totalUsers = uR.data && uR.data.total || 0;
@@ -107,6 +108,9 @@ var PCPages = (function () {
           var chart = new ApexCharts(document.querySelector('#stats-chart'), options);
           chart.render();
         }
+
+        // 加载系统设置
+        PCPages.loadSettings();
       } else {
         // 普通用户仪表盘 - 不暴露敏感统计信息
         c.innerHTML =
@@ -972,6 +976,44 @@ var PCPages = (function () {
     });
   }
 
+  // ==================== 系统设置 ====================
+  function loadSettings() {
+    var panel = document.getElementById('settings-panel');
+    if (!panel) return;
+    API.get('settings/').then(function(res) {
+      if (res.code !== 200) {
+        panel.innerHTML = '<p style="color:var(--danger)">加载设置失败</p>';
+        return;
+      }
+      var settings = res.data || {};
+      var captchaOn = settings.captcha_enabled && settings.captcha_enabled.value !== false;
+      panel.innerHTML =
+        '<div class="setting-row">'
+        + '<div class="setting-info">'
+        + '<div class="setting-label">' + mi('visibility', 'mi-18') + ' 登录验证码</div>'
+        + '<div class="setting-desc">开启后，登录/注册/找回密码需要输入图形验证码</div>'
+        + '</div>'
+        + '<label class="toggle-switch">'
+        + '<input type="checkbox" id="toggle-captcha"' + (captchaOn ? ' checked' : '') + ' onchange="PCPages.toggleCaptcha(this.checked)">'
+        + '<span class="toggle-slider"></span>'
+        + '</label>'
+        + '</div>';
+    });
+  }
+
+  function toggleCaptcha(enabled) {
+    API.post('settings/', { captcha_enabled: enabled }).then(function(res) {
+      if (res.code === 200) {
+        showToast(enabled ? '验证码已启用' : '验证码已禁用');
+      } else {
+        showToast(res.msg || '操作失败');
+        // 回滚开关状态
+        var toggle = document.getElementById('toggle-captcha');
+        if (toggle) toggle.checked = !enabled;
+      }
+    });
+  }
+
   // ==================== 导出 ====================
   var exports = {
     init: init,
@@ -996,6 +1038,8 @@ var PCPages = (function () {
     saveRole: saveRole,
     saveRouter: saveRouter,
     loadLog: loadPCLog,
+    loadSettings: loadSettings,
+    toggleCaptcha: toggleCaptcha,
     toggleRoutePerms: toggleRoutePerms,
     onPermLevelChange: onPermLevelChange,
     updateBatchBar: updateBatchBar,

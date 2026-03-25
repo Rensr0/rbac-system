@@ -78,6 +78,36 @@ if (!$tbl) {
     echo "<span class='skip'>⏭️  operation_logs 表已存在</span>\n";
 }
 
+// ========== 迁移 4：系统设置表 ==========
+echo "\n── 迁移 4：系统设置表 ──\n";
+
+$tbl = $db->query("SHOW TABLES LIKE 'system_settings'")->fetch();
+if (!$tbl) {
+    run($db, "CREATE TABLE IF NOT EXISTS `system_settings` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `setting_key` varchar(100) NOT NULL DEFAULT '' COMMENT '设置键名',
+        `setting_value` text COMMENT '设置值',
+        `setting_type` varchar(20) NOT NULL DEFAULT 'string' COMMENT '类型:string/int/bool',
+        `label` varchar(100) NOT NULL DEFAULT '' COMMENT '显示名称',
+        `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `uk_key` (`setting_key`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统设置表'", "创建 system_settings 表");
+
+    // 插入默认设置
+    run($db, "INSERT INTO system_settings (setting_key, setting_value, setting_type, label) VALUES ('captcha_enabled', '1', 'bool', '登录验证码')", "插入默认设置：验证码已启用");
+} else {
+    echo "<span class='skip'>⏭️  system_settings 表已存在</span>\n";
+    // 确保 captcha_enabled 记录存在
+    $row = $db->query("SELECT id FROM system_settings WHERE setting_key = 'captcha_enabled'")->fetch();
+    if (!$row) {
+        run($db, "INSERT INTO system_settings (setting_key, setting_value, setting_type, label) VALUES ('captcha_enabled', '1', 'bool', '登录验证码')", "插入 captcha_enabled 设置");
+    } else {
+        echo "<span class='ok'>✅ captcha_enabled 设置已存在</span>\n";
+    }
+}
+
 // ========== 输出汇总 ==========
 echo "\n── 汇总 ──\n";
 $ok = $skip = $err = 0;

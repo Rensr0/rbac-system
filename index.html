@@ -236,7 +236,7 @@
           <button class="pwd-toggle" type="button" onclick="togglePwd(this)"><i class="mi mi-18">visibility</i></button>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group captcha-group">
         <label class="form-label"><i class="mi mi-16">visibility</i> 验证码</label>
         <div class="captcha-row">
           <input class="form-input" type="text" id="pc-captcha" placeholder="请输入验证码" maxlength="4">
@@ -277,7 +277,7 @@
         <label class="form-label">邮箱</label>
         <input class="form-input" type="email" id="reg-email" placeholder="选填，用于找回密码">
       </div>
-      <div class="form-group">
+      <div class="form-group captcha-group">
         <label class="form-label">验证码</label>
         <div class="captcha-row">
           <input class="form-input" type="text" id="reg-captcha" placeholder="请输入验证码" maxlength="4">
@@ -299,7 +299,7 @@
         <label class="form-label">邮箱</label>
         <input class="form-input" type="email" id="forgot-email" placeholder="请输入注册时的邮箱">
       </div>
-      <div class="form-group">
+      <div class="form-group captcha-group">
         <label class="form-label">验证码</label>
         <div class="captcha-row">
           <input class="form-input" type="text" id="forgot-captcha" placeholder="请输入验证码" maxlength="4">
@@ -330,7 +330,7 @@
       <input class="login-input" type="password" id="app-password" placeholder="请输入密码" autocomplete="current-password" style="padding-right:40px">
       <button class="pwd-toggle" type="button" onclick="togglePwd(this)" style="right:12px"><i class="mi mi-18" style="color:rgba(255,255,255,0.5)">visibility</i></button>
     </div>
-    <div class="login-input-wrap" style="gap:6px">
+    <div class="login-input-wrap captcha-group" style="gap:6px">
       <span class="input-icon"><i class="mi mi-18">visibility</i></span>
       <input class="login-input" type="text" id="app-captcha" placeholder="验证码" maxlength="4" style="flex:1;min-width:0">
       <img id="app-captcha-img" onclick="refreshCaptcha('app')" style="height:40px;width:110px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.15);flex-shrink:0;object-fit:contain">
@@ -364,7 +364,7 @@
         <div class="app-form-item"><div class="form-label">密码</div><div style="position:relative"><input class="form-input" type="password" id="app-reg-password" placeholder="至少6位" style="padding-right:40px"><button class="pwd-toggle" type="button" onclick="togglePwd(this)" style="right:12px"><i class="mi mi-18" style="color:rgba(255,255,255,0.5)">visibility</i></button></div></div>
         <div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-reg-nickname" placeholder="选填"></div>
         <div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-reg-email" placeholder="选填"></div>
-        <div class="app-form-item"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-reg-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-reg-captcha-img" onclick="refreshCaptcha('app-reg')" style="height:36px;width:100px;border-radius:6px;cursor:pointer;border:1px solid var(--border);object-fit:contain"></div></div>
+        <div class="app-form-item captcha-group"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-reg-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-reg-captcha-img" onclick="refreshCaptcha('app-reg')" style="height:36px;width:100px;border-radius:6px;cursor:pointer;border:1px solid var(--border);object-fit:contain"></div></div>
       </div>
       <button class="app-btn app-btn-primary" style="margin-top:12px" onclick="appRegister()">确认注册</button>
     </div>
@@ -381,7 +381,7 @@
       <div class="app-form">
         <div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="app-forgot-username" placeholder="请输入账号"></div>
         <div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-forgot-email" placeholder="请输入邮箱"></div>
-        <div class="app-form-item"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-forgot-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-forgot-captcha-img" onclick="refreshCaptcha('app-forgot')" style="height:36px;width:100px;border-radius:6px;cursor:pointer;border:1px solid var(--border);object-fit:contain"></div></div>
+        <div class="app-form-item captcha-group"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-forgot-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-forgot-captcha-img" onclick="refreshCaptcha('app-forgot')" style="height:36px;width:100px;border-radius:6px;cursor:pointer;border:1px solid var(--border);object-fit:contain"></div></div>
       </div>
       <button class="app-btn app-btn-primary" style="margin-top:12px" onclick="appForgot()">重置密码</button>
     </div>
@@ -394,6 +394,26 @@
 <script>
 // ==================== 验证码管理 ====================
 var captchaTimestamps = {};
+var captchaEnabled = true; // 默认启用，由服务器配置覆盖
+
+// 获取公开系统配置
+function loadCaptchaConfig() {
+  API.get('login/', { action: 'config' }, { raw: true }).then(function(res) {
+    if (res.code === 200 && res.data) {
+      captchaEnabled = !!res.data.captcha_enabled;
+      applyCaptchaVisibility();
+    }
+  }).catch(function() {});
+}
+
+// 根据配置显示/隐藏所有验证码区域
+function applyCaptchaVisibility() {
+  var groups = document.querySelectorAll('.captcha-group');
+  groups.forEach(function(el) {
+    el.style.display = captchaEnabled ? '' : 'none';
+  });
+}
+
 function refreshCaptcha(prefix) {
   var ts = Date.now();
   captchaTimestamps[prefix] = ts;
@@ -429,8 +449,9 @@ function togglePwd(btn) {
   }
 }
 
-// 初始化所有验证码
+// 初始化所有验证码 + 加载系统配置
 ['pc','reg','forgot','app','app-reg','app-forgot'].forEach(function(p) { refreshCaptcha(p); });
+loadCaptchaConfig();
 
 // ==================== PC 端 Tab 切换 ====================
 function switchLoginTab(tab) {
@@ -496,7 +517,7 @@ function pcLogin() {
   var captcha  = document.getElementById('pc-captcha').value.trim();
   var remember = document.getElementById('pc-remember').checked;
   if (!username || !password) { showToast('请输入账号和密码'); return; }
-  if (!captcha) { showToast('请输入验证码'); return; }
+  if (captchaEnabled && !captcha) { showToast('请输入验证码'); return; }
 
   var btn = document.getElementById('pc-login-btn');
   btn.disabled = true; btn.textContent = '登录中...'; showLoading();
@@ -522,7 +543,7 @@ function pcRegister() {
   var email    = document.getElementById('reg-email').value.trim();
   var captcha  = document.getElementById('reg-captcha').value.trim();
   if (!username || !password) { showToast('请输入账号和密码'); return; }
-  if (!captcha) { showToast('请输入验证码'); return; }
+  if (captchaEnabled && !captcha) { showToast('请输入验证码'); return; }
 
   showLoading();
   API.post('login/', { action: 'register', username: username, password: password, nickname: nickname, email: email, captcha: captcha }).then(function(res) {
@@ -542,7 +563,7 @@ function pcForgot() {
   var email    = document.getElementById('forgot-email').value.trim();
   var captcha  = document.getElementById('forgot-captcha').value.trim();
   if (!username || !email) { showToast('请输入账号和邮箱'); return; }
-  if (!captcha) { showToast('请输入验证码'); return; }
+  if (captchaEnabled && !captcha) { showToast('请输入验证码'); return; }
 
   showLoading();
   API.post('login/', { action: 'forgot', username: username, email: email, captcha: captcha }).then(function(res) {
@@ -563,7 +584,7 @@ function appLogin() {
   var captcha  = document.getElementById('app-captcha').value.trim();
   var remember = document.getElementById('app-remember').checked;
   if (!username || !password) { appToast('请输入账号和密码'); return; }
-  if (!captcha) { appToast('请输入验证码'); return; }
+  if (captchaEnabled && !captcha) { appToast('请输入验证码'); return; }
 
   var btn = document.getElementById('app-login-btn');
   btn.disabled = true; btn.textContent = '登录中...'; appShowLoading();
@@ -602,7 +623,7 @@ function appRegister() {
   var email    = document.getElementById('app-reg-email').value.trim();
   var captcha  = document.getElementById('app-reg-captcha').value.trim();
   if (!username || !password) { appToast('请输入账号和密码'); return; }
-  if (!captcha) { appToast('请输入验证码'); return; }
+  if (captchaEnabled && !captcha) { appToast('请输入验证码'); return; }
   appShowLoading();
   API.post('login/', { action: 'register', username: username, password: password, nickname: nickname, email: email, captcha: captcha }).then(function(res) {
     appHideLoading();
@@ -619,7 +640,7 @@ function appForgot() {
   var email    = document.getElementById('app-forgot-email').value.trim();
   var captcha  = document.getElementById('app-forgot-captcha').value.trim();
   if (!username || !email) { appToast('请输入账号和邮箱'); return; }
-  if (!captcha) { appToast('请输入验证码'); return; }
+  if (captchaEnabled && !captcha) { appToast('请输入验证码'); return; }
   appShowLoading();
   API.post('login/', { action: 'forgot', username: username, email: email, captcha: captcha }).then(function(res) {
     appHideLoading();

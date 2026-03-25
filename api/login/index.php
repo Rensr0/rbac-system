@@ -30,10 +30,19 @@ switch ($method) {
         break;
     case 'GET':
         if ($action === 'captcha') { handleCaptcha(); }
+        elseif ($action === 'config') { handlePublicConfig(); }
         else { checkLogin(); }
         break;
     case 'DELETE': handleLogout(); break;
     default: error('不支持的请求方式', 405);
+}
+
+/**
+ * 公开系统配置（无需登录，供登录页使用）
+ */
+function handlePublicConfig() {
+    $captchaEnabled = getSetting('captcha_enabled', true);
+    success(array('captcha_enabled' => $captchaEnabled));
 }
 
 /**
@@ -123,16 +132,19 @@ function handleLogin() {
         error('输入内容过长');
     }
 
-    $expectedCaptcha = isset($_SESSION['captcha_code']) ? $_SESSION['captcha_code'] : '';
-    $captchaTime = isset($_SESSION['captcha_time']) ? $_SESSION['captcha_time'] : 0;
-    if (empty($expectedCaptcha) || time() - $captchaTime > 300) {
-        error('验证码已过期，请刷新');
-    }
-    if (strtolower($captcha) !== $expectedCaptcha) {
+    // 验证码校验（仅在启用时）
+    if (getSetting('captcha_enabled', true)) {
+        $expectedCaptcha = isset($_SESSION['captcha_code']) ? $_SESSION['captcha_code'] : '';
+        $captchaTime = isset($_SESSION['captcha_time']) ? $_SESSION['captcha_time'] : 0;
+        if (empty($expectedCaptcha) || time() - $captchaTime > 300) {
+            error('验证码已过期，请刷新');
+        }
+        if (strtolower($captcha) !== $expectedCaptcha) {
+            unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
+            error('验证码错误');
+        }
         unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
-        error('验证码错误');
     }
-    unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
 
     try {
         $db = getDB();
@@ -198,16 +210,19 @@ function handleRegister() {
     $email    = trim(isset($data['email']) ? $data['email'] : '');
     $captcha  = trim(isset($data['captcha']) ? $data['captcha'] : '');
 
-    $expectedCaptcha = isset($_SESSION['captcha_code']) ? $_SESSION['captcha_code'] : '';
-    $captchaTime = isset($_SESSION['captcha_time']) ? $_SESSION['captcha_time'] : 0;
-    if (empty($expectedCaptcha) || time() - $captchaTime > 300) {
-        error('验证码已过期，请刷新');
-    }
-    if (strtolower($captcha) !== $expectedCaptcha) {
+    // 验证码校验（仅在启用时）
+    if (getSetting('captcha_enabled', true)) {
+        $expectedCaptcha = isset($_SESSION['captcha_code']) ? $_SESSION['captcha_code'] : '';
+        $captchaTime = isset($_SESSION['captcha_time']) ? $_SESSION['captcha_time'] : 0;
+        if (empty($expectedCaptcha) || time() - $captchaTime > 300) {
+            error('验证码已过期，请刷新');
+        }
+        if (strtolower($captcha) !== $expectedCaptcha) {
+            unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
+            error('验证码错误');
+        }
         unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
-        error('验证码错误');
     }
-    unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
 
     // 输入验证
     if (empty($username)) { error('用户名不能为空'); }
@@ -253,16 +268,19 @@ function handleForgot() {
     $email    = trim(isset($data['email']) ? $data['email'] : '');
     $captcha  = trim(isset($data['captcha']) ? $data['captcha'] : '');
 
-    $expectedCaptcha = isset($_SESSION['captcha_code']) ? $_SESSION['captcha_code'] : '';
-    $captchaTime = isset($_SESSION['captcha_time']) ? $_SESSION['captcha_time'] : 0;
-    if (empty($expectedCaptcha) || time() - $captchaTime > 300) {
-        error('验证码已过期，请刷新');
-    }
-    if (strtolower($captcha) !== $expectedCaptcha) {
+    // 验证码校验（仅在启用时）
+    if (getSetting('captcha_enabled', true)) {
+        $expectedCaptcha = isset($_SESSION['captcha_code']) ? $_SESSION['captcha_code'] : '';
+        $captchaTime = isset($_SESSION['captcha_time']) ? $_SESSION['captcha_time'] : 0;
+        if (empty($expectedCaptcha) || time() - $captchaTime > 300) {
+            error('验证码已过期，请刷新');
+        }
+        if (strtolower($captcha) !== $expectedCaptcha) {
+            unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
+            error('验证码错误');
+        }
         unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
-        error('验证码错误');
     }
-    unset($_SESSION['captcha_code'], $_SESSION['captcha_time']);
 
     if (empty($username) || empty($email)) {
         error('用户名和邮箱不能为空');
