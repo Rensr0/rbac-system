@@ -90,32 +90,39 @@ var SharedUtils = (function () {
 
   function renderRouterPermItem(r, prefix, rolePerms) {
     var rp = rolePerms ? rolePerms.find(function(p) { return p.router_id === r.id; }) : null;
-    var permLevel = rp ? rp.perms : 0;
+    var perms = rp ? rp.perms : [];
+    var hasView = perms.indexOf('view') !== -1;
+    var hasEdit = perms.indexOf('edit') !== -1;
+    var hasDelete = perms.indexOf('delete') !== -1;
+    var checked = perms.length > 0;
     return '<label class="app-router-perm-item" data-router-id="' + r.id + '" data-router-name="' + escapeHtml(r.router_name) + '">'
       + '<div style="display:flex;align-items:center;gap:8px;padding:8px 0">'
-      + '<input type="checkbox" value="' + r.id + '" class="' + prefix + '-router-cb" ' + (permLevel > 0 ? 'checked' : '') + '>'
+      + '<input type="checkbox" value="' + r.id + '" class="' + prefix + '-router-cb" ' + (checked ? 'checked' : '') + '>'
       + '<span style="flex:1">' + escapeHtml(r.router_name) + '</span>'
       + '</div>'
       + '<div style="display:flex;gap:8px;padding:0 0 8px 24px">'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="view" class="' + prefix + '-perm-cb-' + r.id + '" ' + (permLevel & 1 ? 'checked' : '') + '> 查看</label>'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="edit" class="' + prefix + '-perm-cb-' + r.id + '" ' + (permLevel & 2 ? 'checked' : '') + '> 编辑</label>'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="delete" class="' + prefix + '-perm-cb-' + r.id + '" ' + (permLevel & 4 ? 'checked' : '') + '> 删除</label>'
+      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="view" class="' + prefix + '-perm-cb-' + r.id + '" ' + (hasView ? 'checked' : '') + '> 查看</label>'
+      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="edit" class="' + prefix + '-perm-cb-' + r.id + '" ' + (hasEdit ? 'checked' : '') + '> 编辑</label>'
+      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="delete" class="' + prefix + '-perm-cb-' + r.id + '" ' + (hasDelete ? 'checked' : '') + '> 删除</label>'
       + '</div>'
       + '</label>';
   }
 
   function renderRouterPermItemPC(r, rolePerms) {
     var rp = rolePerms ? rolePerms.find(function(p) { return p.router_id === r.id; }) : null;
-    var permLevel = rp ? rp.perms : 0;
+    var perms = rp ? rp.perms : [];
+    var hasView = perms.indexOf('view') !== -1;
+    var hasEdit = perms.indexOf('edit') !== -1;
+    var hasDelete = perms.indexOf('delete') !== -1;
     return '<div class="tree-item">'
       + '<label style="display:flex;align-items:center;gap:8px;flex:1">'
       + '<input type="checkbox" value="' + r.id + '" class="pc-router-cb" onchange="SharedUtils.toggleRoutePerms(this, \'pc\')" ' + (rp ? 'checked' : '') + '>'
       + '<span style="flex:1">' + escapeHtml(r.router_name) + '</span>'
       + '</label>'
       + '<div style="display:flex;gap:8px;margin-left:8px">'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="view" class="pc-perm-cb-' + r.id + '" onchange="SharedUtils.onPermLevelChange(this, \'pc\')" ' + (permLevel & 1 ? 'checked' : '') + '> 查看</label>'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="edit" class="pc-perm-cb-' + r.id + '" onchange="SharedUtils.onPermLevelChange(this, \'pc\')" ' + (permLevel & 2 ? 'checked' : '') + '> 编辑</label>'
-      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="delete" class="pc-perm-cb-' + r.id + '" onchange="SharedUtils.onPermLevelChange(this, \'pc\')" ' + (permLevel & 4 ? 'checked' : '') + '> 删除</label>'
+      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="view" class="pc-perm-cb-' + r.id + '" onchange="SharedUtils.onPermLevelChange(this, \'pc\')" ' + (hasView ? 'checked' : '') + '> 查看</label>'
+      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="edit" class="pc-perm-cb-' + r.id + '" onchange="SharedUtils.onPermLevelChange(this, \'pc\')" ' + (hasEdit ? 'checked' : '') + '> 编辑</label>'
+      + '<label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" value="delete" class="pc-perm-cb-' + r.id + '" onchange="SharedUtils.onPermLevelChange(this, \'pc\')" ' + (hasDelete ? 'checked' : '') + '> 删除</label>'
       + '</div>'
       + '</div>';
   }
