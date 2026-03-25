@@ -333,7 +333,7 @@
     <div class="login-input-wrap" style="gap:6px">
       <span class="input-icon"><i class="mi mi-18">visibility</i></span>
       <input class="login-input" type="text" id="app-captcha" placeholder="验证码" maxlength="4" style="flex:1;min-width:0">
-      <img id="app-captcha-img" onclick="refreshCaptcha('app')" style="border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.15);flex-shrink:0">
+      <img id="app-captcha-img" onclick="refreshCaptcha('app')" style="height:40px;width:110px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.15);flex-shrink:0;object-fit:contain">
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px;padding:0 4px">
       <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,0.6);cursor:pointer">
@@ -364,7 +364,7 @@
         <div class="app-form-item"><div class="form-label">密码</div><div style="position:relative"><input class="form-input" type="password" id="app-reg-password" placeholder="至少6位" style="padding-right:40px"><button class="pwd-toggle" type="button" onclick="togglePwd(this)" style="right:12px"><i class="mi mi-18" style="color:rgba(255,255,255,0.5)">visibility</i></button></div></div>
         <div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-reg-nickname" placeholder="选填"></div>
         <div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-reg-email" placeholder="选填"></div>
-        <div class="app-form-item"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-reg-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-reg-captcha-img" onclick="refreshCaptcha('app-reg')" style="height:36px;border-radius:6px;cursor:pointer;border:1px solid var(--border)"></div></div>
+        <div class="app-form-item"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-reg-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-reg-captcha-img" onclick="refreshCaptcha('app-reg')" style="height:36px;width:100px;border-radius:6px;cursor:pointer;border:1px solid var(--border);object-fit:contain"></div></div>
       </div>
       <button class="app-btn app-btn-primary" style="margin-top:12px" onclick="appRegister()">确认注册</button>
     </div>
@@ -381,7 +381,7 @@
       <div class="app-form">
         <div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="app-forgot-username" placeholder="请输入账号"></div>
         <div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-forgot-email" placeholder="请输入邮箱"></div>
-        <div class="app-form-item"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-forgot-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-forgot-captcha-img" onclick="refreshCaptcha('app-forgot')" style="height:36px;border-radius:6px;cursor:pointer;border:1px solid var(--border)"></div></div>
+        <div class="app-form-item"><div class="form-label">验证码</div><div style="display:flex;align-items:center;gap:6px;flex:1"><input class="form-input" id="app-forgot-captcha" placeholder="输入验证码" maxlength="4" style="flex:1"><img id="app-forgot-captcha-img" onclick="refreshCaptcha('app-forgot')" style="height:36px;width:100px;border-radius:6px;cursor:pointer;border:1px solid var(--border);object-fit:contain"></div></div>
       </div>
       <button class="app-btn app-btn-primary" style="margin-top:12px" onclick="appForgot()">重置密码</button>
     </div>
