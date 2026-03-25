@@ -153,6 +153,11 @@ var SharedOps = (function () {
     API.get('log/', params).then(function (res) { cb(res); });
   }
 
+  function getMyLogs(page, limit, cb) {
+    var params = { self: '1', page: page || 1, limit: limit || 20 };
+    API.get('log/', params).then(function (res) { cb(res); });
+  }
+
   // ==================== 导出 ====================
   return {
     user: {
@@ -181,7 +186,8 @@ var SharedOps = (function () {
       delete: deleteRouter
     },
     log: {
-      search: getLogs
+      search: getLogs,
+      myLogs: getMyLogs
     }
   };
 })();

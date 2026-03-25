@@ -443,26 +443,30 @@
   /* ========== APP Toast ========== */
   .app-toast {
     position: fixed;
-    top: 50%;
+    bottom: calc(90px + var(--safe-bottom, 0px));
     left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.75);
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
     color: #fff;
-    padding: 12px 24px;
-    border-radius: 12px;
+    padding: 10px 20px;
+    border-radius: 10px;
     font-size: 14px;
     z-index: 9999;
-    animation: toastFade 2s ease forwards;
+    animation: toastSlideUp 2s ease forwards;
     white-space: nowrap;
     max-width: 80%;
     text-align: center;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
-  @keyframes toastFade {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
-    12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  @keyframes toastSlideUp {
+    0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    12% { opacity: 1; transform: translateX(-50%) translateY(0); }
     85% { opacity: 1; }
-    100% { opacity: 0; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
   }
+  /* 多个 Toast 垂直堆叠 */
+  .app-toast + .app-toast { margin-top: 8px; }
 
   /* ========== APP Loading ========== */
   .app-loading {

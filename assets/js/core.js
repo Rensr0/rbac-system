@@ -408,7 +408,8 @@ function openIconPicker(inputId, onChange) {
     pickerOverlay = createActionSheet(
       '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">选择图标</div>'
-      + '<div style="padding:0 12px 16px">'
+      + '<div style="padding:0 12px 8px">'
+      + '<div class="app-search" style="margin-bottom:8px"><span class="search-icon">' + mi('search', 'mi-16') + '</span><input type="text" placeholder="搜索图标名称..." id="icon-pick-search" oninput="filterIconPicker(this.value)"></div>'
       + '<div class="icon-pick-grid">' + iconGridHtml + '</div>'
       + '</div>'
       + '<div class="sheet-cancel" id="icon-pick-cancel">取消</div>',
@@ -433,6 +434,7 @@ function openIconPicker(inputId, onChange) {
       '<div class="modal" style="max-width:560px">'
       + '<div class="modal-header"><h3>选择图标</h3><button class="modal-close" id="icon-pick-close">✕</button></div>'
       + '<div class="modal-body" style="max-height:60vh;overflow-y:auto">'
+      + '<div style="margin-bottom:10px"><input class="form-input" type="text" placeholder="搜索图标名称..." id="icon-pick-search" oninput="filterIconPicker(this.value)"></div>'
       + '<div class="icon-pick-grid">' + iconGridHtml + '</div>'
       + '</div></div>';
     document.body.appendChild(pickerOverlay);
@@ -471,6 +473,18 @@ function openIconPicker(inputId, onChange) {
     })(pickerItems[i]);
   }
 }
+
+// 图标选择器搜索过滤
+window.filterIconPicker = function(keyword) {
+  keyword = (keyword || '').toLowerCase();
+  var items = document.querySelectorAll('.icon-pick-item');
+  for (var i = 0; i < items.length; i++) {
+    var icon = items[i].dataset.icon || '';
+    var title = items[i].getAttribute('title') || '';
+    var match = keyword === '' || icon.indexOf(keyword) !== -1 || title.indexOf(keyword) !== -1;
+    items[i].style.display = match ? '' : 'none';
+  }
+};
 
 function iconSelectHtml(selected, inputId) {
   inputId = inputId || '';
@@ -529,6 +543,46 @@ function bindPwdStrength(inputId) {
     text.style.color = result.color;
   });
 }
+
+// ==================== 键盘快捷键 ====================
+(function() {
+  document.addEventListener('keydown', function(e) {
+    // Esc: 关闭弹窗/action sheet
+    if (e.key === 'Escape') {
+      // PC 端关闭 modal
+      var openModal = document.querySelector('.modal-overlay.show');
+      if (openModal) {
+        openModal.classList.remove('show');
+        setTimeout(function() { openModal.style.display = 'none'; }, 250);
+        return;
+      }
+      // 移动端关闭 action sheet
+      var sheetOverlay = document.querySelector('.app-action-sheet-overlay.show');
+      if (sheetOverlay) {
+        var sheet = sheetOverlay.querySelector('.app-action-sheet');
+        if (sheet) sheet.style.transform = 'translateY(100%)';
+        setTimeout(function() { sheetOverlay.remove(); }, 350);
+        return;
+      }
+      // PC 端关闭主题面板
+      var themePanel = document.getElementById('theme-panel');
+      if (themePanel && themePanel.classList.contains('show')) {
+        themePanel.classList.remove('show');
+        return;
+      }
+    }
+
+    // Ctrl+K: 聚焦搜索框（跳过输入框内的情况，除非在搜索框里）
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      var searchInput = document.querySelector('.app-search input, .search-bar input, #user-search, #log-search, #pc-user-search, #pc-log-search');
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    }
+  });
+})();
 
 // ==================== 网络状态监听 ====================
 (function() {

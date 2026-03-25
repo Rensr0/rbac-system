@@ -763,8 +763,41 @@
       + '<div class="app-list-item" onclick="showChangePwdSheet()">'
       + '<div class="item-icon">' + mi('lock') + '</div><div class="item-content"><div class="item-title">修改密码</div></div><div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
       + '</div></div>'
+      + '<div class="app-card" style="margin-bottom:12px">'
+      + '<div class="app-card-header"><h3>' + mi('history') + ' 登录记录</h3></div>'
+      + '<div id="mine-login-logs"><div class="scroll-loading">' + mi('refresh', 'mi-16 spin') + ' 加载中...</div></div>'
+      + '</div>'
       + '<div style="padding:24px 0"><button class="app-btn app-btn-danger" onclick="logoutApp()">' + mi('logout', 'mi-18') + ' 退出登录</button></div>'
       + '</div>';
+
+    // 加载登录日志
+    var logsContainer = document.getElementById('mine-login-logs');
+    if (logsContainer) {
+      SharedOps.log.myLogs(1, 10, function(res) {
+        if (res.code !== 200) {
+          logsContainer.innerHTML = '<div style="padding:12px 16px;font-size:13px;color:var(--text-tertiary)">加载失败</div>';
+          return;
+        }
+        var list = (res.data || {}).list || [];
+        if (list.length === 0) {
+          logsContainer.innerHTML = '<div style="padding:12px 16px;font-size:13px;color:var(--text-tertiary)">暂无登录记录</div>';
+          return;
+        }
+        var actionMap = { 'login': '登录', 'logout': '退出' };
+        logsContainer.innerHTML = list.map(function(l) {
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:0.5px solid var(--border-light)">'
+            + '<div>'
+            + '<div style="font-size:13px;font-weight:500">' + (actionMap[l.action] || l.action) + '</div>'
+            + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">' + escapeHtml(l.ip) + '</div>'
+            + '</div>'
+            + '<div style="font-size:11px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</div>'
+            + '</div>';
+        }).join('');
+        if ((res.data || {}).total > 10) {
+          logsContainer.innerHTML += '<div style="text-align:center;padding:8px"><span style="font-size:12px;color:var(--text-tertiary)">共 ' + (res.data || {}).total + ' 条记录</span></div>';
+        }
+      });
+    }
   });
 
   // 编辑个人资料（手机端）

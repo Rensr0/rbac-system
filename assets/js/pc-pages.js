@@ -151,6 +151,7 @@ var PCPages = (function () {
         + '<span class="batch-count">已选择 <strong id="batch-selected-count">0</strong> 个用户</span>'
         + '<button class="btn btn-sm btn-success" onclick="PCPages.batchEnable()">' + mi('check_circle', 'mi-14') + ' 批量启用</button>'
         + '<button class="btn btn-sm btn-warning" onclick="PCPages.batchDisable()">' + mi('block', 'mi-14') + ' 批量禁用</button>'
+        + '<button class="btn btn-sm btn-danger" onclick="PCPages.batchDelete()">' + mi('delete', 'mi-14') + ' 批量删除</button>'
         + '<button class="btn btn-sm btn-outline" onclick="PCPages.clearSelection()">取消选择</button>'
         + '</div>' : '')
         + '<div class="card"><div class="table-wrap"><table>'
@@ -326,6 +327,31 @@ var PCPages = (function () {
         hideLoading();
         showToast(res.msg);
         if (res.code === 200) loadPCUser(document.getElementById('page-content'));
+      });
+    });
+  }
+
+  function batchDelete() {
+    var ids = getSelectedUserIds();
+    if (ids.length === 0) { showToast('请先选择用户'); return; }
+    confirmDialog('批量删除', '确定要删除选中的 ' + ids.length + ' 个用户吗？此操作不可恢复！').then(function(ok) {
+      if (!ok) return;
+      showLoading();
+      var completed = 0;
+      var failed = 0;
+      function checkDone() {
+        completed++;
+        if (completed === ids.length) {
+          hideLoading();
+          showToast('删除完成，成功 ' + (completed - failed) + ' 个' + (failed > 0 ? '，失败 ' + failed + ' 个' : ''));
+          loadPCUser(document.getElementById('page-content'));
+        }
+      }
+      ids.forEach(function(id) {
+        SharedOps.user.delete(id, function(res) {
+          if (res.code !== 200) failed++;
+          checkDone();
+        });
       });
     });
   }
@@ -784,7 +810,26 @@ var PCPages = (function () {
       + '<div class="form-group"><label class="form-label">确认新密码</label><input class="form-input" type="password" id="pc-confirm-pwd" placeholder="再次输入新密码"></div>'
       + '<button class="btn btn-primary" onclick="PCPages.changePwd()" style="width:100%">' + mi('lock_reset', 'mi-18') + ' 修改密码</button>'
       + '</div>'
-      + '</div></div></div>';
+      + '</div>'
+      + '</div>'
+      + '<div class="card" style="margin-top:24px"><div class="card-header">' + mi('history', 'mi-18') + ' 登录记录</div><div class="card-body" id="pc-mine-logs"><div class="text-center" style="padding:16px"><div class="spinner"></div></div></div></div>'
+      + '</div></div>';
+
+    // 加载登录日志
+    SharedOps.log.myLogs(1, 15, function(res) {
+      var el = document.getElementById('pc-mine-logs');
+      if (!el) return;
+      if (res.code !== 200) { el.innerHTML = '<p style="color:var(--text-secondary)">加载失败</p>'; return; }
+      var list = (res.data || {}).list || [];
+      if (list.length === 0) { el.innerHTML = '<p style="color:var(--text-secondary)">暂无登录记录</p>'; return; }
+      var actionMap = { 'login': '登录', 'logout': '退出' };
+      el.innerHTML = '<table style="width:100%;border-collapse:collapse">'
+        + '<thead><tr><th style="text-align:left;padding:8px;font-size:12px;color:var(--text-secondary)">操作</th><th style="text-align:left;padding:8px;font-size:12px;color:var(--text-secondary)">IP</th><th style="text-align:left;padding:8px;font-size:12px;color:var(--text-secondary)">时间</th></tr></thead>'
+        + '<tbody>' + list.map(function(l) {
+          return '<tr style="border-top:1px solid var(--border-light)"><td style="padding:8px;font-size:13px">' + (actionMap[l.action] || l.action) + '</td><td style="padding:8px;font-size:13px;color:var(--text-secondary)">' + escapeHtml(l.ip) + '</td><td style="padding:8px;font-size:13px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</td></tr>';
+        }).join('')
+        + '</tbody></table>';
+    });
   }
 
   function pcSaveProfile() {
@@ -1047,6 +1092,7 @@ var PCPages = (function () {
     clearSelection: clearSelection,
     batchEnable: batchEnable,
     batchDisable: batchDisable,
+    batchDelete: batchDelete,
     exportUsers: exportUsersCSV,
     importUsers: importUsersCSV
   };
