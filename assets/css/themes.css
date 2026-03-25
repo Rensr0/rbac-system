@@ -276,6 +276,115 @@ html, body, .sidebar, .app-navbar, .app-statusbar, .app-tabbar,
   background: linear-gradient(180deg, var(--login-gradient-start), var(--login-gradient-end)) !important;
 }
 
+/* ========== 暗色模式 — 移动端补充适配 ========== */
+
+/* 底部 Tab 栏 */
+[data-theme="dark"] .app-tabbar {
+  background: rgba(28,28,30,0.95) !important;
+  border-top-color: rgba(255,255,255,0.06) !important;
+}
+[data-theme="dark"] .tab-item .tab-label { color: var(--text-secondary) !important; }
+[data-theme="dark"] .tab-item.active .tab-label { color: var(--primary-light) !important; }
+
+/* 卡片 & 列表 & 表单 */
+[data-theme="dark"] .app-card {
+  background: var(--bg-card) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2) !important;
+}
+[data-theme="dark"] .app-card-header h3 { color: var(--text-primary) !important; }
+[data-theme="dark"] .app-card-header { border-bottom-color: var(--border) !important; }
+[data-theme="dark"] .app-list {
+  background: var(--bg-card) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2) !important;
+}
+[data-theme="dark"] .app-list-item { border-bottom-color: var(--border) !important; }
+[data-theme="dark"] .app-list-item:active { background: var(--bg-secondary) !important; }
+[data-theme="dark"] .app-list-item .item-title { color: var(--text-primary) !important; }
+[data-theme="dark"] .app-list-item .item-desc { color: var(--text-secondary) !important; }
+[data-theme="dark"] .app-list-item .item-arrow { color: var(--text-tertiary) !important; }
+[data-theme="dark"] .app-list-item .item-icon { background: rgba(94,123,255,0.12) !important; }
+[data-theme="dark"] .app-form {
+  background: var(--bg-card) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2) !important;
+}
+[data-theme="dark"] .app-form-item { border-bottom-color: var(--border) !important; }
+
+/* 统计卡片 */
+[data-theme="dark"] .app-stat-card {
+  background: var(--bg-card) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2) !important;
+}
+[data-theme="dark"] .app-stat-card .stat-name { color: var(--text-secondary) !important; }
+
+/* 内容区背景 */
+[data-theme="dark"] .app-page-content { background: var(--bg-primary) !important; }
+
+/* 移动端表单输入 */
+[data-theme="dark"] .app-form-input,
+[data-theme="dark"] .app-form-item input,
+[data-theme="dark"] .app-form-item select,
+[data-theme="dark"] .app-form-item textarea {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+/* 搜索栏 */
+[data-theme="dark"] .search-bar { background: transparent !important; }
+
+/* 更多菜单（action sheet 关闭按钮） */
+[data-theme="dark"] .sheet-cancel { background: var(--bg-card) !important; color: var(--primary-light) !important; }
+[data-theme="dark"] .sheet-cancel:active { background: var(--bg-secondary) !important; }
+[data-theme="dark"] .sheet-title { color: var(--text-primary) !important; }
+[data-theme="dark"] .sheet-item { border-bottom-color: var(--border) !important; }
+[data-theme="dark"] .sheet-item:active { background: var(--bg-secondary) !important; }
+
+/* 移动端弹窗 */
+[data-theme="dark"] .app-dialog { background: rgba(44,44,46,0.97) !important; }
+[data-theme="dark"] .app-dialog .dialog-btn:active { background: var(--bg-secondary) !important; }
+
+/* 移动端 Toast */
+[data-theme="dark"] .app-toast { background: rgba(44,44,46,0.92) !important; color: var(--text-primary) !important; }
+
+/* 个人中心头像区域 */
+[data-theme="dark"] .mine-header { border-bottom-color: var(--border) !important; }
+[data-theme="dark"] .mine-avatar-ring { border-color: rgba(255,255,255,0.15) !important; }
+
+/* 加载指示器 */
+[data-theme="dark"] .loading-spinner { border-top-color: var(--primary-light) !important; }
+
+/* 404 页面 */
+[data-theme="dark"] .error-page { background: var(--bg-primary) !important; }
+[data-theme="dark"] .error-page h2 { color: var(--text-primary) !important; }
+[data-theme="dark"] .error-page p { color: var(--text-secondary) !important; }
+
+/* 密码强度条 */
+[data-theme="dark"] .pwd-strength-track { background: var(--bg-secondary) !important; }
+
+/* 空状态 */
+[data-theme="dark"] .empty-state { color: var(--text-tertiary) !important; }
+[data-theme="dark"] .empty-state .mi { color: var(--text-tertiary) !important; }
+
+/* 移动端更多菜单按钮 */
+[data-theme="dark"] .more-menu-btn { color: var(--text-primary) !important; }
+[data-theme="dark"] .more-menu-grid .menu-item { color: var(--text-primary) !important; }
+[data-theme="dark"] .more-menu-grid .menu-item:active { background: var(--bg-secondary) !important; }
+[data-theme="dark"] .more-menu-overlay { background: rgba(0,0,0,0.6) !important; }
+[data-theme="dark"] .more-menu-panel { background: var(--bg-card) !important; }
+
+/* 主题选项面板（移动端 action sheet） */
+[data-theme="dark"] .theme-option { color: var(--text-primary) !important; }
+[data-theme="dark"] .theme-option:active { background: var(--bg-secondary) !important; }
+[data-theme="dark"] .theme-dot { box-shadow: 0 0 0 2px var(--border) !important; }
+
+/* navbar-action 主题按钮 */
+[data-theme="dark"] .navbar-action .mi { color: rgba(255,255,255,0.85) !important; }
+
+/* 审计日志条目 */
+[data-theme="dark"] .audit-item { border-bottom-color: var(--border) !important; }
+[data-theme="dark"] .audit-item .audit-time { color: var(--text-tertiary) !important; }
+[data-theme="dark"] .audit-item .audit-text { color: var(--text-secondary) !important; }
+
 /* ========== 主题切换器样式 ========== */
 .theme-switcher {
   position: relative;
