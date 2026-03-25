@@ -327,19 +327,88 @@
     }
   });
 
+  // ==================== 无限滚动工具 ====================
+  /**
+   * 在 container 末尾插入滚动哨兵，当可见时触发 loadMore。
+   * @param {HTMLElement} container - 列表容器
+   * @param {Function} loadMore - function(done) ，done(hasMore) 回调
+   * @returns {{ destroy: Function }} 清理函数
+   */
+  function setupInfiniteScroll(container, loadMore) {
+    var sentinel = document.createElement('div');
+    sentinel.className = 'scroll-sentinel';
+    sentinel.innerHTML = '<div class="scroll-loading">' + mi('refresh', 'mi-16 spin') + ' 加载中...</div>';
+    container.appendChild(sentinel);
+
+    var loading = false;
+    var hasMore = true;
+
+    function onIntersect(entries) {
+      if (entries[0].isIntersecting && !loading && hasMore) {
+        loading = true;
+        sentinel.querySelector('.scroll-loading').style.display = 'flex';
+        loadMore(function (more) {
+          hasMore = more;
+          loading = false;
+          sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
+          if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
+        });
+      }
+    }
+
+    var observer;
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver(onIntersect, { rootMargin: '200px' });
+      observer.observe(sentinel);
+    } else {
+      // fallback: scroll listener
+      var scrollEl = container.closest('.app-page') || document.querySelector('.app-content');
+      if (scrollEl) {
+        function onScroll() {
+          if (loading || !hasMore) return;
+          var rect = scrollEl.getBoundingClientRect();
+          if (rect.bottom - window.innerHeight < 300) {
+            loading = true;
+            loadMore(function (more) {
+              hasMore = more;
+              loading = false;
+              sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
+              if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
+            });
+          }
+        }
+        scrollEl.addEventListener('scroll', onScroll);
+      }
+    }
+
+    return {
+      destroy: function () {
+        if (observer) observer.disconnect();
+        sentinel.remove();
+      }
+    };
+  }
+
   // ==================== 用户管理 ====================
   registerPage('user', function () {
     var content = document.getElementById('page-user');
     if (!content) return;
 
     var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
+    var _userPage = 1;
+    var _userTotalPages = 1;
+    var _userKeyword = '';
+    var _scrollCtrl = null;
 
     appShowLoading();
     SharedOps.user.search('', 1, 20, function (res) {
       appHideLoading();
       if (res.code !== 200) { appToast(res.msg); return; }
 
-      var list = (res.data || {}).list || [];
+      var data = res.data || {};
+      var list = data.list || [];
+      var total = data.total || 0;
+      _userTotalPages = Math.ceil(total / 20) || 1;
 
       content.innerHTML =
         '<div class="app-page-content">'
@@ -353,6 +422,28 @@
         + '</div>'
         + (isSuper ? '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="showAddUserSheet()">' + mi('add', 'mi-18') + ' 添加用户</button></div>' : '')
         + '</div>';
+
+      // 无限滚动
+      if (_userTotalPages > 1) {
+        var listEl = document.getElementById('user-list');
+        _scrollCtrl = setupInfiniteScroll(listEl, function (done) {
+          _userPage++;
+          SharedOps.user.search(_userKeyword, _userPage, 20, function (r) {
+            if (r.code !== 200) { done(false); return; }
+            var items = (r.data || {}).list || [];
+            if (items.length === 0) { done(false); return; }
+            var html = items.map(function (u) { return renderUserCard(u); }).join('');
+            // 在哨兵之前插入
+            var sentinel = listEl.querySelector('.scroll-sentinel');
+            var tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            while (tmp.firstChild) {
+              listEl.insertBefore(tmp.firstChild, sentinel);
+            }
+            done(_userPage < _userTotalPages);
+          });
+        });
+      }
     });
   });
 
@@ -383,12 +474,40 @@
     SharedOps.user.search(kw, 1, 20, function (res) {
       appHideLoading();
       if (res.code !== 200) return;
-      var list = (res.data || {}).list || [];
+      var data = res.data || {};
+      var list = data.list || [];
+      var total = data.total || 0;
       var container = document.getElementById('user-list');
       if (container) {
+        // 清除旧的哨兵
+        var oldSentinel = container.querySelector('.scroll-sentinel');
+        if (oldSentinel) oldSentinel.remove();
+
         container.innerHTML = list.length === 0
           ? '<div class="empty-state"><div class="empty-icon">' + mi('search_off', 'mi-xl') + '</div><p>未找到用户</p></div>'
           : list.map(function (u) { return renderUserCard(u); }).join('');
+
+        // 重建无限滚动
+        var totalPages = Math.ceil(total / 20) || 1;
+        if (totalPages > 1) {
+          var _page = 1;
+          setupInfiniteScroll(container, function (done) {
+            _page++;
+            SharedOps.user.search(kw, _page, 20, function (r) {
+              if (r.code !== 200) { done(false); return; }
+              var items = (r.data || {}).list || [];
+              if (items.length === 0) { done(false); return; }
+              var html = items.map(function (u) { return renderUserCard(u); }).join('');
+              var sentinel = container.querySelector('.scroll-sentinel');
+              var tmp = document.createElement('div');
+              tmp.innerHTML = html;
+              while (tmp.firstChild) {
+                container.insertBefore(tmp.firstChild, sentinel);
+              }
+              done(_page < totalPages);
+            });
+          });
+        }
       }
     });
   };
@@ -482,13 +601,19 @@
     var content = document.getElementById('page-log');
     if (!content) return;
 
+    var _logPage = 1;
+    var _logTotalPages = 1;
+    var _logKeyword = '';
+
     appShowLoading();
     SharedOps.log.search('', 1, 20, '', function (res) {
       appHideLoading();
       if (res.code !== 200) { appToast(res.msg); return; }
 
-      var list = (res.data || {}).list || [];
-      var total = (res.data || {}).total || 0;
+      var data = res.data || {};
+      var list = data.list || [];
+      var total = data.total || 0;
+      _logTotalPages = Math.ceil(total / 20) || 1;
       var actionMap = {
         'login': '登录', 'logout': '退出', 'register': '注册', 'user_create': '创建用户',
         'user_update': '更新用户', 'user_delete': '删除用户', 'user_assign_role': '分配角色',
@@ -508,51 +633,98 @@
         + '<div id="log-list">'
         + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('inbox', 'mi-xl') + '</div><p>暂无日志</p></div>' : '')
         + list.map(function (l) {
-          return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
-            + '<div style="display:flex;justify-content:space-between;align-items:center">'
-            + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-            + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
-            + '</div>'
-            + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail) + '</div>'
-            + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
-            + '<span>' + escapeHtml(l.ip) + '</span>'
-            + '<span>' + formatDate(l.create_time) + '</span>'
-            + '</div></div>';
+          return renderLogCard(l, actionMap);
         }).join('')
         + '</div></div>';
+
+      // 无限滚动
+      if (_logTotalPages > 1) {
+        var listEl = document.getElementById('log-list');
+        setupInfiniteScroll(listEl, function (done) {
+          _logPage++;
+          SharedOps.log.search(_logKeyword, _logPage, 20, '', function (r) {
+            if (r.code !== 200) { done(false); return; }
+            var items = (r.data || {}).list || [];
+            if (items.length === 0) { done(false); return; }
+            var html = items.map(function (l) { return renderLogCard(l, actionMap); }).join('');
+            var sentinel = listEl.querySelector('.scroll-sentinel');
+            var tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            while (tmp.firstChild) {
+              listEl.insertBefore(tmp.firstChild, sentinel);
+            }
+            done(_logPage < _logTotalPages);
+          });
+        });
+      }
     });
   });
+
+  function renderLogCard(l, actionMap) {
+    return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
+      + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail) + '</div>'
+      + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
+      + '<span>' + escapeHtml(l.ip) + '</span>'
+      + '<span>' + formatDate(l.create_time) + '</span>'
+      + '</div></div>';
+  }
 
   window.searchLogs = function () {
     var kw = document.getElementById('log-search') ? document.getElementById('log-search').value : '';
     appShowLoading();
+    var actionMap = {
+      'login': '登录', 'logout': '退出', 'register': '注册', 'user_create': '创建用户',
+      'user_update': '更新用户', 'user_delete': '删除用户', 'user_assign_role': '分配角色',
+      'profile_update': '更新资料', 'password_change': '修改密码',
+      'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
+      'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
+    };
     SharedOps.log.search(kw, 1, 20, '', function (res) {
       appHideLoading();
       if (res.code !== 200) return;
-      var list = (res.data || {}).list || [];
-      var actionMap = {
-        'login': '登录', 'logout': '退出', 'register': '注册', 'user_create': '创建用户',
-        'user_update': '更新用户', 'user_delete': '删除用户', 'user_assign_role': '分配角色',
-        'profile_update': '更新资料', 'password_change': '修改密码',
-        'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
-        'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
-      };
+      var data = res.data || {};
+      var list = data.list || [];
+      var total = data.total || 0;
       var container = document.getElementById('log-list');
       if (container) {
+        // 清除旧哨兵
+        var oldSentinel = container.querySelector('.scroll-sentinel');
+        if (oldSentinel) oldSentinel.remove();
+
         container.innerHTML = list.length === 0
           ? '<div class="empty-state"><div class="empty-icon">' + mi('search_off', 'mi-xl') + '</div><p>未找到日志</p></div>'
-          : list.map(function (l) {
-            return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
-              + '<div style="display:flex;justify-content:space-between;align-items:center">'
-              + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-              + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
-              + '</div>'
-              + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail) + '</div>'
-              + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
-              + '<span>' + escapeHtml(l.ip) + '</span>'
-              + '<span>' + formatDate(l.create_time) + '</span>'
-              + '</div></div>';
-          }).join('');
+          : list.map(function (l) { return renderLogCard(l, actionMap); }).join('');
+
+        var totalPages = Math.ceil(total / 20) || 1;
+        if (totalPages > 1) {
+          var _page = 1;
+          setupInfiniteScroll(container, function (done) {
+            _page++;
+            SharedOps.log.search(kw, _page, 20, '', function (r) {
+              if (r.code !== 200) { done(false); return; }
+              var items = (r.data || {}).list || [];
+              if (items.length === 0) { done(false); return; }
+              var html = items.map(function (l) { return renderLogCard(l, actionMap); }).join('');
+              var sentinel = container.querySelector('.scroll-sentinel');
+              var tmp = document.createElement('div');
+              tmp.innerHTML = html;
+              while (tmp.firstChild) {
+                container.insertBefore(tmp.firstChild, sentinel);
+              }
+              done(_page < totalPages);
+            });
+          });
+        }
+
+        // 更新总数显示
+        var countEl = container.previousElementSibling;
+        if (countEl && countEl.style) {
+          countEl.textContent = '共 ' + total + ' 条日志';
+        }
       }
     });
   };
