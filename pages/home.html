@@ -22,7 +22,8 @@
 
 <!-- PC / Pad 端布局 -->
 <div class="pc-layout" id="pc-layout">
-  <aside class="sidebar">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <h2><i class="mi mi-lg">lock</i> RBAC</h2>
       <p>权限管理系统 v3.0</p>
@@ -36,7 +37,7 @@
   </aside>
   <div class="main-content">
     <div class="topbar">
-      <div class="topbar-left"><h1 id="page-title">系统首页</h1></div>
+      <div class="topbar-left" style="display:flex;align-items:center;gap:8px"><button class="sidebar-toggle-btn" id="sidebar-toggle" onclick="toggleSidebar()"><i class="mi">menu</i></button><h1 id="page-title">系统首页</h1></div>
       <div class="topbar-right">
         <button class="theme-toggle-btn" onclick="ThemeSwitcher.toggle()" title="切换主题"><i class="mi">palette</i></button>
         <div class="user-info" id="pc-user-info">
@@ -92,6 +93,26 @@
 (function () {
   if (window.innerWidth <= 768) return;
 
+  // 侧边栏 Drawer 开关
+  window.closeSidebar = function() {
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+  };
+  window.toggleSidebar = function() {
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (!sidebar) return;
+    var isOpen = sidebar.classList.contains('open');
+    if (isOpen) {
+      window.closeSidebar();
+    } else {
+      sidebar.classList.add('open');
+      if (overlay) overlay.classList.add('active');
+    }
+  };
+
   var currentUser = null;
   var userRouters = [];
 
@@ -143,6 +164,8 @@
   }
 
   window.pcNavigate = function (page) {
+    // 导航后自动关闭侧边栏 drawer
+    if (window.innerWidth <= 1024) window.closeSidebar();
     document.querySelectorAll('.nav-item').forEach(function(n) {
       n.classList.toggle('active', n.dataset.page === page);
     });
