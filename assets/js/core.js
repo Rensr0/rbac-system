@@ -530,6 +530,46 @@ function checkPwdStrengthCore(pwd) {
   return checkPwdStrength(pwd);
 }
 
+// ==================== 键盘快捷键 ====================
+(function() {
+  document.addEventListener('keydown', function(e) {
+    // Esc: 关闭弹窗/action sheet
+    if (e.key === 'Escape') {
+      // PC 端关闭 modal
+      var openModal = document.querySelector('.modal-overlay.show');
+      if (openModal) {
+        openModal.classList.remove('show');
+        setTimeout(function() { openModal.style.display = 'none'; }, 250);
+        return;
+      }
+      // 移动端关闭 action sheet
+      var sheetOverlay = document.querySelector('.app-action-sheet-overlay.show');
+      if (sheetOverlay) {
+        var sheet = sheetOverlay.querySelector('.app-action-sheet');
+        if (sheet) sheet.style.transform = 'translateY(100%)';
+        setTimeout(function() { sheetOverlay.remove(); }, 350);
+        return;
+      }
+      // PC 端关闭主题面板
+      var themePanel = document.getElementById('theme-panel');
+      if (themePanel && themePanel.classList.contains('show')) {
+        themePanel.classList.remove('show');
+        return;
+      }
+    }
+
+    // Ctrl+K: 聚焦搜索框（跳过输入框内的情况，除非在搜索框里）
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      var searchInput = document.querySelector('.app-search input, .search-bar input, #user-search, #log-search, #pc-user-search, #pc-log-search');
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    }
+  });
+})();
+
 window.showToast = UI.toast;
 window.appToast = UI.appToast;
 window.showLoading = UI.showLoading;
