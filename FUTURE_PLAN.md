@@ -310,7 +310,24 @@
 - 通用 UI 工具（权限复选框、路由渲染）保留在 `shared-utils.js`
 - `pc-pages.js` 保留 17 行空壳向后兼容
 
-### 9.3 加载顺序
+### 9.3 共享工具函数提取（shared-utils.js）
+
+从 PC 端和移动端提取了 4 个重复函数到 `shared-utils.js`，减少约 140 行重复代码：
+
+| 函数 | 提取自 | 节省 |
+|------|--------|------|
+| `setupInfiniteScroll` | app-logs.js + app-users.js（各一份 ~45行） | ~45 行 |
+| `actionMap` | app-logs.js（×3处）+ pc-logs.js（×1处，~12行/处） | ~48 行 |
+| `validatePasswordChange` | app-mine.js + pc-mine.js（各一份 ~5行） | ~5 行 |
+| `parseCSVLine` | pc-users.js（~15行） | ~15 行 |
+
+调用方式：
+- `SharedUtils.setupInfiniteScroll(container, loadMore)`
+- `SharedUtils.actionMap[l.action]`
+- `SharedUtils.validatePasswordChange(oldId, newId, confirmId, toastFn)`
+- `SharedUtils.parseCSVLine(line)`
+
+### 9.4 加载顺序
 
 `home.html` 中按依赖顺序加载：
 ```
