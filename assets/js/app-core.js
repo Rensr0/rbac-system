@@ -244,8 +244,8 @@
     },
 
     getRouteName: function (path) {
-      if (path === 'home') return '首页';
-      if (path === 'mine') return '我的';
+      var builtInNames = { home: '首页', mine: '我的', user: '用户管理', role: '角色管理', router: '路由管理', log: '日志管理' };
+      if (builtInNames[path]) return builtInNames[path];
       var route = this.userRouters.find(function (r) { return r.router_path === path; });
       return route ? route.router_name : '管理系统';
     },

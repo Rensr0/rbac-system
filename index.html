@@ -354,8 +354,8 @@
 </div>
 
 <!-- 手机端注册 ActionSheet -->
-<div class="app-action-sheet-overlay" id="app-register-overlay" style="display:none">
-  <div class="app-action-sheet">
+<div class="app-action-sheet-overlay" id="app-register-overlay" style="display:none" onclick="if(event.target===this)closeAppSheet('app-register-overlay')">
+  <div class="app-action-sheet" onclick="event.stopPropagation()">
     <div class="sheet-handle"></div>
     <div class="sheet-title">注册新账号</div>
     <div style="padding:0 16px 16px">
@@ -373,8 +373,8 @@
 </div>
 
 <!-- 手机端忘记密码 ActionSheet -->
-<div class="app-action-sheet-overlay" id="app-forgot-overlay" style="display:none">
-  <div class="app-action-sheet">
+<div class="app-action-sheet-overlay" id="app-forgot-overlay" style="display:none" onclick="if(event.target===this)closeAppSheet('app-forgot-overlay')">
+  <div class="app-action-sheet" onclick="event.stopPropagation()">
     <div class="sheet-handle"></div>
     <div class="sheet-title">找回密码</div>
     <div style="padding:0 16px 16px">
@@ -606,15 +606,26 @@ function appLogin() {
 function appShowRegister() {
   var el = document.getElementById('app-register-overlay');
   el.style.display = 'flex';
+  requestAnimationFrame(function() { el.classList.add('show'); });
   refreshCaptcha('app-reg');
 }
 function appShowForgot() {
   var el = document.getElementById('app-forgot-overlay');
   el.style.display = 'flex';
+  requestAnimationFrame(function() { el.classList.add('show'); });
   refreshCaptcha('app-forgot');
 }
 function closeAppSheet(id) {
-  document.getElementById(id).style.display = 'none';
+  var el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('show');
+    var sheet = el.querySelector('.app-action-sheet');
+    if (sheet) sheet.style.transform = 'translateY(100%)';
+    setTimeout(function() {
+      el.style.display = 'none';
+      if (sheet) sheet.style.transform = '';
+    }, 350);
+  }
 }
 function appRegister() {
   var username = document.getElementById('app-reg-username').value.trim();

@@ -243,6 +243,7 @@
           + '<div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-edit-nickname" value="' + escapeHtml(u.nickname) + '"></div>'
           + '<div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-edit-email" value="' + escapeHtml(u.email || '') + '"></div>'
           + '<div class="app-form-item"><div class="form-label">手机</div><input class="form-input" id="app-edit-phone" value="' + escapeHtml(u.phone || '') + '"></div>'
+          + '<div class="app-form-item"><div class="form-label">状态</div><select class="form-input" id="app-edit-status"><option value="1" ' + (u.status == 1 ? 'selected' : '') + '>正常</option><option value="0" ' + (u.status == 0 ? 'selected' : '') + '>禁用</option></select></div>'
           + '<div class="app-form-item"><div class="form-label">分配角色</div>'
           + roles.map(function(r) {
             var checked = (u.role_ids || []).indexOf(r.id) !== -1 ? 'checked' : '';
@@ -263,8 +264,9 @@
     var phone = document.getElementById('app-edit-phone').value.trim();
     var roleIds = Array.from(document.querySelectorAll('.app-edit-role-cb:checked')).map(function(cb) { return parseInt(cb.value); });
 
+    var status = document.getElementById('app-edit-status') ? document.getElementById('app-edit-status').value : undefined;
     appShowLoading();
-    SharedOps.user.update(userId, { nickname: nickname, email: email, phone: phone }, function(updateRes) {
+    SharedOps.user.update(userId, { nickname: nickname, email: email, phone: phone, status: status }, function(updateRes) {
       if (updateRes.code !== 200) { appHideLoading(); appToast(updateRes.msg || '更新失败'); return; }
       var current = Storage.get('currentUser');
       if (current && current.id === userId && updateRes.data) {

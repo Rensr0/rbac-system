@@ -94,7 +94,13 @@
         + '<div id="log-list">'
         + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('inbox', 'mi-xl') + '</div><p>暂无日志数据</p></div>' : '')
         + list.map(function(l) {
-          var actionMap = { 'login': '登录', 'logout': '退出', 'create': '创建', 'update': '更新', 'delete': '删除' };
+          var actionMap = {
+              'login': '登录', 'logout': '退出', 'register': '注册', 'forgot': '找回密码',
+              'user_create': '创建用户', 'user_update': '更新用户', 'user_delete': '删除用户',
+              'user_assign_role': '分配角色', 'profile_update': '更新资料', 'password_change': '修改密码',
+              'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
+              'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
+            };
           return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
             + '<div style="display:flex;justify-content:space-between;align-items:center">'
             + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
@@ -117,7 +123,13 @@
             if (r.code !== 200) { done(false); return; }
             var items = (r.data || {}).list || [];
             if (items.length === 0) { done(false); return; }
-            var actionMap = { 'login': '登录', 'logout': '退出', 'create': '创建', 'update': '更新', 'delete': '删除' };
+            var actionMap = {
+              'login': '登录', 'logout': '退出', 'register': '注册', 'forgot': '找回密码',
+              'user_create': '创建用户', 'user_update': '更新用户', 'user_delete': '删除用户',
+              'user_assign_role': '分配角色', 'profile_update': '更新资料', 'password_change': '修改密码',
+              'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
+              'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
+            };
             var html = items.map(function(l) {
               return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center">'
@@ -158,7 +170,13 @@
         var oldSentinel = container.querySelector('.scroll-sentinel');
         if (oldSentinel) oldSentinel.remove();
 
-        var actionMap = { 'login': '登录', 'logout': '退出', 'create': '创建', 'update': '更新', 'delete': '删除' };
+        var actionMap = {
+          'login': '登录', 'logout': '退出', 'register': '注册', 'forgot': '找回密码',
+          'user_create': '创建用户', 'user_update': '更新用户', 'user_delete': '删除用户',
+          'user_assign_role': '分配角色', 'profile_update': '更新资料', 'password_change': '修改密码',
+          'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
+          'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
+        };
         container.innerHTML = list.length === 0
           ? '<div class="empty-state"><div class="empty-icon">' + mi('search_off', 'mi-xl') + '</div><p>未找到日志</p></div>'
           : list.map(function(l) {

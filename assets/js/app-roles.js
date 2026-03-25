@@ -242,7 +242,6 @@
     edit: editRoleApp,
     submitEdit: submitEditRole,
     delete: deleteRoleApp,
-    filterRouters: filterRouters,
     toggleAppRoutePerms: toggleAppRoutePerms,
     onAppPermLevelChange: onAppPermLevelChange
   };
