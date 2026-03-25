@@ -567,7 +567,13 @@
     content.innerHTML =
       '<div class="app-page-content">'
       + '<div class="mine-header">'
-      + '<div class="mine-avatar">' + getInitial(user.nickname || user.username) + '</div>'
+      + '<div class="mine-avatar" onclick="document.getElementById(\'app-avatar-input\').click()">'
+      + (user.avatar
+        ? '<img src="' + escapeHtml(user.avatar) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">'
+        : getInitial(user.nickname || user.username))
+      + '<div class="mine-avatar-mask"><span class="material-icons" style="font-size:20px">photo_camera</span></div>'
+      + '</div>'
+      + '<input type="file" id="app-avatar-input" accept="image/*" style="display:none" onchange="uploadAppAvatar(this)">'
       + '<div class="mine-name">' + escapeHtml(user.nickname || user.username) + '</div>'
       + '<div class="mine-role">' + (user.is_super ? '超级管理员' : '普通用户') + '</div>'
       + '</div>'
@@ -621,6 +627,37 @@
         if (mineLoader) mineLoader();
       }
     });
+  };
+
+  // 头像上传（手机端）
+  window.uploadAppAvatar = function(input) {
+    if (!input || !input.files || !input.files[0]) return;
+    var file = input.files[0];
+    if (file.size > 2 * 1024 * 1024) { appToast('头像不能超过 2MB'); input.value = ''; return; }
+    if (!file.type.startsWith('image/')) { appToast('请选择图片文件'); input.value = ''; return; }
+
+    var formData = new FormData();
+    formData.append('avatar', file);
+    appShowLoading();
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', API.base + 'user/?action=avatar');
+    xhr.onload = function() {
+      appHideLoading();
+      input.value = '';
+      try {
+        var res = JSON.parse(xhr.responseText);
+        if (res.code === 200 && res.data) {
+          appToast('头像更新成功');
+          Storage.set('currentUser', res.data);
+          var mineLoader = pageLoaders['mine'];
+          if (mineLoader) mineLoader();
+        } else {
+          appToast(res.msg || '上传失败');
+        }
+      } catch(e) { appToast('上传失败'); }
+    };
+    xhr.onerror = function() { appHideLoading(); input.value = ''; appToast('网络错误'); };
+    xhr.send(formData);
   };
 
   // 修改密码（手机端）

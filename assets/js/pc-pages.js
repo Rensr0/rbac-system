@@ -730,7 +730,13 @@ var PCPages = (function () {
       + '<div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(255,255,255,0.1);border-radius:50%"></div>'
       + '<div style="position:absolute;bottom:-30px;right:60px;width:100px;height:100px;background:rgba(255,255,255,0.08);border-radius:50%"></div>'
       + '<div style="display:flex;align-items:center;gap:24px;position:relative">'
-      + '<div style="width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:600;flex-shrink:0;backdrop-filter:blur(10px);border:3px solid rgba(255,255,255,0.3)">' + getInitial(user.nickname || user.username) + '</div>'
+      + '<div class="avatar-wrap" style="position:relative;width:100px;height:100px;flex-shrink:0;cursor:pointer" onclick="document.getElementById(\'pc-avatar-input\').click()" title="点击更换头像">'
+      + (user.avatar
+        ? '<img src="' + escapeHtml(user.avatar) + '" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.3);backdrop-filter:blur(10px)">'
+        : '<div style="width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:600;backdrop-filter:blur(10px);border:3px solid rgba(255,255,255,0.3)">' + getInitial(user.nickname || user.username) + '</div>')
+      + '<div class="avatar-hover-mask"><span class="material-icons" style="font-size:24px">photo_camera</span></div>'
+      + '</div>'
+      + '<input type="file" id="pc-avatar-input" accept="image/*" style="display:none" onchange="PCPages.uploadAvatar(this)">'
       + '<div>'
       + '<h3 style="margin:0 0 8px;font-size:26px;font-weight:700">' + escapeHtml(user.nickname || user.username) + '</h3>'
       + '<p style="margin:0;font-size:14px;opacity:0.9">' + (user.is_super ? '<span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px">超级管理员</span>' : '<span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px">普通用户</span>') + '</p>'
@@ -811,6 +817,53 @@ var PCPages = (function () {
         document.getElementById('pc-confirm-pwd').value = '';
       }
     });
+  }
+
+  // ==================== 头像上传 ====================
+  function uploadAvatar(input) {
+    if (!input || !input.files || !input.files[0]) return;
+    var file = input.files[0];
+    if (file.size > 2 * 1024 * 1024) { showToast('头像不能超过 2MB'); input.value = ''; return; }
+    if (!file.type.startsWith('image/')) { showToast('请选择图片文件'); input.value = ''; return; }
+
+    var formData = new FormData();
+    formData.append('avatar', file);
+
+    showLoading();
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', API.base + 'user/?action=avatar');
+    xhr.onload = function () {
+      hideLoading();
+      input.value = '';
+      try {
+        var res = JSON.parse(xhr.responseText);
+        if (res.code === 200 && res.data) {
+          showToast('头像更新成功');
+          Storage.set('currentUser', res.data);
+          // 更新顶栏
+          var avatarEl = document.getElementById('pc-avatar');
+          if (avatarEl) {
+            if (res.data.avatar) {
+              avatarEl.innerHTML = '<img src="' + escapeHtml(res.data.avatar) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+            } else {
+              avatarEl.textContent = getInitial(res.data.nickname || res.data.username);
+            }
+          }
+          // 刷新个人中心
+          loadPCMine(document.getElementById('page-content'));
+        } else {
+          showToast(res.msg || '上传失败');
+        }
+      } catch (e) {
+        showToast('上传失败');
+      }
+    };
+    xhr.onerror = function () {
+      hideLoading();
+      input.value = '';
+      showToast('网络错误，上传失败');
+    };
+    xhr.send(formData);
   }
 
   window.updatePwdStrength = function(inputId) {
@@ -938,6 +991,7 @@ var PCPages = (function () {
     deleteRouter: pcDeleteRouter,
     changePwd: pcChangePwd,
     saveProfile: pcSaveProfile,
+    uploadAvatar: uploadAvatar,
     saveUser: saveUser,
     saveRole: saveRole,
     saveRouter: saveRouter,

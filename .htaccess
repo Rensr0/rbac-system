@@ -9,6 +9,12 @@ Options -Indexes
     Deny from all
 </FilesMatch>
 
+# 允许访问上传文件
+<Directory "api/uploads">
+    Order allow,deny
+    Allow from all
+</Directory>
+
 # 禁止访问隐藏文件
 <FilesMatch "^\.">
     Order allow,deny

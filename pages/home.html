@@ -102,7 +102,11 @@
       Storage.set('currentUser', currentUser);
 
       document.getElementById('pc-nickname').textContent = currentUser.nickname || currentUser.username;
-      document.getElementById('pc-avatar').textContent = getInitial(currentUser.nickname || currentUser.username);
+      if (currentUser.avatar) {
+        document.getElementById('pc-avatar').innerHTML = '<img src="' + escapeHtml(currentUser.avatar) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+      } else {
+        document.getElementById('pc-avatar').textContent = getInitial(currentUser.nickname || currentUser.username);
+      }
 
       if (window.ModalTemplates) ModalTemplates.inject();
       if (window.ThemeSwitcher) {

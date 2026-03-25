@@ -841,3 +841,23 @@
 .perm-badge-view   { background: rgba(0,122,255,0.15); color: #007aff; padding: 0 4px; border-radius: 3px; }
 .perm-badge-edit   { background: rgba(255,149,0,0.15); color: #ff9500; padding: 0 4px; border-radius: 3px; }
 .perm-badge-delete { background: rgba(255,59,48,0.15); color: #ff3b30; padding: 0 4px; border-radius: 3px; }
+
+/* 头像上传（手机端） */
+.mine-avatar {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+.mine-avatar-mask {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.mine-avatar:active .mine-avatar-mask { opacity: 1; }

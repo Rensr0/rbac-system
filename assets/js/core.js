@@ -84,6 +84,7 @@ var API = (function () {
   }
 
   return {
+    base: BASE,
     get: function (url, params, opts) {
       var options = { method: 'GET', params: params };
       if (opts) { options.raw = opts.raw; }

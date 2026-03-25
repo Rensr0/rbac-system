@@ -29,6 +29,7 @@ switch ($method) {
         elseif ($action === 'delete') { deleteUser(); }
         elseif ($action === 'batch_status') { batchUpdateStatus(); }
         elseif ($action === 'batch_import') { batchImportUsers(); }
+        elseif ($action === 'avatar') { uploadAvatar(); }
         else { createUser(); }
         break;
     case 'PUT': updateUser(); break;
@@ -400,5 +401,124 @@ function changePassword() {
         success(null, '密码修改成功');
     } catch (Exception $e) {
         error('修改密码失败');
+    }
+}
+
+function uploadAvatar() {
+    $user = requireLogin();
+    $isSuper = (isset($user['is_super']) ? $user['is_super'] : 0) == 1;
+
+    // 支持指定用户ID（仅超级管理员）或默认为自己
+    $targetId = intval(getParam('id', $user['id']));
+    if ($targetId !== $user['id'] && !$isSuper) {
+        forbidden('只能修改自己的头像');
+    }
+
+    if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+        error('请选择头像文件');
+    }
+
+    $file = $_FILES['avatar'];
+    $maxSize = 2 * 1024 * 1024; // 2MB
+    if ($file['size'] > $maxSize) {
+        error('头像文件不能超过 2MB');
+    }
+
+    $allowedTypes = array('image/jpeg', 'image/png', 'image/gif', 'image/webp');
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!in_array($mimeType, $allowedTypes, true)) {
+        error('仅支持 JPG/PNG/GIF/WebP 格式的图片');
+    }
+
+    // 确保上传目录存在
+    $uploadDir = dirname(__DIR__) . '/uploads/avatars';
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0755, true);
+    }
+
+    // 生成文件名
+    $ext = 'jpg';
+    if ($mimeType === 'image/png') $ext = 'png';
+    elseif ($mimeType === 'image/gif') $ext = 'gif';
+    elseif ($mimeType === 'image/webp') $ext = 'webp';
+
+    $filename = $targetId . '_' . time() . '.' . $ext;
+    $destPath = $uploadDir . '/' . $filename;
+
+    // 读取原图并压缩到最大 200x200
+    $srcImage = null;
+    if ($mimeType === 'image/jpeg') {
+        $srcImage = @imagecreatefromjpeg($file['tmp_name']);
+    } elseif ($mimeType === 'image/png') {
+        $srcImage = @imagecreatefrompng($file['tmp_name']);
+    } elseif ($mimeType === 'image/gif') {
+        $srcImage = @imagecreatefromgif($file['tmp_name']);
+    } elseif ($mimeType === 'image/webp') {
+        $srcImage = @imagecreatefromwebp($file['tmp_name']);
+    }
+
+    if (!$srcImage) {
+        error('无法读取图片文件');
+    }
+
+    $origW = imagesx($srcImage);
+    $origH = imagesy($srcImage);
+    $size = 200;
+    $scale = min($size / $origW, $size / $origH);
+    $newW = (int)($origW * $scale);
+    $newH = (int)($origH * $scale);
+
+    $dstImage = imagecreatetruecolor($newW, $newH);
+    // 保留 PNG/GIF 透明通道
+    imagealphablending($dstImage, false);
+    imagesavealpha($dstImage, true);
+    $transparent = imagecolorallocatealpha($dstImage, 0, 0, 0, 127);
+    imagefill($dstImage, 0, 0, $transparent);
+
+    imagecopyresampled($dstImage, $srcImage, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+    imagedestroy($srcImage);
+
+    // 保存为 JPEG（统一格式，体积小）
+    $finalPath = $uploadDir . '/' . $targetId . '_' . time() . '.jpg';
+    imagejpeg($dstImage, $finalPath, 85);
+    imagedestroy($dstImage);
+
+    // 删除可能的旧格式文件
+    // 清理旧头像（保留最新的）
+    $avatarUrl = '/api/uploads/avatars/' . basename($finalPath);
+
+    try {
+        $db = getDB();
+        // 删除旧头像文件
+        $stmt = $db->prepare("SELECT avatar FROM admin_users WHERE id = ?");
+        $stmt->execute(array($targetId));
+        $oldAvatar = $stmt->fetch();
+        if ($oldAvatar && !empty($oldAvatar['avatar']) && strpos($oldAvatar['avatar'], '/api/uploads/avatars/') === 0) {
+            $oldFile = dirname(__DIR__) . substr($oldAvatar['avatar'], 4); // /api/uploads -> uploads
+            if (file_exists($oldFile)) {
+                @unlink($oldFile);
+            }
+        }
+
+        $stmt = $db->prepare("UPDATE admin_users SET avatar = ? WHERE id = ?");
+        $stmt->execute(array($avatarUrl, $targetId));
+
+        // 返回更新后的用户信息
+        $stmt = $db->prepare("SELECT id, username, nickname, avatar, email, phone, status, is_super, last_login, create_time FROM admin_users WHERE id = ?");
+        $stmt->execute(array($targetId));
+        $updatedUser = $stmt->fetch();
+
+        // 如果是修改自己，同步 session
+        if ($targetId == $user['id']) {
+            $_SESSION['admin_user']['avatar'] = $avatarUrl;
+        }
+
+        writeLog('user_update', "用户 ID=$targetId 上传头像");
+        success($updatedUser, '头像上传成功');
+    } catch (Exception $e) {
+        error('头像保存失败');
     }
 }
