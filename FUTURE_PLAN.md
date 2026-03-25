@@ -389,3 +389,45 @@ pc-logs.js → pc-mine.js → pc-pages.js
    - 移动端 `app-mine.js`：删除登录记录卡片（`mine-login-logs` 部分）
    - PC 端 `pc-pages.js`：删除 `loadPCMine` 中的 `pc-mine-logs` 部分
    - 操作记录页面（`app-logs.js` / `pc-pages.js` loadPCLog）无需修改，已支持搜索和分页
+
+---
+
+## 十四、第十四轮：全面排查发现的 Bug 与待修复项
+
+> 基于 2026-03-26 07:47 GMT+8 的用户视角全面测试（PC端 + 移动端）
+
+### 14.1 已修复（本轮）
+
+| # | 问题 | 严重度 | 位置 | 提交 | 说明 |
+|---|------|--------|------|------|------|
+| 77 | 移动端用户管理 tab 点击后显示 404 页面 | P0 | 移动端 | `40dca3c` | `app-users.js` 第14-41行残留旧代码（setupInfiniteScroll 提取后未删除函数体），导致整个 IIFE 语法错误，`window.AppUsers` 未定义 |
+| 78 | `app-logs.js` 中 `SharedUtils.SharedUtils.setupInfiniteScroll` 双重引用 | P2 | 移动端日志 | `40dca3c` | 修正为 `SharedUtils.setupInfiniteScroll` |
+| 79 | PC端角色编辑权限子复选框(查看/编辑/删除)不预选 | P0 | PC端 | `161b00e` | `shared-utils.js` 中 `renderRouterPermItemPC` 和 `renderRouterPermItem` 使用位运算 `permLevel & 1` 判断，但调用方传入的是权限数组 `['view','edit']`，导致 `(数组 & 1)` 始终为 false |
+
+### 14.2 待修复项
+
+| # | 问题 | 严重度 | 位置 | 说明 |
+|---|------|--------|------|------|
+| 80 | 移动端404页面"返回首页"按钮后仍残留显示 | P2 | 移动端 | 点击"返回首页"后旧页面内容未被正确清除，与新页面叠加显示 |
+| 81 | PC端 `renderRouterPermItem` 位运算参数不匹配 | P0 | PC端用户编辑 | 用户编辑弹窗中的角色权限复选框也可能受影响（已修复 shared-utils.js 但需验证） |
+| 82 | 超级管理员编辑弹窗无密码修改字段 | P1 | PC+移动端 | 编辑其他用户时不显示密码字段，但管理员也需要修改普通用户的密码 |
+| 83 | 超级管理员可被编辑昵称/邮箱/手机 | P2 | PC+移动端 | 超级管理员账号应限制编辑（防止误改关键信息） |
+| 84 | `app-logs.js` 中 actionMap 在渲染循环内重复定义 | P2 | 移动端日志 | 性能微优化，不影响功能 |
+| 85 | PC/移动端头像上传方式不一致 | P2 | 全局 | 移动端用 base64 POST，PC端用 FormData + XHR |
+| 86 | 登录页密码字段不在 form 标签内 | P2 | 登录页 | 控制台有 DOM 警告 |
+| 87 | 移动端侧边栏 Drawer 返回手势缺失 | P2 | 移动端 | 不支持滑动返回关闭 Drawer |
+| 88 | 移动端角色管理编辑权限子复选框禁用状态 | P2 | 移动端 | 未勾选主路由时子复选框被 disabled，但视觉上不够明确 |
+
+### 14.3 代码质量待改进
+
+| # | 问题 | 说明 |
+|---|------|------|
+| 89 | pc-pages.js 空壳文件 | 仅17行向后兼容代码，可删除 |
+| 90 | 全局变量污染 | `showToast`、`confirmDialog`、`escapeHtml` 等在 window 上 |
+| 91 | 无单元测试 | 核心业务逻辑没有测试覆盖 |
+| 92 | 无 API 限流 | 登录接口没有频率限制 |
+
+---
+
+*文档更新时间：2026-03-26 07:50 GMT+8*
+*更新说明：第十四轮 — 全面排查发现的 Bug 与待修复项*
