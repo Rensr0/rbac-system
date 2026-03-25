@@ -12,38 +12,6 @@
   var _userKeyword = '';
   var _scrollCtrl = null;
 
-    var observer;
-    if ('IntersectionObserver' in window) {
-      observer = new IntersectionObserver(onIntersect, { rootMargin: '200px' });
-      observer.observe(sentinel);
-    } else {
-      var scrollEl = container.closest('.app-page') || document.querySelector('.app-content');
-      if (scrollEl) {
-        function onScroll() {
-          if (loading || !hasMore) return;
-          var rect = scrollEl.getBoundingClientRect();
-          if (rect.bottom - window.innerHeight < 300) {
-            loading = true;
-            loadMore(function (more) {
-              hasMore = more;
-              loading = false;
-              sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
-              if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
-            });
-          }
-        }
-        scrollEl.addEventListener('scroll', onScroll);
-      }
-    }
-
-    return {
-      destroy: function () {
-        if (observer) observer.disconnect();
-        sentinel.remove();
-      }
-    };
-  }
-
   function renderUserCard(u) {
     var current = Storage.get('currentUser') || {};
     var isSuper = current.is_super == 1;

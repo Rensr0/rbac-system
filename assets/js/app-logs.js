@@ -56,7 +56,7 @@
 
       if (_logTotalPages > 1) {
         var listEl = document.getElementById('log-list');
-        _scrollCtrl = SharedUtils.SharedUtils.setupInfiniteScroll(listEl, function (done) {
+        _scrollCtrl = SharedUtils.setupInfiniteScroll(listEl, function (done) {
           _logPage++;
           SharedOps.log.search(_logKeyword, _logPage, 20, '', function (r) {
             if (r.code !== 200) { done(false); return; }
