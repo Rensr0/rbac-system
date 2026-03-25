@@ -22,19 +22,20 @@
       content.innerHTML =
         '<div class="app-page-content">'
         + '<div id="router-list">'
-        + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('inbox', 'mi-xl') + '</div><p>暂无路由数据</p></div>' : '')
+        + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('route', 'mi-xl') + '</div><p>暂无路由数据</p></div>' : '')
         + list.map(function(r) {
-          return '<div class="app-card" style="margin-bottom:12px">'
-            + '<div class="app-card-header" style="display:flex;justify-content:space-between;align-items:center">'
-            + '<h3>' + escapeHtml(r.router_name) + '</h3>'
-            + (isSuper ? '<button class="app-btn app-btn-sm app-btn-outline" onclick="AppRouters.edit(' + r.id + ')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + ' 编辑</button>' : '')
-            + '</div>'
-            + '<div style="font-size:13px;color:var(--text-secondary);padding:0 0 8px">'
-            + '<span style="display:inline-flex;align-items:center;gap:4px">' + mi(r.icon || 'description', 'mi-16') + ' ' + escapeHtml(r.router_path) + '</span>'
-            + ' · <span style="display:inline-flex;align-items:center;gap:4px">' + (r.status == 1 ? mi('check_circle', 'mi-14 mi-success') + ' 启用' : mi('block', 'mi-14 mi-danger') + ' 禁用') + '</span>'
-            + '</div>'
-            + '<div style="font-size:12px;color:var(--text-tertiary)">排序: ' + r.sort + '</div>'
-            + '</div>';
+          return '<div class="app-card" style="margin-bottom:10px">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between">'
+            + '<div style="display:flex;align-items:center;gap:10px">'
+            + '<span style="font-size:24px">' + renderIcon(r.icon) + '</span>'
+            + '<div>'
+            + '<div style="font-size:15px;font-weight:600">' + escapeHtml(r.router_name) + '</div>'
+            + '<div style="font-size:12px;color:var(--text-secondary)"><code>' + escapeHtml(r.router_path) + '</code> · 排序 ' + r.sort + ' · ' + (r.role_count || 0) + ' 个角色绑定</div>'
+            + '</div></div>'
+            + '<div style="display:flex;align-items:center;gap:8px">'
+            + '<span class="badge ' + (r.status == 1 ? 'badge-success' : 'badge-danger') + '">' + (r.status == 1 ? '启用' : '禁用') + '</span>'
+            + (isSuper ? '<button class="app-btn app-btn-sm app-btn-outline" onclick="AppRouters.edit(' + r.id + ')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + '</button>' : '')
+            + '</div></div></div>';
         }).join('')
         + '</div>'
         + (isSuper ? '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="AppRouters.showAdd()">' + mi('add', 'mi-18') + ' 添加路由</button></div>' : '')

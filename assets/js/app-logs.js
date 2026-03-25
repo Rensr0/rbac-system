@@ -95,17 +95,16 @@
         + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('inbox', 'mi-xl') + '</div><p>暂无日志数据</p></div>' : '')
         + list.map(function(l) {
           var actionMap = { 'login': '登录', 'logout': '退出', 'create': '创建', 'update': '更新', 'delete': '删除' };
-          return '<div class="app-card" style="margin-bottom:12px">'
-            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-            + '<span style="font-weight:500">' + escapeHtml(l.username) + '</span>'
-            + '<span style="font-size:12px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</span>'
+          return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center">'
+            + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
+            + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
             + '</div>'
-            + '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">'
-            + '<span class="badge badge-info">' + (actionMap[l.action] || l.action) + '</span>'
-            + '</div>'
-            + '<div style="font-size:12px;color:var(--text-tertiary)">' + escapeHtml(l.detail || '无详情') + '</div>'
-            + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">IP: ' + escapeHtml(l.ip) + '</div>'
-            + '</div>';
+            + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
+            + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
+            + '<span>' + escapeHtml(l.ip) + '</span>'
+            + '<span>' + formatDate(l.create_time) + '</span>'
+            + '</div></div>';
         }).join('')
         + '</div>'
         + '</div>';
@@ -120,17 +119,16 @@
             if (items.length === 0) { done(false); return; }
             var actionMap = { 'login': '登录', 'logout': '退出', 'create': '创建', 'update': '更新', 'delete': '删除' };
             var html = items.map(function(l) {
-              return '<div class="app-card" style="margin-bottom:12px">'
-                + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-                + '<span style="font-weight:500">' + escapeHtml(l.username) + '</span>'
-                + '<span style="font-size:12px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</span>'
+              return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
+                + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
                 + '</div>'
-                + '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">'
-                + '<span class="badge badge-info">' + (actionMap[l.action] || l.action) + '</span>'
-                + '</div>'
-                + '<div style="font-size:12px;color:var(--text-tertiary)">' + escapeHtml(l.detail || '无详情') + '</div>'
-                + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">IP: ' + escapeHtml(l.ip) + '</div>'
-                + '</div>';
+                + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
+                + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
+                + '<span>' + escapeHtml(l.ip) + '</span>'
+                + '<span>' + formatDate(l.create_time) + '</span>'
+                + '</div></div>';
             }).join('');
             var sentinel = listEl.querySelector('.scroll-sentinel');
             var tmp = document.createElement('div');
@@ -164,17 +162,16 @@
         container.innerHTML = list.length === 0
           ? '<div class="empty-state"><div class="empty-icon">' + mi('search_off', 'mi-xl') + '</div><p>未找到日志</p></div>'
           : list.map(function(l) {
-            return '<div class="app-card" style="margin-bottom:12px">'
-              + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-              + '<span style="font-weight:500">' + escapeHtml(l.username) + '</span>'
-              + '<span style="font-size:12px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</span>'
+            return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
+              + '<div style="display:flex;justify-content:space-between;align-items:center">'
+              + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
+              + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
               + '</div>'
-              + '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">'
-              + '<span class="badge badge-info">' + (actionMap[l.action] || l.action) + '</span>'
-              + '</div>'
-              + '<div style="font-size:12px;color:var(--text-tertiary)">' + escapeHtml(l.detail || '无详情') + '</div>'
-              + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">IP: ' + escapeHtml(l.ip) + '</div>'
-              + '</div>';
+              + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
+              + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
+              + '<span>' + escapeHtml(l.ip) + '</span>'
+              + '<span>' + formatDate(l.create_time) + '</span>'
+              + '</div></div>';
           }).join('');
 
         var totalPages = Math.ceil(total / 20) || 1;
@@ -187,17 +184,16 @@
               var items = (r.data || {}).list || [];
               if (items.length === 0) { done(false); return; }
               var html = items.map(function(l) {
-                return '<div class="app-card" style="margin-bottom:12px">'
-                  + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-                  + '<span style="font-weight:500">' + escapeHtml(l.username) + '</span>'
-                  + '<span style="font-size:12px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</span>'
+                return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
+                  + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                  + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
+                  + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
                   + '</div>'
-                  + '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">'
-                  + '<span class="badge badge-info">' + (actionMap[l.action] || l.action) + '</span>'
-                  + '</div>'
-                  + '<div style="font-size:12px;color:var(--text-tertiary)">' + escapeHtml(l.detail || '无详情') + '</div>'
-                  + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">IP: ' + escapeHtml(l.ip) + '</div>'
-                  + '</div>';
+                  + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
+                  + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
+                  + '<span>' + escapeHtml(l.ip) + '</span>'
+                  + '<span>' + formatDate(l.create_time) + '</span>'
+                  + '</div></div>';
               }).join('');
               var sentinel = container.querySelector('.scroll-sentinel');
               var tmp = document.createElement('div');

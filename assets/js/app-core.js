@@ -61,7 +61,21 @@
       if (!container) return;
       container.innerHTML = '';
 
+      var currentUser = Storage.get('currentUser') || {};
+      var isSuper = currentUser.is_super == 1;
+
       var paths = ['home'];
+      
+      // 超级管理员拥有所有管理页面权限
+      if (isSuper) {
+        var allPages = ['user', 'role', 'router', 'log'];
+        allPages.forEach(function (page) {
+          if (paths.indexOf(page) === -1) {
+            paths.push(page);
+          }
+        });
+      }
+      
       this.userRouters.forEach(function (r) {
         if (paths.indexOf(r.router_path) === -1) {
           paths.push(r.router_path);
@@ -83,13 +97,35 @@
       if (!tabBar) return;
       tabBar.innerHTML = '';
 
+      var currentUser = Storage.get('currentUser') || {};
+      var isSuper = currentUser.is_super == 1;
+
       var tabDefs = [];
       tabDefs.push({ page: 'home', icon: 'home', label: '首页' });
 
       var self = this;
+      
+      // 超级管理员显示所有管理页面
+      if (isSuper) {
+        var adminTabs = [
+          { page: 'user', icon: 'people', label: '用户管理' },
+          { page: 'role', icon: 'shield', label: '角色管理' },
+          { page: 'router', icon: 'route', label: '路由管理' },
+          { page: 'log', icon: 'history', label: '日志管理' }
+        ];
+        adminTabs.forEach(function (tab) {
+          if (tabDefs.findIndex(function(t) { return t.page === tab.page; }) === -1) {
+            tabDefs.push(tab);
+          }
+        });
+      }
+      
       this.userRouters.forEach(function (r) {
         if (r.router_path !== 'home' && r.router_path !== 'mine') {
-          tabDefs.push({ page: r.router_path, icon: r.icon || 'description', label: r.router_name });
+          var exists = tabDefs.findIndex(function(t) { return t.page === r.router_path; });
+          if (exists === -1) {
+            tabDefs.push({ page: r.router_path, icon: r.icon || 'description', label: r.router_name });
+          }
         }
       });
 

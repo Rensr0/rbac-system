@@ -11,57 +11,70 @@
     var content = document.getElementById('page-mine');
     if (!content) return;
 
-    var currentUser = Storage.get('currentUser') || {};
+    var user = Storage.get('currentUser');
+    if (!user) return;
 
-    appShowLoading();
-    Promise.all([
-      SharedOps.log.myLogs(1, 5),
-      API.get('user/', { action: 'detail', id: currentUser.id })
-    ]).then(function(results) {
-      appHideLoading();
-      var logRes = results[0];
-      var userRes = results[1];
+    content.innerHTML =
+      '<div class="app-page-content">'
+      + '<div class="mine-header">'
+      + '<div class="mine-avatar" onclick="document.getElementById(\'app-avatar-input\').click()">'
+      + (user.avatar
+        ? '<img src="' + escapeHtml(user.avatar) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">'
+        : getInitial(user.nickname || user.username))
+      + '<div class="mine-avatar-mask"><span class="material-icons" style="font-size:20px">photo_camera</span></div>'
+      + '</div>'
+      + '<input type="file" id="app-avatar-input" accept="image/*" style="display:none" onchange="AppMine.uploadAvatar(this)">'
+      + '<div class="mine-name">' + escapeHtml(user.nickname || user.username) + '</div>'
+      + '<div class="mine-role">' + (user.is_super ? '超级管理员' : '普通用户') + '</div>'
+      + '</div>'
+      + '<div class="app-list">'
+      + '<div class="app-list-item"><div class="item-icon">' + mi('badge') + '</div><div class="item-content"><div class="item-title">账号</div><div class="item-desc">' + escapeHtml(user.username) + '</div></div></div>'
+      + '<div class="app-list-item"><div class="item-icon">' + mi('email') + '</div><div class="item-content"><div class="item-title">邮箱</div><div class="item-desc">' + escapeHtml(user.email || '未设置') + '</div></div></div>'
+      + '<div class="app-list-item"><div class="item-icon">' + mi('phone') + '</div><div class="item-content"><div class="item-title">手机</div><div class="item-desc">' + escapeHtml(user.phone || '未设置') + '</div></div></div>'
+      + '<div class="app-list-item"><div class="item-icon">' + mi('calendar_today') + '</div><div class="item-content"><div class="item-title">注册时间</div><div class="item-desc">' + formatDate(user.create_time) + '</div></div></div>'
+      + '</div>'
+      + '<div class="app-list">'
+      + '<div class="app-list-item" onclick="AppMine.showEditProfile()">'
+      + '<div class="item-icon">' + mi('edit_note') + '</div><div class="item-content"><div class="item-title">编辑资料</div><div class="item-desc">修改昵称、邮箱、手机</div></div><div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
+      + '</div>'
+      + '<div class="app-list-item" onclick="AppMine.showChangePwd()">'
+      + '<div class="item-icon">' + mi('lock') + '</div><div class="item-content"><div class="item-title">修改密码</div></div><div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
+      + '</div></div>'
+      + '<div class="app-card" style="margin-bottom:12px">'
+      + '<div class="app-card-header"><h3>' + mi('history') + ' 登录记录</h3></div>'
+      + '<div id="mine-login-logs"><div class="scroll-loading">' + mi('refresh', 'mi-16 spin') + ' 加载中...</div></div>'
+      + '</div>'
+      + '<div style="padding:24px 0"><button class="app-btn app-btn-danger" onclick="AppMine.logout()">' + mi('logout', 'mi-18') + ' 退出登录</button></div>'
+      + '</div>';
 
-      var logs = (logRes.code === 200) ? ((logRes.data || {}).list || []) : [];
-      var user = (userRes.code === 200) ? userRes.data : currentUser;
-
-      content.innerHTML =
-        '<div class="app-page-content">'
-        + '<div class="app-card" style="text-align:center;padding:24px 16px">'
-        + '<div class="user-avatar-lg" style="width:80px;height:80px;font-size:32px;margin:0 auto 12px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center">'
-        + getInitial(user.nickname || user.username)
-        + '</div>'
-        + '<h2 style="margin:0 0 4px">' + escapeHtml(user.nickname || user.username) + '</h2>'
-        + '<div style="color:var(--text-secondary);font-size:13px">@' + escapeHtml(user.username) + (user.is_super ? ' · <span class="badge badge-warning">超级管理员</span>' : '') + '</div>'
-        + '<div style="margin-top:16px;display:flex;gap:8px;justify-content:center">'
-        + '<button class="app-btn app-btn-sm app-btn-outline" onclick="AppMine.showEditProfile()">' + mi('edit', 'mi-14') + ' 编辑资料</button>'
-        + '<button class="app-btn app-btn-sm app-btn-outline" onclick="AppMine.showChangePwd()">' + mi('lock', 'mi-14') + ' 修改密码</button>'
-        + '</div>'
-        + '</div>'
-        + '<div class="app-card">'
-        + '<div class="app-card-header"><h3>' + mi('person', 'mi-18') + ' 个人信息</h3></div>'
-        + '<div class="app-list">'
-        + '<div class="app-list-item"><div class="item-label">邮箱</div><div class="item-value">' + escapeHtml(user.email || '未设置') + '</div></div>'
-        + '<div class="app-list-item"><div class="item-label">手机</div><div class="item-value">' + escapeHtml(user.phone || '未设置') + '</div></div>'
-        + '<div class="app-list-item"><div class="item-label">创建时间</div><div class="item-value">' + formatDate(user.create_time) + '</div></div>'
-        + '<div class="app-list-item"><div class="item-label">最后登录</div><div class="item-value">' + formatDate(user.last_login) + '</div></div>'
-        + '</div>'
-        + '</div>'
-        + '<div class="app-card">'
-        + '<div class="app-card-header"><h3>' + mi('history', 'mi-18') + ' 最近登录日志</h3></div>'
-        + '<div class="app-list">'
-        + (logs.length === 0 ? '<div style="padding:16px;text-align:center;color:var(--text-secondary)">暂无登录记录</div>' : '')
-        + logs.map(function(l) {
-          return '<div class="app-list-item">'
-            + '<div class="item-label">' + escapeHtml(l.action) + '</div>'
-            + '<div class="item-value" style="font-size:12px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</div>'
+    // 加载登录日志
+    var logsContainer = document.getElementById('mine-login-logs');
+    if (logsContainer) {
+      SharedOps.log.myLogs(1, 10, function(res) {
+        if (res.code !== 200) {
+          logsContainer.innerHTML = '<div style="padding:12px 16px;font-size:13px;color:var(--text-tertiary)">加载失败</div>';
+          return;
+        }
+        var list = (res.data || {}).list || [];
+        if (list.length === 0) {
+          logsContainer.innerHTML = '<div style="padding:12px 16px;font-size:13px;color:var(--text-tertiary)">暂无登录记录</div>';
+          return;
+        }
+        var actionMap = { 'login': '登录', 'logout': '退出' };
+        logsContainer.innerHTML = list.map(function(l) {
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:0.5px solid var(--border-light)">'
+            + '<div>'
+            + '<div style="font-size:13px;font-weight:500">' + (actionMap[l.action] || l.action) + '</div>'
+            + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">' + escapeHtml(l.ip) + '</div>'
+            + '</div>'
+            + '<div style="font-size:11px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</div>'
             + '</div>';
-        }).join('')
-        + '</div>'
-        + '</div>'
-        + '<div style="padding:16px 0"><button class="app-btn app-btn-danger" onclick="AppMine.logout()" style="width:100%">' + mi('logout', 'mi-18') + ' 退出登录</button></div>'
-        + '</div>';
-    });
+        }).join('');
+        if ((res.data || {}).total > 10) {
+          logsContainer.innerHTML += '<div style="text-align:center;padding:8px"><span style="font-size:12px;color:var(--text-tertiary)">共 ' + (res.data || {}).total + ' 条记录</span></div>';
+        }
+      });
+    }
   }
 
   function showEditProfileSheet() {

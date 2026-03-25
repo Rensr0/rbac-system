@@ -155,7 +155,9 @@ var SharedOps = (function () {
 
   function getMyLogs(page, limit, cb) {
     var params = { self: '1', page: page || 1, limit: limit || 20 };
-    API.get('log/', params).then(function (res) { cb(res); });
+    API.get('log/', params).then(function (res) {
+      if (typeof cb === 'function') cb(res);
+    });
   }
 
   // ==================== 导出 ====================
