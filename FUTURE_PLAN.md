@@ -218,5 +218,31 @@
 
 ---
 
-*文档更新时间：2026-03-25 20:44 GMT+8*
-*更新说明：第十轮 — 移动端 Bug 集中修复（6项）*
+## 六、第十一轮：移动端导航与图标修复（待办）
+
+### 6.1 发现的问题
+
+| # | 问题 | 严重度 | 状态 |
+|---|------|--------|------|
+| 54 | 移动端导航栏硬编码 admin tabs（user/role/router/log），不是从 API `userRouters` 动态生成 | P0 | ⬜ 待修复 |
+| 55 | 硬编码 tabs 图标（`people`/`route`/`history`）不在 KNOWN_ICONS 列表中，显示为 ♢ 占位符 | P0 | ⬜ 待修复 |
+| 56 | `buildPages()` 仅为 `userRouters` 创建页面 div，但 admin 硬编码 tabs 显示了更多页面，导致点击无响应 | P0 | ⬜ 待修复 |
+| 57 | `app.js` 遗留文件（旧版单文件移动端路由），未被 home.html 加载，应清理 | P2 | ⬜ 待清理 |
+| 58 | `more_horiz` 图标不在 KNOWN_ICONS 中，"更多"按钮图标显示为 ♢ | P1 | ⬜ 待修复 |
+| 59 | 移动端与电脑端页面不一致：电脑端侧边栏从 `userRouters` 动态生成，移动端有硬编码 admin tabs | P0 | ⬜ 待修复 |
+
+### 6.2 修复方案
+
+**核心修复（54/55/56/59）**：修改 `app-core.js` 的 `buildTabBar()` 和 `buildPages()`
+- 移除超级管理员硬编码 admin tabs 逻辑
+- 统一使用 `userRouters` 动态生成导航栏（与 PC 端 `renderSidebar()` 保持一致）
+- `buildPages()` 同步创建所有 `userRouters` 对应的页面 div
+- 确保移动端顶部导航栏标题根据路由动态显示
+
+**图标修复（55/58）**：修改 `core.js` 的 `KNOWN_ICONS` 列表
+- 添加缺失的常用图标：`people`、`route`、`history`、`more_horiz`
+
+---
+
+*文档更新时间：2026-03-25 21:51 GMT+8*
+*更新说明：第十一轮开始 — 移动端导航与图标修复（6项待办）*
