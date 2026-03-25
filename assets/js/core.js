@@ -366,9 +366,14 @@ function createActionSheet(innerHtml, opts) {
   overlay.innerHTML = '<div class="app-action-sheet" style="' + sheetStyle + '">' + innerHtml + '</div>';
   document.body.appendChild(overlay);
 
+  // 保存父级 close 函数，以便嵌套时恢复
+  var prevClose = window.closeActionSheet;
+
   window.closeActionSheet = function () {
     overlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
     setTimeout(function () { overlay.remove(); }, 350);
+    // 恢复父级 close
+    window.closeActionSheet = prevClose;
   };
 
   overlay.onclick = function (e) {
@@ -395,54 +400,76 @@ function openIconPicker(inputId, onChange) {
       + '</div>';
   }).join('');
 
+  var pickerOverlay;
+
   if (mobile) {
-    createActionSheet(
+    // 保存父级 close，picker 独立关闭
+    var parentClose = window.closeActionSheet;
+    pickerOverlay = createActionSheet(
       '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">选择图标</div>'
       + '<div style="padding:0 12px 16px">'
       + '<div class="icon-pick-grid">' + iconGridHtml + '</div>'
       + '</div>'
-      + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>',
+      + '<div class="sheet-cancel" id="icon-pick-cancel">取消</div>',
       { maxHeight: '70vh' }
     );
+    // 恢复父级 close（picker 的 createActionSheet 已覆盖）
+    window.closeActionSheet = parentClose;
+
+    // picker 自身关闭函数
+    function closePicker() {
+      pickerOverlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
+      setTimeout(function () { pickerOverlay.remove(); }, 350);
+    }
+    pickerOverlay.querySelector('#icon-pick-cancel').onclick = closePicker;
+    pickerOverlay.onclick = function (e) {
+      if (e.target === pickerOverlay) closePicker();
+    };
   } else {
-    var overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML =
+    pickerOverlay = document.createElement('div');
+    pickerOverlay.className = 'modal-overlay';
+    pickerOverlay.innerHTML =
       '<div class="modal" style="max-width:560px">'
-      + '<div class="modal-header"><h3>选择图标</h3><button class="modal-close" onclick="this.closest(\'.modal-overlay\').classList.remove(\'show\');setTimeout(function(){event.target.closest(\'.modal-overlay\').remove()},250)">✕</button></div>'
+      + '<div class="modal-header"><h3>选择图标</h3><button class="modal-close" id="icon-pick-close">✕</button></div>'
       + '<div class="modal-body" style="max-height:60vh;overflow-y:auto">'
       + '<div class="icon-pick-grid">' + iconGridHtml + '</div>'
       + '</div></div>';
-    document.body.appendChild(overlay);
-    requestAnimationFrame(function () { overlay.classList.add('show'); });
+    document.body.appendChild(pickerOverlay);
+    requestAnimationFrame(function () { pickerOverlay.classList.add('show'); });
 
-    overlay.onclick = function (e) {
-      if (e.target === overlay) {
-        overlay.classList.remove('show');
-        setTimeout(function () { overlay.remove(); }, 250);
-      }
+    function closePickerModal() {
+      pickerOverlay.classList.remove('show');
+      setTimeout(function () { pickerOverlay.remove(); }, 250);
+    }
+    pickerOverlay.querySelector('#icon-pick-close').onclick = closePickerModal;
+    pickerOverlay.onclick = function (e) {
+      if (e.target === pickerOverlay) closePickerModal();
     };
   }
 
-  // 绑定点击事件
-  document.querySelectorAll('.icon-pick-item').forEach(function (item) {
-    item.addEventListener('click', function () {
-      var icon = item.dataset.icon;
-      if (input) input.value = icon;
-      // 更新选中态
-      document.querySelectorAll('.icon-pick-item').forEach(function (i) { i.classList.remove('active'); });
-      document.querySelectorAll('.icon-pick-item[data-icon="' + icon + '"]').forEach(function (i) { i.classList.add('active'); });
-      // 关闭选择器
-      if (mobile) {
-        closeActionSheet();
-      } else {
-        var ov = item.closest('.modal-overlay');
-        if (ov) { ov.classList.remove('show'); setTimeout(function () { ov.remove(); }, 250); }
-      }
-      if (typeof onChange === 'function') onChange(icon);
-    });
-  });
+  // 绑定点击事件（仅限 picker 内的 items）
+  var pickerItems = pickerOverlay.querySelectorAll('.icon-pick-item');
+  for (var i = 0; i < pickerItems.length; i++) {
+    (function (item) {
+      item.addEventListener('click', function () {
+        var icon = item.dataset.icon;
+        if (input) input.value = icon;
+        // 更新选中态
+        pickerOverlay.querySelectorAll('.icon-pick-item').forEach(function (el) { el.classList.remove('active'); });
+        item.classList.add('active');
+        // 关闭 picker（不影响父级）
+        if (mobile) {
+          pickerOverlay.querySelector('.app-action-sheet').style.transform = 'translateY(100%)';
+          setTimeout(function () { pickerOverlay.remove(); }, 350);
+        } else {
+          pickerOverlay.classList.remove('show');
+          setTimeout(function () { pickerOverlay.remove(); }, 250);
+        }
+        if (typeof onChange === 'function') onChange(icon);
+      });
+    })(pickerItems[i]);
+  }
 }
 
 function iconSelectHtml(selected, inputId) {
