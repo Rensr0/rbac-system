@@ -100,23 +100,33 @@
 (function () {
   if (window.innerWidth <= 768) return;
 
-  // 侧边栏 Drawer 开关
+  // 侧边栏开关（支持 Pad 端展开/收起 + 移动端 Drawer）
   window.closeSidebar = function() {
     var sidebar = document.getElementById('sidebar');
     var overlay = document.getElementById('sidebar-overlay');
-    if (sidebar) sidebar.classList.remove('open');
+    if (sidebar) {
+      sidebar.classList.remove('open');
+      sidebar.classList.remove('expanded');
+    }
     if (overlay) overlay.classList.remove('active');
   };
   window.toggleSidebar = function() {
     var sidebar = document.getElementById('sidebar');
     var overlay = document.getElementById('sidebar-overlay');
     if (!sidebar) return;
-    var isOpen = sidebar.classList.contains('open');
-    if (isOpen) {
-      window.closeSidebar();
-    } else {
-      sidebar.classList.add('open');
-      if (overlay) overlay.classList.add('active');
+    var w = window.innerWidth;
+    if (w <= 768) {
+      // 移动端：Drawer 开关
+      var isOpen = sidebar.classList.contains('open');
+      if (isOpen) {
+        window.closeSidebar();
+      } else {
+        sidebar.classList.add('open');
+        if (overlay) overlay.classList.add('active');
+      }
+    } else if (w <= 1024) {
+      // Pad 端：紧凑 ↔ 完整切换
+      sidebar.classList.toggle('expanded');
     }
   };
 
@@ -171,8 +181,9 @@
   }
 
   window.pcNavigate = function (page) {
-    // 导航后自动关闭侧边栏 drawer
-    if (window.innerWidth <= 1024) window.closeSidebar();
+    // 导航后自动收起侧边栏（Pad 收起展开态，移动端关闭 Drawer）
+    if (window.innerWidth <= 768) window.closeSidebar();
+    else if (window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('expanded');
     document.querySelectorAll('.nav-item').forEach(function(n) {
       n.classList.toggle('active', n.dataset.page === page);
     });
