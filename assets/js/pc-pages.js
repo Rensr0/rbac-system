@@ -656,9 +656,9 @@ var PCPages = (function () {
   }
 
   function pcAddRouter() {
-    var iconSelect = document.getElementById('form-router-icon');
-    if (iconSelect) {
-      iconSelect.innerHTML = iconSelectHtml();
+    var iconWrap = document.getElementById('form-router-icon-wrap');
+    if (iconWrap) {
+      iconWrap.innerHTML = iconSelectHtml('', 'form-router-icon');
     }
     document.getElementById('modal-router-title').textContent = '新增路由';
     document.getElementById('form-router-id').value = '';
@@ -675,9 +675,9 @@ var PCPages = (function () {
       var r = (res.data || []).find(function(x) { return x.id === id; });
       if (!r) { showToast('路由不存在'); return; }
       
-      var iconSelect = document.getElementById('form-router-icon');
-      if (iconSelect) {
-        iconSelect.innerHTML = iconSelectHtml(r.icon);
+      var iconWrap = document.getElementById('form-router-icon-wrap');
+      if (iconWrap) {
+        iconWrap.innerHTML = iconSelectHtml(r.icon, 'form-router-icon');
       }
       
       document.getElementById('modal-router-title').textContent = '编辑路由';

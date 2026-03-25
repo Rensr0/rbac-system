@@ -107,7 +107,7 @@ var KNOWN_ICONS = ['home','group','security','route','account_circle','login','l
   'edit_note','logout','inbox','search_off','description','save','palette','expand_more','block',
   'check_circle','star','folder','analytics','assessment','trending_up','bar_chart','pie_chart',
   'timeline','event','schedule','notifications','favorite','share','download','upload','cloud',
-  'storage','backup','privacy_policy','help','support'];
+  'storage','backup','help','support'];
 
 function mi(name, cls) {
   return '<i class="mi' + (cls ? ' ' + cls : '') + '">' + name + '</i>';

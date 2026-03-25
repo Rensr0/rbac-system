@@ -22,6 +22,7 @@
   direction: ltr;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  pointer-events: none;
   text-rendering: optimizeLegibility;
   font-feature-settings: 'liga';
   vertical-align: middle;
