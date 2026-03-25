@@ -445,15 +445,8 @@
   background: var(--bg-primary);
 }
 
-/* Pad 自适应覆盖：Pad 上不再用缩小侧边栏，改用 drawer */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .sidebar { width: 280px; }
-  .sidebar-brand h2 { font-size: 20px; }
-  .sidebar-brand p { display: block; }
-  .nav-item span:not(.nav-icon) { display: inline; }
-  .nav-item { justify-content: flex-start; padding: 12px 16px; }
-  .nav-item.active::before { display: block; }
-}
+/* 注：Pad 端（769-1024px）使用上方紧凑侧边栏 64px，点击汉堡按钮展开为 280px */
+/* 移动端 Drawer 模式由下方 @media (max-width: 768px) 控制 */
 
 /* ========== 批量操作栏 ========== */
 .batch-bar {
