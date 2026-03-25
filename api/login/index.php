@@ -49,41 +49,54 @@ function handleCaptcha() {
     $_SESSION['captcha_code'] = strtolower($code);
     $_SESSION['captcha_time'] = time();
 
+    // 自定义字体（也字工厂春梅手书，裁剪子集 base64 内嵌）
+    $fontB64 = file_get_contents(__DIR__ . '/../../assets/fonts/captcha.b64');
+    if ($fontB64 === false) {
+        $fontB64 = ''; // fallback：文件不存在时用系统字体
+    }
+
     // 生成带干扰线和噪点的 SVG 验证码
     $colors = ['#333', '#555', '#444', '#666'];
     $bgColors = ['#f0f2f7', '#e8eaf0', '#f5f5fa', '#eaeff5'];
     $bg = $bgColors[random_int(0, count($bgColors) - 1)];
 
-    $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80">';
-    $svg .= '<rect width="100%" height="100%" fill="' . $bg . '"/>';
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="70">';
+
+    // 内嵌自定义字体
+    if ($fontB64) {
+        $svg .= '<style>@font-face{font-family:"CaptchaFont";src:url(data:font/woff2;base64,' . $fontB64 . ') format("woff2");font-weight:normal;font-style:normal}</style>';
+    }
+
+    $svg .= '<rect width="100%" height="100%" fill="' . $bg . '" rx="6"/>';
 
     // 干扰线
     for ($i = 0; $i < 3; $i++) {
-        $x1 = random_int(10, 50);
-        $y1 = random_int(5, 75);
-        $x2 = random_int(190, 230);
-        $y2 = random_int(5, 75);
+        $x1 = random_int(5, 40);
+        $y1 = random_int(5, 65);
+        $x2 = random_int(160, 195);
+        $y2 = random_int(5, 65);
         $lineColor = $colors[random_int(0, count($colors) - 1)];
         $svg .= '<line x1="' . $x1 . '" y1="' . $y1 . '" x2="' . $x2 . '" y2="' . $y2 . '" stroke="' . $lineColor . '" stroke-width="1" opacity="0.3"/>';
     }
 
     // 噪点
-    for ($i = 0; $i < 20; $i++) {
-        $cx = random_int(5, 235);
-        $cy = random_int(5, 75);
+    for ($i = 0; $i < 15; $i++) {
+        $cx = random_int(5, 195);
+        $cy = random_int(5, 65);
         $svg .= '<circle cx="' . $cx . '" cy="' . $cy . '" r="1" fill="#999" opacity="0.4"/>';
     }
 
     // 绘制每个字符（随机位置偏移和旋转）
+    $fontFamily = $fontB64 ? 'CaptchaFont' : 'Arial,sans-serif';
     $chars_arr = mb_str_split($code);
-    $startX = 30;
+    $startX = 28;
     foreach ($chars_arr as $idx => $ch) {
-        $x = $startX + $idx * 50 + random_int(-3, 3);
-        $y = 45 + random_int(-8, 8);
-        $rotate = random_int(-15, 15);
-        $fontSize = random_int(28, 36);
+        $x = $startX + $idx * 46 + random_int(-3, 3);
+        $y = 38 + random_int(-6, 6);
+        $rotate = random_int(-12, 12);
+        $fontSize = random_int(26, 34);
         $charColor = $colors[random_int(0, count($colors) - 1)];
-        $svg .= '<text x="' . $x . '" y="' . $y . '" font-family="Arial,sans-serif" font-size="' . $fontSize . '" font-weight="bold" fill="' . $charColor . '" text-anchor="middle" dominant-baseline="central" transform="rotate(' . $rotate . ',' . $x . ',' . $y . ')">' . htmlspecialchars($ch) . '</text>';
+        $svg .= '<text x="' . $x . '" y="' . $y . '" font-family="' . $fontFamily . '" font-size="' . $fontSize . '" font-weight="bold" fill="' . $charColor . '" text-anchor="middle" dominant-baseline="central" transform="rotate(' . $rotate . ',' . $x . ',' . $y . ')">' . htmlspecialchars($ch) . '</text>';
     }
 
     $svg .= '</svg>';
