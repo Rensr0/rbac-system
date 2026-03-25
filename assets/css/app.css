@@ -54,7 +54,7 @@
     left: 8px;
     top: 50%;
     transform: translateY(-50%);
-    color: #fff;
+    color: var(--bg-card);
     font-size: 28px;
     font-weight: 300;
     cursor: pointer;
@@ -70,7 +70,7 @@
     right: 16px;
     top: 50%;
     transform: translateY(-50%);
-    color: #fff;
+    color: var(--bg-card);
     font-size: 14px;
     cursor: pointer;
     padding: 4px 8px;
@@ -116,10 +116,10 @@
     justify-content: space-around;
     height: 54px;
     padding-bottom: var(--safe-bottom);
-    background: rgba(255,255,255,0.92);
+    background: var(--tabbar-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-top: 0.5px solid rgba(0,0,0,0.06);
+    border-top: 0.5px solid var(--tabbar-border);
     flex-shrink: 0;
     z-index: 50;
   }
@@ -160,7 +160,7 @@
 
   /* ========== APP 卡片 ========== */
   .app-card {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     padding: 16px;
     margin-bottom: 12px;
@@ -183,7 +183,7 @@
 
   /* ========== APP 列表 ========== */
   .app-list {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     overflow: hidden;
     margin-bottom: 12px;
@@ -234,7 +234,7 @@
 
   /* ========== APP 表单 ========== */
   .app-form {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     overflow: hidden;
     margin-bottom: 12px;
@@ -291,16 +291,16 @@
   .app-btn:active { transform: scale(0.97); opacity: 0.9; }
   .app-btn-primary {
     background: var(--primary);
-    color: #fff;
+    color: var(--bg-card);
     box-shadow: 0 4px 12px rgba(79,110,247,0.3);
   }
   .app-btn-danger {
     background: var(--danger);
-    color: #fff;
+    color: var(--bg-card);
     box-shadow: 0 4px 12px rgba(255,59,48,0.25);
   }
   .app-btn-outline {
-    background: #fff;
+    background: var(--bg-card);
     border: 1.5px solid var(--border);
     color: var(--text-primary);
   }
@@ -329,7 +329,7 @@
   .app-action-sheet {
     position: relative;
     width: 100%;
-    background: rgba(255,255,255,0.97);
+    background: var(--bg-card);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
@@ -343,7 +343,7 @@
 
   .app-action-sheet .sheet-handle {
     width: 36px; height: 4px;
-    background: #d1d1d6;
+    background: var(--text-tertiary);
     border-radius: 2px;
     margin: 8px auto 12px;
   }
@@ -367,7 +367,7 @@
   .app-action-sheet .sheet-item.danger { color: var(--danger); }
   .app-action-sheet .sheet-cancel {
     margin-top: 8px;
-    background: #fff;
+    background: var(--bg-card);
     padding: 14px;
     text-align: center;
     font-size: 16px;
@@ -393,7 +393,7 @@
   .app-dialog {
     width: 100%;
     max-width: 300px;
-    background: rgba(255,255,255,0.97);
+    background: var(--bg-card);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-radius: 14px;
@@ -447,7 +447,7 @@
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0,0,0,0.8);
-    color: #fff;
+    color: var(--bg-card);
     padding: 10px 20px;
     border-radius: 10px;
     font-size: 14px;
@@ -491,7 +491,7 @@
   .app-loading .loading-spinner {
     width: 32px; height: 32px;
     border: 3px solid rgba(255,255,255,0.3);
-    border-top-color: #fff;
+    border-top-color: var(--bg-card);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
   }
@@ -519,7 +519,7 @@
     50% { transform: translateY(-8px); }
   }
   .app-login .login-title {
-    color: #fff;
+    color: var(--bg-card);
     font-size: 26px;
     font-weight: 700;
     margin-bottom: 8px;
@@ -535,24 +535,24 @@
     max-width: 340px;
   }
   .app-login .login-input-wrap {
-    background: rgba(255,255,255,0.12);
+    background: rgba(var(--white-rgb),0.12);
     border-radius: 14px;
     padding: 4px;
     margin-bottom: 14px;
     display: flex;
     align-items: center;
     gap: 10px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(var(--white-rgb),0.1);
     transition: border-color 0.2s, background 0.2s;
   }
   .app-login .login-input-wrap:focus-within {
-    background: rgba(255,255,255,0.18);
-    border-color: rgba(255,255,255,0.25);
+    background: rgba(var(--white-rgb),0.18);
+    border-color: rgba(var(--white-rgb),0.25);
   }
   .app-login .login-input-wrap .input-icon {
     font-size: 18px;
     padding-left: 12px;
-    color: rgba(255,255,255,0.6);
+    color: rgba(var(--white-rgb),0.6);
   }
   .app-login .login-input {
     flex: 1;
@@ -560,7 +560,7 @@
     background: transparent;
     padding: 14px 12px 14px 0;
     font-size: 16px;
-    color: #fff;
+    color: var(--bg-card);
     outline: none;
     font-family: var(--font);
   }
@@ -570,7 +570,7 @@
     height: 52px;
     border: none;
     border-radius: 14px;
-    background: #fff;
+    background: var(--bg-card);
     color: var(--primary);
     font-size: 17px;
     font-weight: 700;
@@ -584,7 +584,7 @@
 
   /* ========== 用户卡片 ========== */
   .user-card-app {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     padding: 16px;
     margin-bottom: 10px;
@@ -599,7 +599,7 @@
     width: 44px; height: 44px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: #fff;
+    color: var(--bg-card);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -646,7 +646,7 @@
   .switch .slider {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: #e5e5ea;
+    background: var(--border);
     border-radius: 31px;
     cursor: pointer;
     transition: background 0.3s;
@@ -657,7 +657,7 @@
     width: 27px; height: 27px;
     left: 2px;
     bottom: 2px;
-    background: #fff;
+    background: var(--bg-card);
     border-radius: 50%;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -683,13 +683,13 @@
     right: -30%;
     width: 200px;
     height: 200px;
-    background: rgba(255,255,255,0.08);
+    background: rgba(var(--white-rgb),0.08);
     border-radius: 50%;
   }
   .mine-avatar {
     width: 68px; height: 68px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.2);
+    background: rgba(var(--white-rgb),0.2);
     margin: 0 auto 14px;
     display: flex;
     align-items: center;
@@ -715,7 +715,7 @@
     margin-bottom: 16px;
   }
   .app-stat-card {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     padding: 18px;
     text-align: center;
@@ -832,9 +832,9 @@
   margin: 0;
   cursor: pointer;
 }
-.perm-lv:nth-child(1) { background: rgba(0,122,255,0.08); color: #007aff; }
-.perm-lv:nth-child(2) { background: rgba(255,149,0,0.08); color: #ff9500; }
-.perm-lv:nth-child(3) { background: rgba(255,59,48,0.08); color: #ff3b30; }
+.perm-lv:nth-child(1) { background: rgba(0,122,255,0.08); color: var(--perm-view); }
+.perm-lv:nth-child(2) { background: rgba(255,149,0,0.08); color: var(--perm-edit); }
+.perm-lv:nth-child(3) { background: rgba(255,59,48,0.08); color: var(--perm-delete); }
 .perm-lv:has(input:checked) { font-weight: 600; }
 .perm-lv:nth-child(1):has(input:checked) { background: rgba(0,122,255,0.18); }
 .perm-lv:nth-child(2):has(input:checked) { background: rgba(255,149,0,0.18); }
@@ -842,9 +842,9 @@
 .perm-lv:has(input:disabled) { opacity: 0.5; }
 
 /* 权限级别徽章 */
-.perm-badge-view   { background: rgba(0,122,255,0.15); color: #007aff; padding: 0 4px; border-radius: 3px; }
-.perm-badge-edit   { background: rgba(255,149,0,0.15); color: #ff9500; padding: 0 4px; border-radius: 3px; }
-.perm-badge-delete { background: rgba(255,59,48,0.15); color: #ff3b30; padding: 0 4px; border-radius: 3px; }
+.perm-badge-view   { background: rgba(0,122,255,0.15); color: var(--perm-view); padding: 0 4px; border-radius: 3px; }
+.perm-badge-edit   { background: rgba(255,149,0,0.15); color: var(--perm-edit); padding: 0 4px; border-radius: 3px; }
+.perm-badge-delete { background: rgba(255,59,48,0.15); color: var(--perm-delete); padding: 0 4px; border-radius: 3px; }
 
 /* 头像上传（手机端） */
 .mine-avatar {
@@ -857,7 +857,7 @@
   inset: 0;
   border-radius: 50%;
   background: rgba(0,0,0,0.4);
-  color: #fff;
+  color: var(--bg-card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -910,7 +910,7 @@
   position: absolute;
   height: 20px; width: 20px;
   left: 3px; bottom: 3px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 50%;
   transition: transform 0.25s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);

@@ -22,6 +22,10 @@ html, body, .sidebar, .app-navbar, .app-statusbar, .app-tabbar,
   --warning: #FF9500;
   --danger: #FF3B30;
   --info: #5AC8FA;
+  --perm-view: #007aff;
+  --perm-edit: #ff9500;
+  --perm-delete: #ff3b30;
+  --white-rgb: 255, 255, 255;
   --text-primary: #1C1C1E;
   --text-secondary: #8E8E93;
   --text-tertiary: #C7C7CC;
@@ -56,6 +60,10 @@ html, body, .sidebar, .app-navbar, .app-statusbar, .app-tabbar,
   --warning: #FFD60A;
   --danger: #FF453A;
   --info: #64D2FF;
+  --perm-view: #007aff;
+  --perm-edit: #ff9500;
+  --perm-delete: #ff3b30;
+  --white-rgb: 255, 255, 255;
   --text-primary: #F5F5F7;
   --text-secondary: #98989D;
   --text-tertiary: #636366;
@@ -90,6 +98,10 @@ html, body, .sidebar, .app-navbar, .app-statusbar, .app-tabbar,
   --warning: #F59E0B;
   --danger: #EF4444;
   --info: #06B6D4;
+  --perm-view: #007aff;
+  --perm-edit: #ff9500;
+  --perm-delete: #ff3b30;
+  --white-rgb: 255, 255, 255;
   --text-primary: #111827;
   --text-secondary: #6B7280;
   --text-tertiary: #D1D5DB;
@@ -124,6 +136,10 @@ html, body, .sidebar, .app-navbar, .app-statusbar, .app-tabbar,
   --warning: #F59E0B;
   --danger: #DC2626;
   --info: #0EA5E9;
+  --perm-view: #007aff;
+  --perm-edit: #ff9500;
+  --perm-delete: #ff3b30;
+  --white-rgb: 255, 255, 255;
   --text-primary: #1C1917;
   --text-secondary: #78716C;
   --text-tertiary: #D6D3D1;

@@ -1,10 +1,16 @@
-# RBAC 权限管理系统 v2.0
+# RBAC 权限管理系统 v3.3
 
 > 前后端分离 · 动态角色/路由/权限 · 三端自适应 · 模块化架构
 
 ## 📋 系统概述
 
 RBAC 权限管理系统是一个基于 PHP + MySQL + 原生 JavaScript 的企业级权限管理解决方案。支持动态角色管理、动态路由权限配置，PC / Pad / 手机三端自适应。
+
+### v3.3 更新
+- ✅ **代码模块化重构** — app.js 拆分为 app-users.js、app-roles.js、app-routers.js、app-mine.js、app-core.js、app-home.js、app-logs.js
+- ✅ **PC/移动端共用函数抽取** — 创建 shared-utils.js，统一路由权限处理逻辑，消除代码重复
+- ✅ **全局变量命名空间迁移** — UI、Utils 命名空间，减少 window 污染
+- ✅ **CSS 硬编码色值清理** — 统一使用 CSS 变量，支持主题切换
 
 ### v2.0 更新
 - ✅ **手机端导航完全动态化** — TabBar、页面容器、标题均由 API 路由数据驱动，新增路由自动加载
@@ -59,12 +65,19 @@ rbac-system/
     │   ├── app.css           # 手机 APP 风格（沉浸式、TabBar、ActionSheet）
     │   └── themes.css        # 6 套主题配色
     └── js/
-        ├── core.js           # AJAX + UI 组件 + 工具函数
-        ├── theme-switcher.js  # 主题切换
-        ├── app.js            # 手机端路由系统（动态 TabBar + 页面加载器）
-        ├── pc-pages.js       # PC 端页面渲染逻辑
-        ├── modals.js         # PC 端弹窗模板
-        └── version.js        # 版本号
+        ├── core.js           # AJAX + UI 组件 + 工具函数（UI/Utils 命名空间）
+        ├── shared-utils.js   # PC/移动端共用工具函数
+        ├── theme-switcher.js # 主题切换
+        ├── app-core.js      # 手机端核心路由系统
+        ├── app-home.js     # 手机端首页模块
+        ├── app-users.js    # 手机端用户管理模块
+        ├── app-roles.js    # 手机端角色管理模块
+        ├── app-routers.js   # 手机端路由管理模块
+        ├── app-mine.js     # 手机端个人中心模块
+        ├── app-logs.js     # 手机端日志管理模块
+        ├── pc-pages.js      # PC 端页面渲染逻辑
+        ├── modals.js       # PC 端弹窗模板
+        └── version.js      # 版本号
 ```
 
 ---

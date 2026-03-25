@@ -88,8 +88,8 @@ img { max-width: 100%; display: block; }
 
 .btn-primary {
   background: var(--primary);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(79,110,247,0.3);
+  color: var(--bg-card);
+  box-shadow: 0 2px 8px var(--primary-glow);
 }
 .btn-primary:hover {
   background: var(--primary-dark);
@@ -98,14 +98,14 @@ img { max-width: 100%; display: block; }
 }
 .btn-primary:active { transform: translateY(0) scale(0.96); }
 
-.btn-success { background: var(--success); color: #fff; }
+.btn-success { background: var(--success); color: var(--bg-card); }
 .btn-danger {
   background: var(--danger);
-  color: #fff;
+  color: var(--bg-card);
   box-shadow: 0 2px 8px rgba(255,59,48,0.25);
 }
 .btn-danger:hover { box-shadow: 0 4px 16px rgba(255,59,48,0.35); transform: translateY(-1px); }
-.btn-warning { background: var(--warning); color: #fff; }
+.btn-warning { background: var(--warning); color: var(--bg-card); }
 .btn-outline {
   background: transparent;
   border: 1.5px solid var(--border);
@@ -262,7 +262,7 @@ tr:hover td { background: rgba(79,110,247,0.03); }
 }
 .toast {
   background: rgba(0,0,0,0.8);
-  color: #fff;
+  color: var(--bg-card);
   padding: 10px 24px;
   border-radius: 24px;
   font-size: 14px;
@@ -327,7 +327,7 @@ tr:hover td { background: rgba(79,110,247,0.03); }
 }
 .pagination button.active {
   background: var(--primary);
-  color: #fff;
+  color: var(--bg-card);
   border-color: var(--primary);
 }
 .pagination button:disabled {

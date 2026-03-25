@@ -1,0 +1,224 @@
+/**
+ * app-logs.js v3.1 - 手机端日志管理模块
+ * 从 app.js 拆分出来
+ */
+(function () {
+  'use strict';
+
+  if (window.innerWidth > 768) return;
+
+  var _logPage = 1;
+  var _logTotalPages = 1;
+  var _logKeyword = '';
+  var _scrollCtrl = null;
+
+  function setupInfiniteScroll(container, loadMore) {
+    var sentinel = document.createElement('div');
+    sentinel.className = 'scroll-sentinel';
+    sentinel.innerHTML = '<div class="scroll-loading">' + mi('refresh', 'mi-16 spin') + ' 加载中...</div>';
+    container.appendChild(sentinel);
+
+    var loading = false;
+    var hasMore = true;
+
+    function onIntersect(entries) {
+      if (entries[0].isIntersecting && !loading && hasMore) {
+        loading = true;
+        sentinel.querySelector('.scroll-loading').style.display = 'flex';
+        loadMore(function (more) {
+          hasMore = more;
+          loading = false;
+          sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
+          if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
+        });
+      }
+    }
+
+    var observer;
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver(onIntersect, { rootMargin: '200px' });
+      observer.observe(sentinel);
+    } else {
+      var scrollEl = container.closest('.app-page') || document.querySelector('.app-content');
+      if (scrollEl) {
+        function onScroll() {
+          if (loading || !hasMore) return;
+          var rect = scrollEl.getBoundingClientRect();
+          if (rect.bottom - window.innerHeight < 300) {
+            loading = true;
+            loadMore(function (more) {
+              hasMore = more;
+              loading = false;
+              sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
+              if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
+            });
+          }
+        }
+        scrollEl.addEventListener('scroll', onScroll);
+      }
+    }
+
+    return {
+      destroy: function () {
+        if (observer) observer.disconnect();
+        sentinel.remove();
+      }
+    };
+  }
+
+  function loadPage() {
+    var content = document.getElementById('page-log');
+    if (!content) return;
+
+    var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
+    _logPage = 1;
+    _logTotalPages = 1;
+    _logKeyword = '';
+
+    appShowLoading();
+    SharedOps.log.search('', 1, 20, '', function(res) {
+      appHideLoading();
+      if (res.code !== 200) { appToast(res.msg); return; }
+
+      var data = res.data || {};
+      var list = data.list || [];
+      var total = data.total || 0;
+      _logTotalPages = Math.ceil(total / 20) || 1;
+
+      content.innerHTML =
+        '<div class="app-page-content">'
+        + '<div class="app-search">'
+        + '<span class="search-icon">' + mi('search', 'mi-18') + '</span>'
+        + '<input type="text" placeholder="搜索操作人或详情" id="log-search" onkeyup="if(event.key===\'Enter\')AppLogs.search()">'
+        + '</div>'
+        + '<div id="log-list">'
+        + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('inbox', 'mi-xl') + '</div><p>暂无日志数据</p></div>' : '')
+        + list.map(function(l) {
+          var actionMap = { 'login': '登录', 'logout': '退出', 'create': '创建', 'update': '更新', 'delete': '删除' };
+          return '<div class="app-card" style="margin-bottom:12px">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+            + '<span style="font-weight:500">' + escapeHtml(l.username) + '</span>'
+            + '<span style="font-size:12px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</span>'
+            + '</div>'
+            + '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">'
+            + '<span class="badge badge-info">' + (actionMap[l.action] || l.action) + '</span>'
+            + '</div>'
+            + '<div style="font-size:12px;color:var(--text-tertiary)">' + escapeHtml(l.detail || '无详情') + '</div>'
+            + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">IP: ' + escapeHtml(l.ip) + '</div>'
+            + '</div>';
+        }).join('')
+        + '</div>'
+        + '</div>';
+
+      if (_logTotalPages > 1) {
+        var listEl = document.getElementById('log-list');
+        _scrollCtrl = setupInfiniteScroll(listEl, function (done) {
+          _logPage++;
+          SharedOps.log.search(_logKeyword, _logPage, 20, '', function (r) {
+            if (r.code !== 200) { done(false); return; }
+            var items = (r.data || {}).list || [];
+            if (items.length === 0) { done(false); return; }
+            var actionMap = { 'login': '登录', 'logout': '退出', 'create': '创建', 'update': '更新', 'delete': '删除' };
+            var html = items.map(function(l) {
+              return '<div class="app-card" style="margin-bottom:12px">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+                + '<span style="font-weight:500">' + escapeHtml(l.username) + '</span>'
+                + '<span style="font-size:12px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</span>'
+                + '</div>'
+                + '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">'
+                + '<span class="badge badge-info">' + (actionMap[l.action] || l.action) + '</span>'
+                + '</div>'
+                + '<div style="font-size:12px;color:var(--text-tertiary)">' + escapeHtml(l.detail || '无详情') + '</div>'
+                + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">IP: ' + escapeHtml(l.ip) + '</div>'
+                + '</div>';
+            }).join('');
+            var sentinel = listEl.querySelector('.scroll-sentinel');
+            var tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            while (tmp.firstChild) {
+              listEl.insertBefore(tmp.firstChild, sentinel);
+            }
+            done(_logPage < _logTotalPages);
+          });
+        });
+      }
+    });
+  }
+
+  function searchLogs() {
+    var kw = document.getElementById('log-search') ? document.getElementById('log-search').value : '';
+    _logKeyword = kw;
+    appShowLoading();
+    SharedOps.log.search(kw, 1, 20, '', function(res) {
+      appHideLoading();
+      if (res.code !== 200) return;
+      var data = res.data || {};
+      var list = data.list || [];
+      var total = data.total || 0;
+      var container = document.getElementById('log-list');
+      if (container) {
+        var oldSentinel = container.querySelector('.scroll-sentinel');
+        if (oldSentinel) oldSentinel.remove();
+
+        var actionMap = { 'login': '登录', 'logout': '退出', 'create': '创建', 'update': '更新', 'delete': '删除' };
+        container.innerHTML = list.length === 0
+          ? '<div class="empty-state"><div class="empty-icon">' + mi('search_off', 'mi-xl') + '</div><p>未找到日志</p></div>'
+          : list.map(function(l) {
+            return '<div class="app-card" style="margin-bottom:12px">'
+              + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+              + '<span style="font-weight:500">' + escapeHtml(l.username) + '</span>'
+              + '<span style="font-size:12px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</span>'
+              + '</div>'
+              + '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">'
+              + '<span class="badge badge-info">' + (actionMap[l.action] || l.action) + '</span>'
+              + '</div>'
+              + '<div style="font-size:12px;color:var(--text-tertiary)">' + escapeHtml(l.detail || '无详情') + '</div>'
+              + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">IP: ' + escapeHtml(l.ip) + '</div>'
+              + '</div>';
+          }).join('');
+
+        var totalPages = Math.ceil(total / 20) || 1;
+        if (totalPages > 1) {
+          _logPage = 1;
+          setupInfiniteScroll(container, function (done) {
+            _logPage++;
+            SharedOps.log.search(kw, _logPage, 20, '', function (r) {
+              if (r.code !== 200) { done(false); return; }
+              var items = (r.data || {}).list || [];
+              if (items.length === 0) { done(false); return; }
+              var html = items.map(function(l) {
+                return '<div class="app-card" style="margin-bottom:12px">'
+                  + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+                  + '<span style="font-weight:500">' + escapeHtml(l.username) + '</span>'
+                  + '<span style="font-size:12px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</span>'
+                  + '</div>'
+                  + '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">'
+                  + '<span class="badge badge-info">' + (actionMap[l.action] || l.action) + '</span>'
+                  + '</div>'
+                  + '<div style="font-size:12px;color:var(--text-tertiary)">' + escapeHtml(l.detail || '无详情') + '</div>'
+                  + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">IP: ' + escapeHtml(l.ip) + '</div>'
+                  + '</div>';
+              }).join('');
+              var sentinel = container.querySelector('.scroll-sentinel');
+              var tmp = document.createElement('div');
+              tmp.innerHTML = html;
+              while (tmp.firstChild) {
+                container.insertBefore(tmp.firstChild, sentinel);
+              }
+              done(_logPage < totalPages);
+            });
+          });
+        }
+      }
+    });
+  }
+
+  window.AppLogs = {
+    load: loadPage,
+    search: searchLogs
+  };
+
+  if (window.registerPage) {
+    window.registerPage('log', loadPage);
+  }
+})();

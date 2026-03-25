@@ -69,19 +69,9 @@ var ModalTemplates = (function () {
 
 // ==================== 列表搜索过滤 ====================
 window.filterRoleList = function(keyword) {
-  var items = document.querySelectorAll('#form-user-roles .tree-item');
-  keyword = (keyword || '').toLowerCase();
-  items.forEach(function(item) {
-    var text = item.textContent.toLowerCase();
-    item.style.display = keyword === '' || text.indexOf(keyword) !== -1 ? '' : 'none';
-  });
+  SharedUtils.filterRoleList(keyword, 'form-user-roles');
 };
 
 window.filterRouterList = function(keyword) {
-  var items = document.querySelectorAll('#form-role-routers .tree-item');
-  keyword = (keyword || '').toLowerCase();
-  items.forEach(function(item) {
-    var text = item.textContent.toLowerCase();
-    item.style.display = keyword === '' || text.indexOf(keyword) !== -1 ? '' : 'none';
-  });
+  SharedUtils.filterRouterList(keyword, 'form-role-routers');
 };

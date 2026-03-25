@@ -568,19 +568,17 @@ var PCPages = (function () {
       var routers = routerRes.data || [];
       if (!role) { showToast('角色不存在'); return; }
 
-      // 构建 router_id → permissions 映射
-      var permMap = {};
+      var rolePerms = [];
       (role.routers || []).forEach(function(rt) {
         var perms = rt.perms || [];
         if (perms.length === 0 && rt.permissions) {
-          // 从 bitmask 还原
           var m = rt.permissions;
           perms = [];
           if (m & 1) perms.push('view');
           if (m & 2) perms.push('edit');
           if (m & 4) perms.push('delete');
         }
-        permMap[rt.id] = perms;
+        rolePerms.push({ router_id: rt.id, perms: perms });
       });
 
       document.getElementById('modal-role-title').textContent = '编辑角色';
@@ -588,18 +586,7 @@ var PCPages = (function () {
       var nEl = document.getElementById('form-role-name'); nEl.value = role.role_name; nEl.disabled = (id === 1);
       document.getElementById('form-role-remark').value = role.remark || '';
       document.getElementById('form-role-routers').innerHTML = routers.map(function(r) {
-        var perms = permMap[r.id] || [];
-        var checked = perms.length > 0;
-        return '<div class="tree-item perm-row" data-router-id="' + r.id + '">'
-          + '<div class="perm-row-header">'
-          + '<input type="checkbox" value="' + r.id + '" class="role-router-cb" ' + (checked ? 'checked' : '') + ' onchange="PCPages.toggleRoutePerms(this)">'
-          + '<span class="perm-router-name">' + renderIcon(r.icon) + ' ' + escapeHtml(r.router_name) + '</span>'
-          + '</div>'
-          + '<div class="perm-badges">'
-          + '<label class="perm-badge perm-view"><input type="checkbox" value="view" class="perm-level-cb" data-level="view" ' + (perms.indexOf('view') !== -1 ? 'checked' : '') + ' onchange="PCPages.onPermLevelChange(this)" ' + (checked ? '' : 'disabled') + '> 查看</label>'
-          + '<label class="perm-badge perm-edit"><input type="checkbox" value="edit" class="perm-level-cb" data-level="edit" ' + (perms.indexOf('edit') !== -1 ? 'checked' : '') + ' onchange="PCPages.onPermLevelChange(this)" ' + (checked ? '' : 'disabled') + '> 编辑</label>'
-          + '<label class="perm-badge perm-delete"><input type="checkbox" value="delete" class="perm-level-cb" data-level="delete" ' + (perms.indexOf('delete') !== -1 ? 'checked' : '') + ' onchange="PCPages.onPermLevelChange(this)" ' + (checked ? '' : 'disabled') + '> 删除</label>'
-          + '</div></div>';
+        return SharedUtils.renderRouterPermItemPC(r, rolePerms);
       }).join('');
       openModal('modal-role');
     });
@@ -611,18 +598,17 @@ var PCPages = (function () {
     var remark = document.getElementById('form-role-remark').value.trim();
     if (!roleName) { showToast('请输入角色名称'); return; }
 
-    // 收集路由权限数据
     var routerPerms = [];
-    document.querySelectorAll('.role-router-cb:checked').forEach(function(cb) {
+    document.querySelectorAll('.pc-router-cb:checked').forEach(function(cb) {
       var routerId = parseInt(cb.value);
-      var row = cb.closest('.perm-row');
       var perms = [];
+      var row = cb.closest('.tree-item');
       if (row) {
         row.querySelectorAll('.perm-level-cb:checked').forEach(function(lcb) {
           perms.push(lcb.value);
         });
       }
-      if (perms.length === 0) perms = ['view']; // 至少给予查看权限
+      if (perms.length === 0) perms = ['view'];
       routerPerms.push({ router_id: routerId, perms: perms });
     });
 
@@ -923,40 +909,11 @@ var PCPages = (function () {
 
   // ==================== 权限级别联动 ====================
   function toggleRoutePerms(cb) {
-    var row = cb.closest('.perm-row');
-    if (!row) return;
-    var levelCbs = row.querySelectorAll('.perm-level-cb');
-    if (cb.checked) {
-      levelCbs.forEach(function(lcb) { lcb.disabled = false; });
-      // 默认勾选查看
-      var viewCb = row.querySelector('.perm-level-cb[data-level="view"]');
-      if (viewCb && !viewCb.checked) viewCb.checked = true;
-    } else {
-      levelCbs.forEach(function(lcb) { lcb.checked = false; lcb.disabled = true; });
-    }
+    SharedUtils.toggleRoutePerms(cb, 'pc');
   }
 
   function onPermLevelChange(cb) {
-    var row = cb.closest('.perm-row');
-    if (!row) return;
-    var viewCb   = row.querySelector('.perm-level-cb[data-level="view"]');
-    var editCb   = row.querySelector('.perm-level-cb[data-level="edit"]');
-    var deleteCb = row.querySelector('.perm-level-cb[data-level="delete"]');
-    // 级联：编辑需要查看，删除需要编辑
-    if (cb === deleteCb && deleteCb.checked) {
-      editCb.checked = true;
-      viewCb.checked = true;
-    }
-    if (cb === editCb && editCb.checked) {
-      viewCb.checked = true;
-    }
-    if (cb === editCb && !editCb.checked) {
-      deleteCb.checked = false;
-    }
-    if (cb === viewCb && !viewCb.checked) {
-      editCb.checked = false;
-      deleteCb.checked = false;
-    }
+    SharedUtils.onPermLevelChange(cb, 'pc');
   }
 
   // ==================== 搜索过滤 ====================
