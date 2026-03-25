@@ -280,7 +280,7 @@
 
       var rows = [];
       for (var i = 1; i < lines.length; i++) {
-        var cols = parseCSVLine(lines[i]);
+        var cols = SharedUtils.parseCSVLine(lines[i]);
         if (cols.length >= 2 && cols[1].trim()) {
           rows.push({
             username: cols[1].trim(),
@@ -312,16 +312,6 @@
     reader.readAsText(file);
   }
 
-  function parseCSVLine(line) {
-    var result = [], current = '', inQuotes = false;
-    for (var i = 0; i < line.length; i++) {
-      var ch = line[i];
-      if (inQuotes) { if (ch === '"') { if (i + 1 < line.length && line[i + 1] === '"') { current += '"'; i++; } else { inQuotes = false; } } else { current += ch; } }
-      else { if (ch === '"') { inQuotes = true; } else if (ch === ',') { result.push(current); current = ''; } else { current += ch; } }
-    }
-    result.push(current);
-    return result;
-  }
 
   PCPages.loadUser = loadPCUser;
   PCPages.addUser = pcAddUser;

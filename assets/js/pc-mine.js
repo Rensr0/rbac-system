@@ -88,13 +88,9 @@
   }
 
   function pcChangePwd() {
-    var oldPwd = document.getElementById('pc-old-pwd').value;
-    var newPwd = document.getElementById('pc-new-pwd').value;
-    var confirmPwd = document.getElementById('pc-confirm-pwd').value;
-    if (!oldPwd || !newPwd) { showToast('请填写完整'); return; }
-    if (newPwd.length < 6) { showToast('新密码至少6位'); return; }
-    if (newPwd !== confirmPwd) { showToast('两次密码不一致'); return; }
-    SharedOps.user.changePassword(oldPwd, newPwd, function(res) {
+    var result = SharedUtils.validatePasswordChange('pc-old-pwd', 'pc-new-pwd', 'pc-confirm-pwd', showToast);
+    if (!result) return;
+    SharedOps.user.changePassword(result.oldPwd, result.newPwd, function(res) {
       showToast(res.msg);
       if (res.code === 200) {
         document.getElementById('pc-old-pwd').value = '';

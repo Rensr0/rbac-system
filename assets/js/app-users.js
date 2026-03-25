@@ -12,28 +12,6 @@
   var _userKeyword = '';
   var _scrollCtrl = null;
 
-  function setupInfiniteScroll(container, loadMore) {
-    var sentinel = document.createElement('div');
-    sentinel.className = 'scroll-sentinel';
-    sentinel.innerHTML = '<div class="scroll-loading">' + mi('refresh', 'mi-16 spin') + ' 加载中...</div>';
-    container.appendChild(sentinel);
-
-    var loading = false;
-    var hasMore = true;
-
-    function onIntersect(entries) {
-      if (entries[0].isIntersecting && !loading && hasMore) {
-        loading = true;
-        sentinel.querySelector('.scroll-loading').style.display = 'flex';
-        loadMore(function (more) {
-          hasMore = more;
-          loading = false;
-          sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
-          if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
-        });
-      }
-    }
-
     var observer;
     if ('IntersectionObserver' in window) {
       observer = new IntersectionObserver(onIntersect, { rootMargin: '200px' });
@@ -121,7 +99,7 @@
 
       if (_userTotalPages > 1) {
         var listEl = document.getElementById('user-list');
-        _scrollCtrl = setupInfiniteScroll(listEl, function (done) {
+        _scrollCtrl = SharedUtils.setupInfiniteScroll(listEl, function (done) {
           _userPage++;
           SharedOps.user.search(_userKeyword, _userPage, 20, function (r) {
             if (r.code !== 200) { done(false); return; }
@@ -163,7 +141,7 @@
         var totalPages = Math.ceil(total / 20) || 1;
         if (totalPages > 1) {
           _userPage = 1;
-          setupInfiniteScroll(container, function (done) {
+          SharedUtils.setupInfiniteScroll(container, function (done) {
             _userPage++;
             SharedOps.user.search(kw, _userPage, 20, function (r) {
               if (r.code !== 200) { done(false); return; }

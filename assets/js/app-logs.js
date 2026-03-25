@@ -12,60 +12,6 @@
   var _logKeyword = '';
   var _scrollCtrl = null;
 
-  function setupInfiniteScroll(container, loadMore) {
-    var sentinel = document.createElement('div');
-    sentinel.className = 'scroll-sentinel';
-    sentinel.innerHTML = '<div class="scroll-loading">' + mi('refresh', 'mi-16 spin') + ' 加载中...</div>';
-    container.appendChild(sentinel);
-
-    var loading = false;
-    var hasMore = true;
-
-    function onIntersect(entries) {
-      if (entries[0].isIntersecting && !loading && hasMore) {
-        loading = true;
-        sentinel.querySelector('.scroll-loading').style.display = 'flex';
-        loadMore(function (more) {
-          hasMore = more;
-          loading = false;
-          sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
-          if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
-        });
-      }
-    }
-
-    var observer;
-    if ('IntersectionObserver' in window) {
-      observer = new IntersectionObserver(onIntersect, { rootMargin: '200px' });
-      observer.observe(sentinel);
-    } else {
-      var scrollEl = container.closest('.app-page') || document.querySelector('.app-content');
-      if (scrollEl) {
-        function onScroll() {
-          if (loading || !hasMore) return;
-          var rect = scrollEl.getBoundingClientRect();
-          if (rect.bottom - window.innerHeight < 300) {
-            loading = true;
-            loadMore(function (more) {
-              hasMore = more;
-              loading = false;
-              sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
-              if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
-            });
-          }
-        }
-        scrollEl.addEventListener('scroll', onScroll);
-      }
-    }
-
-    return {
-      destroy: function () {
-        if (observer) observer.disconnect();
-        sentinel.remove();
-      }
-    };
-  }
-
   function loadPage() {
     var content = document.getElementById('page-log');
     if (!content) return;
@@ -94,17 +40,10 @@
         + '<div id="log-list">'
         + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('inbox', 'mi-xl') + '</div><p>暂无日志数据</p></div>' : '')
         + list.map(function(l) {
-          var actionMap = {
-              'login': '登录', 'logout': '退出', 'register': '注册', 'forgot': '找回密码',
-              'user_create': '创建用户', 'user_update': '更新用户', 'user_delete': '删除用户',
-              'user_assign_role': '分配角色', 'profile_update': '更新资料', 'password_change': '修改密码',
-              'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
-              'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
-            };
           return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
             + '<div style="display:flex;justify-content:space-between;align-items:center">'
             + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-            + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
+            + '<span class="badge badge-info" style="font-size:10px">' + (SharedUtils.actionMap[l.action] || l.action) + '</span>'
             + '</div>'
             + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
             + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
@@ -117,24 +56,17 @@
 
       if (_logTotalPages > 1) {
         var listEl = document.getElementById('log-list');
-        _scrollCtrl = setupInfiniteScroll(listEl, function (done) {
+        _scrollCtrl = SharedUtils.SharedUtils.setupInfiniteScroll(listEl, function (done) {
           _logPage++;
           SharedOps.log.search(_logKeyword, _logPage, 20, '', function (r) {
             if (r.code !== 200) { done(false); return; }
             var items = (r.data || {}).list || [];
             if (items.length === 0) { done(false); return; }
-            var actionMap = {
-              'login': '登录', 'logout': '退出', 'register': '注册', 'forgot': '找回密码',
-              'user_create': '创建用户', 'user_update': '更新用户', 'user_delete': '删除用户',
-              'user_assign_role': '分配角色', 'profile_update': '更新资料', 'password_change': '修改密码',
-              'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
-              'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
-            };
             var html = items.map(function(l) {
               return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center">'
                 + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-                + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
+                + '<span class="badge badge-info" style="font-size:10px">' + (SharedUtils.actionMap[l.action] || l.action) + '</span>'
                 + '</div>'
                 + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
                 + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
@@ -170,20 +102,13 @@
         var oldSentinel = container.querySelector('.scroll-sentinel');
         if (oldSentinel) oldSentinel.remove();
 
-        var actionMap = {
-          'login': '登录', 'logout': '退出', 'register': '注册', 'forgot': '找回密码',
-          'user_create': '创建用户', 'user_update': '更新用户', 'user_delete': '删除用户',
-          'user_assign_role': '分配角色', 'profile_update': '更新资料', 'password_change': '修改密码',
-          'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
-          'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
-        };
         container.innerHTML = list.length === 0
           ? '<div class="empty-state"><div class="empty-icon">' + mi('search_off', 'mi-xl') + '</div><p>未找到日志</p></div>'
           : list.map(function(l) {
             return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
               + '<div style="display:flex;justify-content:space-between;align-items:center">'
               + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-              + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
+              + '<span class="badge badge-info" style="font-size:10px">' + (SharedUtils.actionMap[l.action] || l.action) + '</span>'
               + '</div>'
               + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
               + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
@@ -195,7 +120,7 @@
         var totalPages = Math.ceil(total / 20) || 1;
         if (totalPages > 1) {
           _logPage = 1;
-          setupInfiniteScroll(container, function (done) {
+          SharedUtils.setupInfiniteScroll(container, function (done) {
             _logPage++;
             SharedOps.log.search(kw, _logPage, 20, '', function (r) {
               if (r.code !== 200) { done(false); return; }
@@ -205,7 +130,7 @@
                 return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
                   + '<div style="display:flex;justify-content:space-between;align-items:center">'
                   + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-                  + '<span class="badge badge-info" style="font-size:10px">' + (actionMap[l.action] || l.action) + '</span>'
+                  + '<span class="badge badge-info" style="font-size:10px">' + (SharedUtils.actionMap[l.action] || l.action) + '</span>'
                   + '</div>'
                   + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
                   + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'

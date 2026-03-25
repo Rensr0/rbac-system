@@ -286,6 +286,43 @@
 
 ---
 
+## 九、代码重构：pc-pages.js 模块化拆分
+
+### 9.1 拆分说明
+
+原 `pc-pages.js`（1052 行）承载了所有 PC 端页面逻辑，拆分为 7 个独立模块：
+
+| 文件 | 行数 | 职责 |
+|------|------|------|
+| `pc-core.js` | 30 | 共享状态（分页器）、PCPages 命名空间初始化 |
+| `pc-home.js` | 131 | 首页仪表盘 + 系统设置（验证码开关） |
+| `pc-users.js` | 339 | 用户管理 CRUD + 批量操作 + CSV 导入导出 |
+| `pc-roles.js` | 159 | 角色管理 CRUD + 权限复选框联动 |
+| `pc-routers.js` | 101 | 路由管理 CRUD |
+| `pc-logs.js` | 69 | 操作日志查看（搜索 + 分页） |
+| `pc-mine.js` | 155 | 个人中心（编辑资料 + 修改密码 + 头像上传） |
+
+### 9.2 拆分原则
+
+- 与移动端 `app-*.js` 保持一致的文件命名风格
+- 每个文件通过 IIFE 注入 `PCPages` 命名空间
+- 通用操作（API 调用）保留在 `shared-ops.js`
+- 通用 UI 工具（权限复选框、路由渲染）保留在 `shared-utils.js`
+- `pc-pages.js` 保留 17 行空壳向后兼容
+
+### 9.3 加载顺序
+
+`home.html` 中按依赖顺序加载：
+```
+core.js → shared-ops.js → shared-utils.js → theme-switcher.js → modals.js →
+app-core.js → app-home.js → app-users.js → app-roles.js → app-routers.js →
+app-mine.js → app-logs.js →
+pc-core.js → pc-home.js → pc-users.js → pc-roles.js → pc-routers.js →
+pc-logs.js → pc-mine.js → pc-pages.js
+```
+
+---
+
 *文档更新时间：2026-03-26 00:45 GMT+8*
 *更新说明：第十三轮 — 操作记录页面权限调整 + 个人中心登录记录移除*
 

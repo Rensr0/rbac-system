@@ -148,16 +148,11 @@
   }
 
   function submitChangePwd() {
-    var oldPwd = document.getElementById('app-old-password').value.trim();
-    var newPwd = document.getElementById('app-new-password').value.trim();
-    var confirmPwd = document.getElementById('app-confirm-password').value.trim();
-
-    if (!oldPwd) { appToast('请输入旧密码'); return; }
-    if (!newPwd || newPwd.length < 6) { appToast('新密码至少6位'); return; }
-    if (newPwd !== confirmPwd) { appToast('两次密码不一致'); return; }
+    var result = SharedUtils.validatePasswordChange('app-old-password', 'app-new-password', 'app-confirm-password', appToast);
+    if (!result) return;
 
     appShowLoading();
-    SharedOps.user.changePassword(oldPwd, newPwd, function(res) {
+    SharedOps.user.changePassword(result.oldPwd, result.newPwd, function(res) {
       appHideLoading();
       appToast(res.msg);
       if (res.code === 200) {

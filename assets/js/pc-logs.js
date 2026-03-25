@@ -15,17 +15,8 @@
       var pages = Math.ceil(total / 20) || 1;
       var actions = (res.data || {}).actions || [];
 
-      var actionMap = {
-        'login': '登录', 'logout': '退出', 'register': '注册', 'user_create': '创建用户',
-        'user_update': '更新用户', 'user_delete': '删除用户', 'user_assign_role': '分配角色',
-        'profile_update': '更新资料', 'password_change': '修改密码',
-        'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
-        'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由',
-        'forgot': '找回密码'
-      };
-
       var actionOptions = actions.map(function(a) {
-        return '<option value="' + a + '"' + (a === action ? ' selected' : '') + '>' + (actionMap[a] || a) + '</option>';
+        return '<option value="' + a + '"' + (a === action ? ' selected' : '') + '>' + (SharedUtils.actionMap[a] || a) + '</option>';
       }).join('');
 
       c.innerHTML =
@@ -44,7 +35,7 @@
           return '<tr>'
             + '<td>' + l.id + '</td>'
             + '<td>' + escapeHtml(l.username) + '</td>'
-            + '<td><span class="badge badge-info">' + (actionMap[l.action] || l.action) + '</span></td>'
+            + '<td><span class="badge badge-info">' + (SharedUtils.actionMap[l.action] || l.action) + '</span></td>'
             + '<td class="text-sm">' + escapeHtml(l.detail) + '</td>'
             + '<td class="text-sm text-secondary">' + escapeHtml(l.ip) + '</td>'
             + '<td class="text-sm text-secondary">' + formatDate(l.create_time) + '</td>'

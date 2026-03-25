@@ -120,6 +120,101 @@ var SharedUtils = (function () {
       + '</div>';
   }
 
+  // ==================== 无限滚动（移动端复用） ====================
+  function setupInfiniteScroll(container, loadMore) {
+    var sentinel = document.createElement('div');
+    sentinel.className = 'scroll-sentinel';
+    sentinel.innerHTML = '<div class="scroll-loading">' + mi('refresh', 'mi-16 spin') + ' 加载中...</div>';
+    container.appendChild(sentinel);
+
+    var loading = false;
+    var hasMore = true;
+
+    function onIntersect(entries) {
+      if (entries[0].isIntersecting && !loading && hasMore) {
+        loading = true;
+        sentinel.querySelector('.scroll-loading').style.display = 'flex';
+        loadMore(function (more) {
+          hasMore = more;
+          loading = false;
+          sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
+          if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
+        });
+      }
+    }
+
+    var observer;
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver(onIntersect, { rootMargin: '200px' });
+      observer.observe(sentinel);
+    } else {
+      var scrollEl = container.closest('.app-page') || document.querySelector('.app-content');
+      if (scrollEl) {
+        function onScroll() {
+          if (loading || !hasMore) return;
+          var rect = scrollEl.getBoundingClientRect();
+          if (rect.bottom - window.innerHeight < 300) {
+            loading = true;
+            loadMore(function (more) {
+              hasMore = more;
+              loading = false;
+              sentinel.querySelector('.scroll-loading').style.display = more ? 'flex' : 'none';
+              if (!more) sentinel.querySelector('.scroll-loading').textContent = '已加载全部';
+            });
+          }
+        }
+        scrollEl.addEventListener('scroll', onScroll);
+      }
+    }
+
+    return {
+      destroy: function () {
+        if (observer) observer.disconnect();
+        sentinel.remove();
+      }
+    };
+  }
+
+  // ==================== 操作类型映射（日志页面复用） ====================
+  var actionMap = {
+    'login': '登录', 'logout': '退出', 'register': '注册', 'forgot': '找回密码',
+    'user_create': '创建用户', 'user_update': '更新用户', 'user_delete': '删除用户',
+    'user_assign_role': '分配角色', 'profile_update': '更新资料', 'password_change': '修改密码',
+    'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
+    'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
+  };
+
+  // ==================== 密码修改验证（个人中心复用） ====================
+  function validatePasswordChange(oldPwdId, newPwdId, confirmPwdId, toastFn) {
+    var oldPwd = document.getElementById(oldPwdId).value.trim();
+    var newPwd = document.getElementById(newPwdId).value.trim();
+    var confirmPwd = document.getElementById(confirmPwdId).value.trim();
+    if (!oldPwd) { toastFn('请输入旧密码'); return null; }
+    if (!newPwd || newPwd.length < 6) { toastFn('新密码至少6位'); return null; }
+    if (newPwd !== confirmPwd) { toastFn('两次密码不一致'); return null; }
+    return { oldPwd: oldPwd, newPwd: newPwd };
+  }
+
+  // ==================== CSV 行解析 ====================
+  function parseCSVLine(line) {
+    var result = [], current = '', inQuotes = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (i + 1 < line.length && line[i + 1] === '"') { current += '"'; i++; }
+          else { inQuotes = false; }
+        } else { current += ch; }
+      } else {
+        if (ch === '"') { inQuotes = true; }
+        else if (ch === ',') { result.push(current); current = ''; }
+        else { current += ch; }
+      }
+    }
+    result.push(current);
+    return result;
+  }
+
   return {
     collectRouterPerms: collectRouterPerms,
     toggleRoutePerms: toggleRoutePerms,
@@ -127,6 +222,10 @@ var SharedUtils = (function () {
     filterRouterList: filterRouterList,
     filterRoleList: filterRoleList,
     renderRouterPermItem: renderRouterPermItem,
-    renderRouterPermItemPC: renderRouterPermItemPC
+    renderRouterPermItemPC: renderRouterPermItemPC,
+    setupInfiniteScroll: setupInfiniteScroll,
+    actionMap: actionMap,
+    validatePasswordChange: validatePasswordChange,
+    parseCSVLine: parseCSVLine
   };
 })();
