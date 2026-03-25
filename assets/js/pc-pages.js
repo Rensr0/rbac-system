@@ -798,24 +798,7 @@ var PCPages = (function () {
       + '</div>'
       + '</div>'
       + '</div>'
-      + '<div class="card" style="margin-top:24px"><div class="card-header">' + mi('history', 'mi-18') + ' 登录记录</div><div class="card-body" id="pc-mine-logs"><div class="text-center" style="padding:16px"><div class="spinner"></div></div></div></div>'
       + '</div></div>';
-
-    // 加载登录日志
-    SharedOps.log.myLogs(1, 15, function(res) {
-      var el = document.getElementById('pc-mine-logs');
-      if (!el) return;
-      if (res.code !== 200) { el.innerHTML = '<p style="color:var(--text-secondary)">加载失败</p>'; return; }
-      var list = (res.data || {}).list || [];
-      if (list.length === 0) { el.innerHTML = '<p style="color:var(--text-secondary)">暂无登录记录</p>'; return; }
-      var actionMap = { 'login': '登录', 'logout': '退出' };
-      el.innerHTML = '<table style="width:100%;border-collapse:collapse">'
-        + '<thead><tr><th style="text-align:left;padding:8px;font-size:12px;color:var(--text-secondary)">操作</th><th style="text-align:left;padding:8px;font-size:12px;color:var(--text-secondary)">IP</th><th style="text-align:left;padding:8px;font-size:12px;color:var(--text-secondary)">时间</th></tr></thead>'
-        + '<tbody>' + list.map(function(l) {
-          return '<tr style="border-top:1px solid var(--border-light)"><td style="padding:8px;font-size:13px">' + (actionMap[l.action] || l.action) + '</td><td style="padding:8px;font-size:13px;color:var(--text-secondary)">' + escapeHtml(l.ip) + '</td><td style="padding:8px;font-size:13px;color:var(--text-secondary)">' + formatDate(l.create_time) + '</td></tr>';
-        }).join('')
-        + '</tbody></table>';
-    });
   }
 
   function pcSaveProfile() {

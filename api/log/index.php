@@ -1,7 +1,8 @@
 <?php
 /**
  * 操作日志接口
- * 仅超级管理员可查看
+ * 超级管理员可查看所有用户的操作记录
+ * 普通用户只能查看自己的操作记录
  */
 require_once __DIR__ . '/../common.php';
 
@@ -19,12 +20,6 @@ if ($method === 'GET') {
 function getLogs() {
     $user = getCurrentUser();
     $isSuper = (isset($user['is_super']) ? $user['is_super'] : 0) == 1;
-    $selfOnly = getParam('self', '') === '1';
-
-    // 仅超级管理员可查看全部日志，普通用户只能查看自己的登录日志
-    if (!$isSuper && !$selfOnly) {
-        forbidden('仅超级管理员可查看操作日志');
-    }
 
     $p = getPagination();
     $keyword = getParam('keyword', '');
@@ -35,16 +30,10 @@ function getLogs() {
         $where = 'WHERE 1=1';
         $params = array();
 
-        // 普通用户只看自己的
-        if (!$isSuper && $selfOnly) {
+        // 普通用户只看自己的操作记录
+        if (!$isSuper) {
             $where .= ' AND user_id = ?';
             $params[] = $user['id'];
-            // 只显示登录相关的操作
-            $where .= " AND action IN ('login','logout','register','password_change','profile_update')";
-            if ($action === '') {
-                // 默认只返回登录/退出
-                $where = str_replace(" AND action IN ('login','logout','register','password_change','profile_update')", " AND action IN ('login','logout')", $where);
-            }
         }
 
         if ($keyword !== '') {
