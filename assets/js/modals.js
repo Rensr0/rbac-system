@@ -16,6 +16,7 @@ var ModalTemplates = (function () {
     + '<div class="form-group"><label class="form-label">昵称</label><input class="form-input" id="form-user-nickname" placeholder="请输入昵称"></div>'
     + '<div class="form-group"><label class="form-label">邮箱</label><input class="form-input" id="form-user-email" placeholder="选填"></div>'
     + '<div class="form-group"><label class="form-label">手机</label><input class="form-input" id="form-user-phone" placeholder="选填"></div>'
+    + '<div class="form-group" id="form-user-status-group" style="display:none"><label class="form-label">状态</label><select class="form-input" id="form-user-status"><option value="1">正常</option><option value="0">禁用</option></select></div>'
     + '<div class="form-group"><label class="form-label">分配角色</label>'
     + '<input class="form-input" type="text" id="form-user-role-search" placeholder="搜索角色..." oninput="filterRoleList(this.value)" style="margin-bottom:8px">'
     + '<div class="tree-selector" id="form-user-roles"></div></div>'

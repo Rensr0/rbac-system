@@ -70,6 +70,8 @@
       document.getElementById('form-user-nickname').value = '';
       document.getElementById('form-user-email').value = '';
       document.getElementById('form-user-phone').value = '';
+      var statusGroup = document.getElementById('form-user-status-group');
+      if (statusGroup) { statusGroup.style.display = 'none'; }
       document.getElementById('form-user-roles').innerHTML = roles.map(function(r) {
         return '<div class="tree-item"><input type="checkbox" value="' + r.id + '" class="user-role-cb"><span>' + escapeHtml(r.role_name) + '</span></div>';
       }).join('');
@@ -90,6 +92,10 @@
         document.getElementById('form-user-nickname').value = u.nickname;
         document.getElementById('form-user-email').value = u.email || '';
         document.getElementById('form-user-phone').value = u.phone || '';
+        var statusGroup = document.getElementById('form-user-status-group');
+        if (statusGroup) { statusGroup.style.display = ''; }
+        var statusEl = document.getElementById('form-user-status');
+        if (statusEl) { statusEl.value = u.status == 1 ? '1' : '0'; }
         document.getElementById('form-user-roles').innerHTML = roles.map(function(r) {
           return '<div class="tree-item"><input type="checkbox" value="' + r.id + '" class="user-role-cb" ' + ((u.role_ids || []).indexOf(r.id) !== -1 ? 'checked' : '') + '><span>' + escapeHtml(r.role_name) + '</span></div>';
         }).join('');
@@ -105,12 +111,14 @@
     var nickname = document.getElementById('form-user-nickname').value.trim();
     var email = document.getElementById('form-user-email').value.trim();
     var phone = document.getElementById('form-user-phone').value.trim();
+    var statusEl = document.getElementById('form-user-status');
+    var status = statusEl ? parseInt(statusEl.value) : undefined;
     var roleIds = Array.from(document.querySelectorAll('.user-role-cb:checked')).map(function(cb) { return parseInt(cb.value); });
     if (!username) { showToast('请输入账号'); return; }
 
     function doSave() {
       if (id) {
-        SharedOps.user.update(parseInt(id), { nickname: nickname, email: email, phone: phone }, function(updateRes) {
+        SharedOps.user.update(parseInt(id), { nickname: nickname, email: email, phone: phone, status: status }, function(updateRes) {
           if (updateRes.code !== 200) { showToast(updateRes.msg || '更新用户失败'); return; }
           var current = Storage.get('currentUser');
           if (current && current.id === parseInt(id) && updateRes.data) {

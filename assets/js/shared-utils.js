@@ -109,7 +109,7 @@ var SharedUtils = (function () {
     var permLevel = rp ? rp.perms : 0;
     return '<div class="tree-item">'
       + '<label style="display:flex;align-items:center;gap:8px;flex:1">'
-      + '<input type="checkbox" value="' + r.id + '" class="pc-router-cb" onchange="SharedUtils.toggleRoutePerms(this, \'pc\')">'
+      + '<input type="checkbox" value="' + r.id + '" class="pc-router-cb" onchange="SharedUtils.toggleRoutePerms(this, \'pc\')" ' + (rp ? 'checked' : '') + '>'
       + '<span style="flex:1">' + escapeHtml(r.router_name) + '</span>'
       + '</label>'
       + '<div style="display:flex;gap:8px;margin-left:8px">'
@@ -177,11 +177,14 @@ var SharedUtils = (function () {
 
   // ==================== 操作类型映射（日志页面复用） ====================
   var actionMap = {
-    'login': '登录', 'logout': '退出', 'register': '注册', 'forgot': '找回密码',
+    'login': '登录', 'logout': '退出', 'register': '注册',
+    'forgot': '找回密码', 'forgot_password': '找回密码',
     'user_create': '创建用户', 'user_update': '更新用户', 'user_delete': '删除用户',
     'user_assign_role': '分配角色', 'profile_update': '更新资料', 'password_change': '修改密码',
     'role_create': '创建角色', 'role_update': '更新角色', 'role_delete': '删除角色',
-    'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由'
+    'role_assign_router': '分配路由权限',
+    'router_create': '创建路由', 'router_update': '更新路由', 'router_delete': '删除路由',
+    'settings_update': '更新设置'
   };
 
   // ==================== 密码修改验证（个人中心复用） ====================
