@@ -155,6 +155,13 @@
     appShowLoading();
     SharedOps.user.changePassword(result.oldPwd, result.newPwd, function(res) {
       appHideLoading();
+      if (res.code === 200 && res.data && res.data.require_logout) {
+        appToast(res.msg);
+        closeActionSheet();
+        Storage.remove('currentUser');
+        setTimeout(function() { window.location.href = '../index.html'; }, 1500);
+        return;
+      }
       appToast(res.msg);
       if (res.code === 200) {
         closeActionSheet();

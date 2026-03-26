@@ -235,6 +235,26 @@ function requireLogin() {
     if (!$user) {
         unauthorized();
     }
+    // 从数据库验证用户是否仍有效（防止管理员禁用后旧 session 继续使用）
+    try {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT id, status, is_super, nickname, email, phone, avatar FROM admin_users WHERE id = ? LIMIT 1");
+        $stmt->execute(array($user['id']));
+        $fresh = $stmt->fetch();
+        if (!$fresh || $fresh['status'] != 1) {
+            session_destroy();
+            unauthorized('账号已被禁用');
+        }
+        // 同步最新用户信息到 session
+        $user['nickname'] = $fresh['nickname'];
+        $user['email']    = $fresh['email'];
+        $user['phone']    = $fresh['phone'];
+        $user['avatar']   = $fresh['avatar'];
+        $user['is_super'] = $fresh['is_super'];
+        $_SESSION['admin_user'] = $user;
+    } catch (Exception $e) {
+        // 数据库查询失败时降级为仅检查 session
+    }
     return $user;
 }
 

@@ -430,6 +430,11 @@ html, body, .sidebar, .app-navbar, .app-statusbar, .app-tabbar,
   color: var(--text-primary) !important;
   border-color: var(--border) !important;
 }
+[data-theme="dark"] .app-form-item .form-input,
+[data-theme="dark"] .app-form-item .form-select {
+  border: none !important;
+  box-shadow: none !important;
+}
 
 /* 搜索栏 */
 [data-theme="dark"] .search-bar { background: transparent !important; }

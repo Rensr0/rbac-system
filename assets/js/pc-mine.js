@@ -92,6 +92,12 @@
     var result = SharedUtils.validatePasswordChange('pc-old-pwd', 'pc-new-pwd', 'pc-confirm-pwd', showToast);
     if (!result) return;
     SharedOps.user.changePassword(result.oldPwd, result.newPwd, function(res) {
+      if (res.code === 200 && res.data && res.data.require_logout) {
+        showToast(res.msg);
+        Storage.remove('currentUser');
+        setTimeout(function() { window.location.href = '../index.html'; }, 1500);
+        return;
+      }
       showToast(res.msg);
       if (res.code === 200) {
         document.getElementById('pc-old-pwd').value = '';

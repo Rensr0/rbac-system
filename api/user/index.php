@@ -398,7 +398,10 @@ function changePassword() {
            ->execute(array(encryptPassword($newPassword), $user['id']));
 
         writeLog('password_change', "用户 [{$user['username']}] 修改密码");
-        success(null, '密码修改成功');
+
+        // 修改密码后销毁当前 session，强制重新登录
+        session_destroy();
+        success(array('require_logout' => true), '密码修改成功，请重新登录');
     } catch (Exception $e) {
         error('修改密码失败');
     }

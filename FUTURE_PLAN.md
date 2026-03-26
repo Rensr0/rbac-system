@@ -2,7 +2,7 @@
 
 > 基于 2026-03-25 的全面用户视角测试体验撰写
 > 测试环境：https://panel.shixis.site
-> 最近更新：2026-03-26 10:52 GMT+8（第十六轮 — 图标选择器实时预览修复）
+> 最近更新：2026-03-26 11:15 GMT+8（第十七轮 — 会话安全与暗色模式修复）
 
 ---
 
@@ -674,3 +674,45 @@ pc-logs.js → pc-mine.js → pc-pages.js
 | 登录页 | ✅ | lock/person/visibility/login/person_add 全部正常 |
 
 **结论：全部页面无 ♢ 占位符，所有图标从本地 woff2 字体文件正确加载。**
+---
+
+## 十七、第十七轮：会话安全与暗色模式修复
+
+### 17.1 问题描述
+
+| # | 问题 | 严重度 | 说明 |
+|---|------|--------|------|
+| 116 | 管理员禁用用户后，该用户仍可继续操作 | P0 | `requireLogin()` 仅检查 session 是否存在，不从数据库验证用户 status |
+| 117 | 用户修改密码后不退出登录 | P0 | `changePassword()` 后端仅更新密码不销毁 session，前端不清除缓存 |
+| 118 | 移动端暗色模式下输入框有浅色边框 | P2 | `[data-theme="dark"] .form-input { border-color !important }` 覆盖了 `.app-form-item .form-input { border: none }` |
+
+### 17.2 修复方案
+
+**后端修复（`api/common.php`）：**
+- `requireLogin()` 新增数据库查询：每次 API 调用时从 DB 验证用户 status
+- 用户被禁用（status != 1）时销毁 session 并返回 401
+- 同步最新用户信息（昵称/邮箱/手机/头像/is_super）到 session
+
+**后端修复（`api/user/index.php`）：**
+- `changePassword()` 成功后调用 `session_destroy()` 并返回 `require_logout: true`
+
+**前端修复（`pc-mine.js` + `app-mine.js`）：**
+- 密码修改成功后：显示提示 → 清除 Storage → 1.5s 后跳转登录页
+
+**CSS 修复（`themes.css`）：**
+- 新增：`[data-theme="dark"] .app-form-item .form-input { border: none !important; box-shadow: none !important; }`
+
+### 17.3 待办任务
+
+| # | 任务 | 说明 | 状态 |
+|---|------|------|------|
+| 116 | 后端 requireLogin() 增加 DB 状态验证 | 每次 API 调用验证用户 status | ✅ 已完成 |
+| 117 | 密码修改后强制退出登录 | 后端 session_destroy + 前端跳转 | ✅ 已完成 |
+| 118 | 暗色模式移动端输入框边框修复 | border: none !important | ✅ 已完成 |
+| 119 | PC + 移动端功能测试 | 验证密码修改退出、暗色模式 | ⏳ 待测试 |
+| 120 | 提交并推送到 GitHub | — | ⏳ 待提交 |
+
+---
+
+*文档更新时间：2026-03-26 11:15 GMT+8*
+*更新说明：第十七轮 — 会话安全与暗色模式修复*
