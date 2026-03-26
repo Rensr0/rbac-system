@@ -2,7 +2,7 @@
 
 > 基于 2026-03-25 的全面用户视角测试体验撰写
 > 测试环境：https://panel.shixis.site
-> 最近更新：2026-03-26 01:54 GMT+8（第十三轮开发完成）
+> 最近更新：2026-03-26 10:45 GMT+8（第十六轮 — Material Icons 本地化修复）
 
 ---
 
@@ -582,5 +582,70 @@ pc-logs.js → pc-mine.js → pc-pages.js
 
 ---
 
-*文档更新时间：2026-03-26 08:47 GMT+8*
-*更新说明：第十五轮 — CSS 样式重构计划*
+*文档更新时间：2026-03-26 10:45 GMT+8*
+*更新说明：第十六轮 — Material Icons 本地化修复*
+
+## 十六、第十六轮：Material Icons 本地化修复
+
+> 基于 2026-03-26 10:45 GMT+8 的图标问题排查
+
+### 16.1 问题根因
+
+图标显示为 ♢ 占位符的根本原因有三层：
+
+| # | 原因 | 说明 |
+|---|------|------|
+| 1 | `font-display: block` | 字体加载期间浏览器完全隐藏图标文字，用户看到空白/闪烁 |
+| 2 | JS fallback 过于激进 | `DOMContentLoaded` 时立即检查 `document.fonts.check()`，未加载则永久替换为 ♢，即使字体稍后加载成功也无恢复 |
+| 3 | `pointer-events: none` | `.mi` 类设置了该属性，导致主题按钮等包含图标的可点击元素无法响应点击 |
+
+### 16.2 修复方案
+
+**CSS 修复（`assets/css/material-icons.css`）：**
+- `font-display: block` → `font-display: swap`（字体加载期间显示 fallback 文字，加载完成后替换为图标）
+- 移除 `.mi` 的 `pointer-events: none`（避免图标遮挡点击事件）
+- 添加 `-webkit-font-feature-settings: 'liga'` 前缀兼容 Safari
+- 更新字体文件至 Google Fonts 最新版本（v145）
+
+**JS 修复（`assets/js/core.js`）：**
+- `renderIcon()` 不再检查字体状态，始终返回正常图标 HTML（依赖 CSS `font-display:swap` 处理视觉）
+- 移除 `applyFallback()` 函数（不再破坏性替换图标文字为 ♢）
+- 移除 `_checkIconFont` 全局函数（无用）
+- 保留诊断日志：字体未加载时仅 console.warn，不影响页面
+
+### 16.3 待办任务
+
+| # | 任务 | 说明 | 状态 |
+|---|------|------|------|
+| 109 | 更新 `material-icons.css` 为本地离线版本 | `font-display:swap` + 移除 `pointer-events:none` + webkit 前缀 | ✅ 已完成 |
+| 110 | 更新字体文件至 v145 | 从 Google Fonts CDN 下载最新 woff2 | ✅ 已完成 |
+| 111 | 重写 `renderIcon()` fallback 逻辑 | 不再替换为 ♢，依赖 CSS swap 策略 | ✅ 已完成 |
+| 112 | 更新缓存版本号 | material-icons.css + core.js | ✅ 已完成 |
+| 113 | PC 端 + 移动端全面测试 | 验证所有页面图标正常显示 | ⏳ 待测试 |
+| 114 | 提交并推送到 GitHub | — | ⏳ 待提交 |
+
+### 16.4 本地 Material Icons 使用说明
+
+按照 Google Fonts 官方文档（https://developers.google.cn/fonts/docs/material_icons?hl=zh-cn）：
+
+1. **字体文件**：`assets/fonts/MaterialIcons-Regular.woff2`（128KB，从 Google Fonts 下载）
+2. **CSS 声明**：`assets/css/material-icons.css` 中的 `@font-face` 声明
+3. **使用方式**：`<i class="mi">icon_name</i>`（icon_name 为 Material Icons 名称，如 `home`、`settings`、`person`）
+4. **不依赖 CDN**：全部资源本地化，国内网络不受限
+
+### 16.5 用户视角测试待检项
+
+| 功能 | PC 端 | 移动端 | 说明 |
+|------|-------|--------|------|
+| 登录页图标 | ⏳ | ⏳ | lock/person/visibility/login 等 |
+| 首页仪表盘 | ⏳ | ⏳ | 统计卡片图标 |
+| 侧边栏导航 | ⏳ | — | 菜单图标 |
+| 底部 Tab 栏 | — | ⏳ | 导航图标 |
+| 用户管理 | ⏳ | ⏳ | 列表/编辑/新增图标 |
+| 角色管理 | ⏳ | ⏳ | 列表/编辑图标 |
+| 路由管理 | ⏳ | ⏳ | 列表/编辑图标 |
+| 操作日志 | ⏳ | ⏳ | 搜索/筛选图标 |
+| 个人中心 | ⏳ | ⏳ | 头像/设置图标 |
+| 主题切换按钮 | ⏳ | ⏳ | 可点击（无穿透） |
+| 图标选择器 | ⏳ | ⏳ | 弹窗中图标网格 |
+| 404 页面 | ⏳ | ⏳ | 返回首页按钮图标 |

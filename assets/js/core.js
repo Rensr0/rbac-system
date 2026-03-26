@@ -469,56 +469,37 @@ function miSpan(name, text, cls) {
 }
 
 function renderIcon(iconText) {
-  var fontOk = !(document.fonts && document.fonts.check) || document.fonts.check('1em "Material Icons"');
-  if (!fontOk) {
-    return '<i class="mi mi-fallback">\u2662</i>';
-  }
-  if (KNOWN_ICONS.indexOf(iconText) !== -1) {
-    return '<i class="mi">' + iconText + '</i>';
-  }
-  return iconText || '<i class="mi">description</i>';
+  // Always render icon markup — CSS font-display:swap handles visual fallback
+  return '<i class="mi">' + (iconText || 'description') + '</i>';
 }
 
 (function () {
+  // Font loading health check — purely diagnostic, does NOT alter DOM
   var FONT_NAME = '1em "Material Icons"';
-  var PLACEHOLDER = '\u2662';
-  var checked = false;
+  var reported = false;
 
-  function applyFallback() {
-    document.querySelectorAll('.mi').forEach(function (el) {
-      if (!el.classList.contains('mi-fallback')) {
-        el.textContent = PLACEHOLDER;
-        el.classList.add('mi-fallback');
-      }
-    });
-  }
-
-  function checkAndApply() {
-    if (checked) return;
-    checked = true;
+  function checkFont() {
+    if (reported) return;
     if (document.fonts && document.fonts.check) {
       if (!document.fonts.check(FONT_NAME)) {
-        applyFallback();
+        // Font not yet loaded — wait for fonts.ready then re-check
+        document.fonts.ready.then(function () {
+          if (!document.fonts.check(FONT_NAME)) {
+            console.warn('[Material Icons] 字体未加载，图标将以文字显示。请检查 assets/fonts/MaterialIcons-Regular.woff2 是否存在且可访问。');
+          }
+          reported = true;
+        });
+      } else {
+        reported = true;
       }
-      document.fonts.ready.then(function () {
-        if (!document.fonts.check(FONT_NAME)) {
-          applyFallback();
-        }
-      });
     }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', checkAndApply);
+    document.addEventListener('DOMContentLoaded', checkFont);
   } else {
-    checkAndApply();
+    checkFont();
   }
-
-  window._checkIconFont = function () {
-    if (document.fonts && document.fonts.check && !document.fonts.check(FONT_NAME)) {
-      applyFallback();
-    }
-  };
 })();
 
 function iconSelectHtml(selected, inputId) {

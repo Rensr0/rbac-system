@@ -1,13 +1,14 @@
-/* Material Icons - 本地字体（离线可用） */
+/* Material Icons - 本地离线版本 */
+/* 参考：https://developers.google.cn/fonts/docs/material_icons */
+
 @font-face {
   font-family: 'Material Icons';
   font-style: normal;
   font-weight: 400;
   src: url('../fonts/MaterialIcons-Regular.woff2') format('woff2');
-  font-display: block;
+  font-display: swap;
 }
 
-/* 字体加载失败时的 fallback：隐藏文字，由 JS 注入占位符 */
 .mi {
   font-family: 'Material Icons';
   font-weight: normal;
@@ -22,17 +23,19 @@
   direction: ltr;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  pointer-events: none;
   text-rendering: optimizeLegibility;
   font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
   vertical-align: middle;
   user-select: none;
 }
 
-/* 字体未加载时的 fallback 状态 */
+/* 字体加载失败时的 fallback */
 .mi-fallback {
   font-family: inherit !important;
   font-style: normal !important;
+  color: var(--text-tertiary, #c7c7cc) !important;
+  font-size: 18px !important;
 }
 
 .mi-sm { font-size: 20px; }
