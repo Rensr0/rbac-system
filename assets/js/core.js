@@ -603,6 +603,11 @@ function openIconPicker(inputId, onChange) {
       item.addEventListener('click', function () {
         var icon = item.dataset.icon;
         if (input) input.value = icon;
+        // 更新图标预览
+        var previewEl = document.getElementById(inputId + '-preview');
+        if (previewEl) {
+          previewEl.innerHTML = '<i class="mi">' + icon + '</i> ' + icon;
+        }
         pickerOverlay.querySelectorAll('.icon-pick-item').forEach(function (el) { el.classList.remove('active'); });
         item.classList.add('active');
         if (mobile) {
