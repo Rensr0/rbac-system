@@ -403,12 +403,12 @@ pc-logs.js → pc-mine.js → pc-pages.js
 | 77 | 移动端用户管理 tab 点击后显示 404 页面 | P0 | 移动端 | `40dca3c` | `app-users.js` 第14-41行残留旧代码（setupInfiniteScroll 提取后未删除函数体），导致整个 IIFE 语法错误，`window.AppUsers` 未定义 |
 | 78 | `app-logs.js` 中 `SharedUtils.SharedUtils.setupInfiniteScroll` 双重引用 | P2 | 移动端日志 | `40dca3c` | 修正为 `SharedUtils.setupInfiniteScroll` |
 | 79 | PC端角色编辑权限子复选框(查看/编辑/删除)不预选 | P0 | PC端 | `161b00e` | `shared-utils.js` 中 `renderRouterPermItemPC` 和 `renderRouterPermItem` 使用位运算 `permLevel & 1` 判断，但调用方传入的是权限数组 `['view','edit']`，导致 `(数组 & 1)` 始终为 false |
+| 80 | 移动端404页面"返回首页"后残留显示 | P2 | 移动端 | `3207abf` | navigate() 中在激活新页面前清空 .app-page-content，避免旧内容叠加 |
 
 ### 14.2 待修复项
 
 | # | 问题 | 严重度 | 位置 | 说明 |
 |---|------|--------|------|------|
-| 80 | 移动端404页面"返回首页"按钮后仍残留显示 | P2 | 移动端 | 点击"返回首页"后旧页面内容未被正确清除，与新页面叠加显示 |
 | 81 | PC端 `renderRouterPermItem` 位运算参数不匹配 | P0 | PC端用户编辑 | 用户编辑弹窗中的角色权限复选框也可能受影响（已修复 shared-utils.js 但需验证） |
 | 82 | 超级管理员编辑弹窗无密码修改字段 | P1 | PC+移动端 | 编辑其他用户时不显示密码字段，但管理员也需要修改普通用户的密码 |
 | 83 | 超级管理员可被编辑昵称/邮箱/手机 | P2 | PC+移动端 | 超级管理员账号应限制编辑（防止误改关键信息） |
@@ -468,5 +468,4 @@ pc-logs.js → pc-mine.js → pc-pages.js
 
 | 问题 | 严重度 | 说明 |
 |------|--------|------|
-| 404页面残留 | P2 | 点击"返回首页"后旧页面未清除，与新页面叠加 |
 | 编辑用户无密码字段 | P1 | 超级管理员编辑其他用户时无法修改其密码 |
