@@ -60,8 +60,7 @@
 .fw-600 { font-weight: 600; }
 
 /* ========== Text Color ========== */
-.text-secondary { color: var(--text-secondary); }
-.text-tertiary  { color: var(--text-tertiary); }
+/* .text-secondary 已在 global.css 中定义 */
 
 /* ========== Avatar ========== */
 .avatar-fill {
@@ -249,9 +248,7 @@
 }
 
 /* ========== 空白居中 ========== */
-.text-center {
-  text-align: center;
-}
+/* .text-center 已在 global.css 中定义 */
 
 /* ========== PC 个人中心 ========== */
 .mine-hero {

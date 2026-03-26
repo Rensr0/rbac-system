@@ -348,6 +348,7 @@ tr:hover td { background: rgba(79,110,247,0.03); }
 .text-center { text-align: center; }
 .text-sm { font-size: 12px; }
 .text-secondary { color: var(--text-secondary); }
+.text-tertiary  { color: var(--text-tertiary); }
 .mt-8 { margin-top: 8px; }
 .mt-16 { margin-top: 16px; }
 .mt-24 { margin-top: 24px; }

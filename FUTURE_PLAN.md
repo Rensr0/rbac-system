@@ -514,20 +514,26 @@ pc-logs.js → pc-mine.js → pc-pages.js
 |---|------|------|------|
 | 93 | 创建 `components.css` 公共样式文件 | 封装高频重复的内联样式为 CSS 类 | ✅ 已完成 |
 | 94 | 重构 `app-logs.js` — 移除24处内联样式 | 日志卡片使用 CSS 类替代，引入 renderLogItem 模板函数 | ✅ 已完成 |
-| 95 | 重构 `pc-mine.js` — 移除40处内联样式 | 个人中心表单使用 CSS 类替代 | ⬜ 待处理 |
+| 95 | 重构 `pc-mine.js` — 移除40处内联样式 | PC个人中心使用 CSS 类（mine-hero/mine-info-grid等） | ✅ 已完成 |
 | 96 | 重构 `app-roles.js` — 移除17处内联样式 | 角色列表/编辑弹窗使用 CSS 类，引入 renderRoleItem/renderRouterPermSheetHtml | ✅ 已完成 |
 | 97 | 重构 `app-routers.js` — 移除11处内联样式 | 路由列表/编辑弹窗使用 CSS 类 | ✅ 已完成 |
 | 98 | 重构 `app-mine.js` — 移除11处内联样式 | 移动端个人中心使用 CSS 类 | ✅ 已完成 |
 | 99 | 重构 `shared-utils.js` — 移除12处内联样式 | 权限复选框布局使用 CSS 类 | ✅ 已完成 |
 | 100 | 重构 `app-users.js` — 移除8处内联样式 | 用户列表使用 CSS 类 | ✅ 已完成 |
-| 101 | 重构 `core.js` — 移除13处内联样式 | ActionSheet/图标选择器使用 CSS 类 | ⬜ 待处理 |
+| 101 | 重构 `core.js` — 密码强度条/图标选择器 | 使用 str-bar/flex-center 等 CSS 类 | ✅ 已完成 |
 | 102 | 重构 `app-home.js` — 移除4处内联样式 | 首页布局使用 CSS 类 | ✅ 已完成 |
-| 103 | 重构 `pc-home.js` — 移除9处内联样式 | PC端首页使用 CSS 类 | ⬜ 待处理 |
-| 104 | 重构 `pc-logs.js` — 移除4处内联样式 | PC端日志使用 CSS 类 | ⬜ 待处理 |
-| 105 | 重构 `modals.js` — 移除3处内联样式 | 弹窗使用 CSS 类 | ⬜ 待处理 |
+| 103 | 重构 `pc-home.js` — 移除9处内联样式 | PC端首页使用 CSS 类 | ✅ 已完成 |
+| 104 | 重构 `pc-logs.js` — 移除4处内联样式 | PC端日志使用 CSS 类 | ✅ 已完成 |
+| 105 | 重构 `modals.js` — 移除3处内联样式 | 弹窗使用 CSS 类 | ✅ 已完成 |
 | 106 | 在 `home.html` + `index.html` 中引入 `components.css` | 确保新样式文件正确加载 | ✅ 已完成 |
-| 107 | 验证 PC + 移动端功能完整性 | 所有页面功能正常 | ⬜ 待测试 |
-| 108 | 提交并推送到 GitHub | 包含所有 CSS 重构改动 | ⏳ 进行中 |
+| 107 | 验证 PC + 移动端功能完整性 | 所有页面功能正常 | ⏳ 待测试 |
+| 108 | 提交并推送到 GitHub | 2次提交，内联样式从 166→35 | ✅ 已完成 |
+
+**CSS 重构成果：**
+- 内联样式总数：166 → 35（减少 79%）
+- 新增 components.css：~250 行通用工具类
+- 提取公共模板函数：renderLogItem、renderRoleItem、renderRouterPermSheetHtml、renderRouterItem
+- 剩余 35 处为动态样式（如 sheetStyle）或特殊布局，可后续优化
 
 ### 15.3 CSS 类封装方案
 
