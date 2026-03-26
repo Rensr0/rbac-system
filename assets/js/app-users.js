@@ -1,6 +1,7 @@
 /**
- * app-users.js v3.1 - 手机端用户管理模块
+ * app-users.js v3.2 - 手机端用户管理模块
  * 从 app.js 拆分出来
+ * v3.2: 内联样式迁移到 components.css
  */
 (function () {
   'use strict';
@@ -18,14 +19,14 @@
     var isSelf = current.id === u.id;
     var editBtn = '';
     if (isSuper) {
-      editBtn = '<button class="app-btn app-btn-sm app-btn-outline" onclick="AppUsers.edit(' + u.id + ')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + ' 编辑</button>';
+      editBtn = '<button class="app-btn app-btn-sm app-btn-outline btn-sm-outline" onclick="AppUsers.edit(' + u.id + ')">' + mi('edit', 'mi-14') + ' 编辑</button>';
     } else if (isSelf) {
-      editBtn = '<button class="app-btn app-btn-sm app-btn-outline" onclick="AppRouter.navigate(\'mine\')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + ' 编辑</button>';
+      editBtn = '<button class="app-btn app-btn-sm app-btn-outline btn-sm-outline" onclick="AppRouter.navigate(\'mine\')">' + mi('edit', 'mi-14') + ' 编辑</button>';
     }
     return '<div class="user-card-app" data-id="' + u.id + '">'
       + '<div class="user-avatar-app">' + getInitial(u.nickname || u.username) + '</div>'
       + '<div class="user-info-app">'
-      + '<div class="user-name-app">' + escapeHtml(u.nickname || u.username) + (u.is_super ? '<span class="badge badge-warning" style="font-size:10px;margin-left:4px">超级</span>' : '') + '</div>'
+      + '<div class="user-name-app">' + escapeHtml(u.nickname || u.username) + (u.is_super ? '<span class="badge badge-warning fs-10 ml-4">超级</span>' : '') + '</div>'
       + '<div class="user-meta-app">@' + escapeHtml(u.username) + ' · ' + ((u.roles || []).map(function (r) { return r.role_name; }).join(', ') || '无角色') + '</div>'
       + '</div>'
       + '<div class="user-actions-app">'
@@ -62,7 +63,7 @@
         + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('inbox', 'mi-xl') + '</div><p>暂无用户数据</p></div>' : '')
         + list.map(renderUserCard).join('')
         + '</div>'
-        + (isSuper ? '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="AppUsers.showAdd()">' + mi('add', 'mi-18') + ' 添加用户</button></div>' : '')
+        + (isSuper ? '<div class="p-16-0"><button class="app-btn app-btn-primary" onclick="AppUsers.showAdd()">' + mi('add', 'mi-18') + ' 添加用户</button></div>' : '')
         + '</div>';
 
       if (_userTotalPages > 1) {
@@ -136,7 +137,7 @@
       createActionSheet(
         '<div class="sheet-handle"></div>'
         + '<div class="sheet-title">添加用户</div>'
-        + '<div style="padding:0 16px 16px">'
+        + '<div class="modal-body">'
         + '<div class="app-form"><div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="app-add-username" placeholder="字母数字下划线"></div>'
         + '<div class="app-form-item"><div class="form-label">密码</div><input class="form-input" type="password" id="app-add-password" placeholder="默认123456"></div>'
         + '<div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-add-nickname" placeholder="选填"></div>'
@@ -144,7 +145,7 @@
         + '<div class="app-form-item"><div class="form-label">手机</div><input class="form-input" id="app-add-phone" placeholder="选填"></div>'
         + '<div class="app-form-item"><div class="form-label">分配角色</div>'
         + roles.map(function(r) {
-          return '<label style="display:flex;align-items:center;gap:8px;padding:8px 0"><input type="checkbox" value="' + r.id + '" class="app-add-role-cb"><span>' + escapeHtml(r.role_name) + '</span></label>';
+          return '<label class="perm-item-row"><input type="checkbox" value="' + r.id + '" class="app-add-role-cb"><span>' + escapeHtml(r.role_name) + '</span></label>';
         }).join('')
         + '</div></div>'
         + '<button class="app-btn app-btn-primary" onclick="AppUsers.submitAdd()">确认添加</button>'
@@ -184,7 +185,7 @@
         createActionSheet(
           '<div class="sheet-handle"></div>'
           + '<div class="sheet-title">编辑用户</div>'
-          + '<div style="padding:0 16px 16px">'
+          + '<div class="modal-body">'
           + '<div class="app-form"><div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="app-edit-username" value="' + escapeHtml(u.username) + '" disabled></div>'
           + '<div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-edit-nickname" value="' + escapeHtml(u.nickname) + '"></div>'
           + '<div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-edit-email" value="' + escapeHtml(u.email || '') + '"></div>'
@@ -193,7 +194,7 @@
           + '<div class="app-form-item"><div class="form-label">分配角色</div>'
           + roles.map(function(r) {
             var checked = (u.role_ids || []).indexOf(r.id) !== -1 ? 'checked' : '';
-            return '<label style="display:flex;align-items:center;gap:8px;padding:8px 0"><input type="checkbox" value="' + r.id + '" class="app-edit-role-cb" ' + checked + '><span>' + escapeHtml(r.role_name) + '</span></label>';
+            return '<label class="perm-item-row"><input type="checkbox" value="' + r.id + '" class="app-edit-role-cb" ' + checked + '><span>' + escapeHtml(r.role_name) + '</span></label>';
           }).join('')
           + '</div></div>'
           + '<button class="app-btn app-btn-primary" onclick="AppUsers.submitEdit(' + userId + ')">保存修改</button>'

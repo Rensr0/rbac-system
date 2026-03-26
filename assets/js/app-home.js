@@ -1,6 +1,7 @@
 /**
- * app-home.js v3.1 - 手机端首页模块
+ * app-home.js v3.2 - 手机端首页模块
  * 从 app.js 拆分出来
+ * v3.2: 内联样式迁移到 components.css
  */
 (function () {
   'use strict';
@@ -36,13 +37,13 @@
           + '</div>'
           + '<div class="app-card">'
           + '<div class="app-card-header"><h3>' + mi('dashboard') + ' 系统概况</h3></div>'
-          + '<div style="text-align:center;padding:16px 0">'
+          + '<div class="text-center p-16-0">'
           + '<div id="app-stats-chart" style="height:240px"></div>'
           + '</div>'
           + '</div>'
           + '<div class="app-card">'
           + '<div class="app-card-header"><h3>' + mi('person') + ' 欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</h3></div>'
-          + '<div style="font-size:13px;color:var(--text-secondary);padding:0 0 8px">RBAC 权限管理系统 v3.1 运行正常，请通过底部导航栏访问各功能模块。</div>'
+          + '<div class="home-stat-text">RBAC 权限管理系统 v3.1 运行正常，请通过底部导航栏访问各功能模块。</div>'
           + '</div></div>';
 
         if (window.ApexCharts) {
@@ -89,7 +90,7 @@
         + '</div>'
         + '<div class="app-card">'
         + '<div class="app-card-header"><h3>' + mi('person') + ' 欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</h3></div>'
-        + '<div style="font-size:13px;color:var(--text-secondary);padding:0 0 8px">RBAC 权限管理系统 v3.1 运行正常，请通过底部导航栏访问各功能模块。</div>'
+        + '<div class="home-stat-text">RBAC 权限管理系统 v3.1 运行正常，请通过底部导航栏访问各功能模块。</div>'
         + '</div></div>';
     }
   }

@@ -469,3 +469,104 @@ pc-logs.js → pc-mine.js → pc-pages.js
 | 问题 | 严重度 | 说明 |
 |------|--------|------|
 | 编辑用户无密码字段 | P1 | 超级管理员编辑其他用户时无法修改其密码 |
+
+---
+
+## 十五、第十五轮：CSS 样式重构与内联样式清理
+
+> 基于 2026-03-26 08:47 GMT+8 的代码审查
+> 目标：将 JS 中的内联样式迁移到 CSS 文件，封装公共样式类，提升可维护性
+
+### 15.1 问题分析
+
+当前 JS 文件中存在 **166 处** 内联 `style=""` 属性，主要集中在以下文件：
+
+| 文件 | 内联样式数 | 主要问题 |
+|------|-----------|----------|
+| `pc-mine.js` | 40 | 大量表单布局样式 |
+| `app-logs.js` | 24 | 日志卡片渲染重复样式 |
+| `app-roles.js` | 17 | 角色列表卡片样式 |
+| `core.js` | 13 | ActionSheet、图标选择器 |
+| `app-routers.js` | 11 | 路由列表卡片样式 |
+| `app-mine.js` | 11 | 个人中心布局 |
+| `shared-utils.js` | 12 | 权限复选框布局 |
+| `app-users.js` | 8 | 用户列表样式 |
+
+**高频重复样式模式：**
+
+| 出现次数 | 样式值 |
+|----------|--------|
+| 6 | `padding:0 16px 16px` |
+| 6 | `display:none` |
+| 6 | `display:flex;align-items:center;gap:4px;font-size:12px` |
+| 5 | `font-size:12px;color:var(--text-secondary)` |
+| 4 | `margin-bottom:8px;padding:12px` |
+| 4 | `font-size:14px;font-weight:500` |
+| 4 | `display:flex;justify-content:space-between;align-items:center` |
+| 4 | `font-size:10px` |
+| 3 | `width:100%;height:100%;border-radius:50%;object-fit:cover` |
+| 3 | `padding:0 10px;height:30px;font-size:12px` |
+| 3 | `display:flex;align-items:center;gap:8px;padding:8px 0` |
+
+### 15.2 待办任务
+
+| # | 任务 | 说明 | 状态 |
+|---|------|------|------|
+| 93 | 创建 `components.css` 公共样式文件 | 封装高频重复的内联样式为 CSS 类 | ✅ 已完成 |
+| 94 | 重构 `app-logs.js` — 移除24处内联样式 | 日志卡片使用 CSS 类替代，引入 renderLogItem 模板函数 | ✅ 已完成 |
+| 95 | 重构 `pc-mine.js` — 移除40处内联样式 | 个人中心表单使用 CSS 类替代 | ⬜ 待处理 |
+| 96 | 重构 `app-roles.js` — 移除17处内联样式 | 角色列表/编辑弹窗使用 CSS 类，引入 renderRoleItem/renderRouterPermSheetHtml | ✅ 已完成 |
+| 97 | 重构 `app-routers.js` — 移除11处内联样式 | 路由列表/编辑弹窗使用 CSS 类 | ✅ 已完成 |
+| 98 | 重构 `app-mine.js` — 移除11处内联样式 | 移动端个人中心使用 CSS 类 | ✅ 已完成 |
+| 99 | 重构 `shared-utils.js` — 移除12处内联样式 | 权限复选框布局使用 CSS 类 | ✅ 已完成 |
+| 100 | 重构 `app-users.js` — 移除8处内联样式 | 用户列表使用 CSS 类 | ✅ 已完成 |
+| 101 | 重构 `core.js` — 移除13处内联样式 | ActionSheet/图标选择器使用 CSS 类 | ⬜ 待处理 |
+| 102 | 重构 `app-home.js` — 移除4处内联样式 | 首页布局使用 CSS 类 | ✅ 已完成 |
+| 103 | 重构 `pc-home.js` — 移除9处内联样式 | PC端首页使用 CSS 类 | ⬜ 待处理 |
+| 104 | 重构 `pc-logs.js` — 移除4处内联样式 | PC端日志使用 CSS 类 | ⬜ 待处理 |
+| 105 | 重构 `modals.js` — 移除3处内联样式 | 弹窗使用 CSS 类 | ⬜ 待处理 |
+| 106 | 在 `home.html` + `index.html` 中引入 `components.css` | 确保新样式文件正确加载 | ✅ 已完成 |
+| 107 | 验证 PC + 移动端功能完整性 | 所有页面功能正常 | ⬜ 待测试 |
+| 108 | 提交并推送到 GitHub | 包含所有 CSS 重构改动 | ⏳ 进行中 |
+
+### 15.3 CSS 类封装方案
+
+计划创建以下 CSS 工具类：
+
+```css
+/* 布局 */
+.flex-center     → display:flex;align-items:center
+.flex-between    → display:flex;justify-content:space-between;align-items:center
+.flex-col        → display:flex;flex-direction:column
+.flex-wrap       → display:flex;flex-wrap:wrap
+
+/* 间距 */
+.gap-4  → gap:4px   .gap-6  → gap:6px   .gap-8  → gap:8px
+.gap-10 → gap:10px  .gap-12 → gap:12px  .gap-16 → gap:16px
+
+.p-0-16-16  → padding:0 16px 16px
+.p-0-12-12  → padding:0 12px 12px
+.p-8-0      → padding:8px 0
+
+/* 字号 */
+.fs-10 → font-size:10px   .fs-11 → font-size:11px
+.fs-12 → font-size:12px   .fs-13 → font-size:13px
+.fs-14 → font-size:14px   .fs-15 → font-size:15px
+.fs-16 → font-size:16px   .fs-18 → font-size:18px
+
+/* 文字颜色 */
+.text-secondary → color:var(--text-secondary)
+.text-tertiary  → color:var(--text-tertiary)
+
+/* 通用组件 */
+.avatar-fill    → width:100%;height:100%;border-radius:50%;object-fit:cover
+.card           → 常用卡片样式
+.btn-sm-outline → 小按钮+描边样式
+.perm-row       → 权限复选框行布局
+.log-card       → 日志卡片布局
+```
+
+---
+
+*文档更新时间：2026-03-26 08:47 GMT+8*
+*更新说明：第十五轮 — CSS 样式重构计划*

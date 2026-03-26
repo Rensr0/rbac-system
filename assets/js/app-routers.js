@@ -1,11 +1,27 @@
 /**
- * app-routers.js v3.1 - 手机端路由管理模块
+ * app-routers.js v3.2 - 手机端路由管理模块
  * 从 app.js 拆分出来
+ * v3.2: 内联样式迁移到 components.css
  */
 (function () {
   'use strict';
 
   if (window.innerWidth > 768) return;
+
+  function renderRouterItem(r, isSuper) {
+    return '<div class="app-card card-padding-sm">'
+      + '<div class="item-header">'
+      + '<div class="item-header-left">'
+      + '<span class="icon-lg">' + renderIcon(r.icon) + '</span>'
+      + '<div>'
+      + '<div class="item-title">' + escapeHtml(r.router_name) + '</div>'
+      + '<div class="text-row-secondary" style="margin-top:0"><code>' + escapeHtml(r.router_path) + '</code> · 排序 ' + r.sort + ' · ' + (r.role_count || 0) + ' 个角色绑定</div>'
+      + '</div></div>'
+      + '<div class="flex-center gap-8">'
+      + '<span class="badge ' + (r.status == 1 ? 'badge-success' : 'badge-danger') + '">' + (r.status == 1 ? '启用' : '禁用') + '</span>'
+      + (isSuper ? '<button class="app-btn app-btn-sm app-btn-outline btn-sm-outline" onclick="AppRouters.edit(' + r.id + ')">' + mi('edit', 'mi-14') + '</button>' : '')
+      + '</div></div></div>';
+  }
 
   function loadPage() {
     var content = document.getElementById('page-router');
@@ -23,22 +39,9 @@
         '<div class="app-page-content">'
         + '<div id="router-list">'
         + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('route', 'mi-xl') + '</div><p>暂无路由数据</p></div>' : '')
-        + list.map(function(r) {
-          return '<div class="app-card" style="margin-bottom:10px">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between">'
-            + '<div style="display:flex;align-items:center;gap:10px">'
-            + '<span style="font-size:24px">' + renderIcon(r.icon) + '</span>'
-            + '<div>'
-            + '<div style="font-size:15px;font-weight:600">' + escapeHtml(r.router_name) + '</div>'
-            + '<div style="font-size:12px;color:var(--text-secondary)"><code>' + escapeHtml(r.router_path) + '</code> · 排序 ' + r.sort + ' · ' + (r.role_count || 0) + ' 个角色绑定</div>'
-            + '</div></div>'
-            + '<div style="display:flex;align-items:center;gap:8px">'
-            + '<span class="badge ' + (r.status == 1 ? 'badge-success' : 'badge-danger') + '">' + (r.status == 1 ? '启用' : '禁用') + '</span>'
-            + (isSuper ? '<button class="app-btn app-btn-sm app-btn-outline" onclick="AppRouters.edit(' + r.id + ')" style="padding:0 10px;height:30px;font-size:12px">' + mi('edit', 'mi-14') + '</button>' : '')
-            + '</div></div></div>';
-        }).join('')
+        + list.map(function(r) { return renderRouterItem(r, isSuper); }).join('')
         + '</div>'
-        + (isSuper ? '<div style="padding:16px 0"><button class="app-btn app-btn-primary" onclick="AppRouters.showAdd()">' + mi('add', 'mi-18') + ' 添加路由</button></div>' : '')
+        + (isSuper ? '<div class="p-16-0"><button class="app-btn app-btn-primary" onclick="AppRouters.showAdd()">' + mi('add', 'mi-18') + ' 添加路由</button></div>' : '')
         + '</div>';
     });
   }
@@ -47,7 +50,7 @@
     createActionSheet(
       '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">添加路由</div>'
-      + '<div style="padding:0 16px 16px">'
+      + '<div class="modal-body">'
       + '<div class="app-form"><div class="app-form-item"><div class="form-label">路由名称</div><input class="form-input" id="app-add-router-name" placeholder="如：用户管理"></div>'
       + '<div class="app-form-item"><div class="form-label">路由路径</div><input class="form-input" id="app-add-router-path" placeholder="如：user（字母数字短横线）"></div>'
       + '<div class="app-form-item"><div class="form-label">图标</div><div id="app-add-router-icon"></div></div>'
@@ -100,7 +103,7 @@
       createActionSheet(
         '<div class="sheet-handle"></div>'
         + '<div class="sheet-title">编辑路由</div>'
-        + '<div style="padding:0 16px 16px">'
+        + '<div class="modal-body">'
         + '<div class="app-form"><div class="app-form-item"><div class="form-label">路由名称</div><input class="form-input" id="app-edit-router-name" value="' + escapeHtml(router.router_name) + '"></div>'
         + '<div class="app-form-item"><div class="form-label">路由路径</div><input class="form-input" id="app-edit-router-path" value="' + escapeHtml(router.router_path) + '" disabled></div>'
         + '<div class="app-form-item"><div class="form-label">图标</div><div id="app-edit-router-icon"></div></div>'

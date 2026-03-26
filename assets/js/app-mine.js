@@ -1,6 +1,7 @@
 /**
- * app-mine.js v3.1 - 手机端个人中心模块
+ * app-mine.js v3.2 - 手机端个人中心模块
  * 从 app.js 拆分出来
+ * v3.2: 内联样式迁移到 components.css
  */
 (function () {
   'use strict';
@@ -19,11 +20,11 @@
       + '<div class="mine-header">'
       + '<div class="mine-avatar" onclick="document.getElementById(\'app-avatar-input\').click()">'
       + (user.avatar
-        ? '<img src="' + escapeHtml(user.avatar) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">'
+        ? '<img src="' + escapeHtml(user.avatar) + '" class="avatar-fill">'
         : getInitial(user.nickname || user.username))
-      + '<div class="mine-avatar-mask"><span class="material-icons" style="font-size:20px">photo_camera</span></div>'
+      + '<div class="mine-avatar-mask"><span class="material-icons fs-20">photo_camera</span></div>'
       + '</div>'
-      + '<input type="file" id="app-avatar-input" accept="image/*" style="display:none" onchange="AppMine.uploadAvatar(this)">'
+      + '<input type="file" id="app-avatar-input" accept="image/*" class="hidden" onchange="AppMine.uploadAvatar(this)">'
       + '<div class="mine-name">' + escapeHtml(user.nickname || user.username) + '</div>'
       + '<div class="mine-role">' + (user.is_super ? '超级管理员' : '普通用户') + '</div>'
       + '</div>'
@@ -40,7 +41,7 @@
       + '<div class="app-list-item" onclick="AppMine.showChangePwd()">'
       + '<div class="item-icon">' + mi('lock') + '</div><div class="item-content"><div class="item-title">修改密码</div></div><div class="item-arrow">' + mi('chevron_right', 'mi-18') + '</div>'
       + '</div></div>'
-      + '<div style="padding:24px 0"><button class="app-btn app-btn-danger" onclick="AppMine.logout()">' + mi('logout', 'mi-18') + ' 退出登录</button></div>'
+      + '<div class="p-24-0"><button class="app-btn app-btn-danger" onclick="AppMine.logout()">' + mi('logout', 'mi-18') + ' 退出登录</button></div>'
       + '</div>';
   }
 
@@ -49,13 +50,13 @@
     createActionSheet(
       '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">编辑资料</div>'
-      + '<div style="padding:0 16px 16px">'
+      + '<div class="modal-body">'
       + '<div class="app-form"><div class="app-form-item"><div class="form-label">头像</div>'
-      + '<div style="display:flex;align-items:center;gap:12px">'
-      + '<div class="user-avatar-lg" style="width:60px;height:60px;font-size:24px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center" id="app-avatar-preview">'
+      + '<div class="avatar-section">'
+      + '<div class="avatar-circle" id="app-avatar-preview">'
       + getInitial(currentUser.nickname || currentUser.username)
       + '</div>'
-      + '<label class="app-btn app-btn-sm app-btn-outline" style="margin:0;cursor:pointer">' + mi('upload', 'mi-14') + ' 上传头像<input type="file" accept="image/*" id="app-avatar-input" onchange="AppMine.uploadAvatar(this)" style="display:none"></label>'
+      + '<label class="app-btn app-btn-sm app-btn-outline" style="margin:0;cursor:pointer">' + mi('upload', 'mi-14') + ' 上传头像<input type="file" accept="image/*" id="app-avatar-input" onchange="AppMine.uploadAvatar(this)" class="hidden"></label>'
       + '</div></div>'
       + '<div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-edit-nickname" value="' + escapeHtml(currentUser.nickname || '') + '"></div>'
       + '<div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-edit-email" value="' + escapeHtml(currentUser.email || '') + '"></div>'
@@ -103,7 +104,7 @@
 
         var preview = document.getElementById('app-avatar-preview');
         if (preview) {
-          preview.innerHTML = '<img src="' + dataUrl + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+          preview.innerHTML = '<img src="' + dataUrl + '" class="avatar-fill">';
         }
 
         appShowLoading();
@@ -127,7 +128,7 @@
     createActionSheet(
       '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">修改密码</div>'
-      + '<div style="padding:0 16px 16px">'
+      + '<div class="modal-body">'
       + '<div class="app-form"><div class="app-form-item"><div class="form-label">旧密码</div><input class="form-input" type="password" id="app-old-password" placeholder="请输入旧密码"></div>'
       + '<div class="app-form-item"><div class="form-label">新密码</div><input class="form-input" type="password" id="app-new-password" placeholder="至少6位" oninput="AppMine.checkPwdStrength(this.value)"></div>'
       + '<div id="app-pwd-strength"></div>'

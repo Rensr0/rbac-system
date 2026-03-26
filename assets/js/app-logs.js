@@ -1,6 +1,7 @@
 /**
- * app-logs.js v3.1 - 手机端日志管理模块
+ * app-logs.js v3.2 - 手机端日志管理模块
  * 从 app.js 拆分出来
+ * v3.2: 内联样式迁移到 components.css
  */
 (function () {
   'use strict';
@@ -11,6 +12,19 @@
   var _logTotalPages = 1;
   var _logKeyword = '';
   var _scrollCtrl = null;
+
+  function renderLogItem(l) {
+    return '<div class="app-card card-padding">'
+      + '<div class="log-card">'
+      + '<div class="text-row-primary">' + escapeHtml(l.username) + '</div>'
+      + '<span class="badge badge-info fs-10">' + (SharedUtils.actionMap[l.action] || l.action) + '</span>'
+      + '</div>'
+      + '<div class="text-row-secondary">' + escapeHtml(l.detail || '无详情') + '</div>'
+      + '<div class="text-row-meta">'
+      + '<span>' + escapeHtml(l.ip) + '</span>'
+      + '<span>' + formatDate(l.create_time) + '</span>'
+      + '</div></div>';
+  }
 
   function loadPage() {
     var content = document.getElementById('page-log');
@@ -39,18 +53,7 @@
         + '</div>'
         + '<div id="log-list">'
         + (list.length === 0 ? '<div class="empty-state"><div class="empty-icon">' + mi('inbox', 'mi-xl') + '</div><p>暂无日志数据</p></div>' : '')
-        + list.map(function(l) {
-          return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
-            + '<div style="display:flex;justify-content:space-between;align-items:center">'
-            + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-            + '<span class="badge badge-info" style="font-size:10px">' + (SharedUtils.actionMap[l.action] || l.action) + '</span>'
-            + '</div>'
-            + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
-            + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
-            + '<span>' + escapeHtml(l.ip) + '</span>'
-            + '<span>' + formatDate(l.create_time) + '</span>'
-            + '</div></div>';
-        }).join('')
+        + list.map(renderLogItem).join('')
         + '</div>'
         + '</div>';
 
@@ -62,18 +65,7 @@
             if (r.code !== 200) { done(false); return; }
             var items = (r.data || {}).list || [];
             if (items.length === 0) { done(false); return; }
-            var html = items.map(function(l) {
-              return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
-                + '<div style="display:flex;justify-content:space-between;align-items:center">'
-                + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-                + '<span class="badge badge-info" style="font-size:10px">' + (SharedUtils.actionMap[l.action] || l.action) + '</span>'
-                + '</div>'
-                + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
-                + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
-                + '<span>' + escapeHtml(l.ip) + '</span>'
-                + '<span>' + formatDate(l.create_time) + '</span>'
-                + '</div></div>';
-            }).join('');
+            var html = items.map(renderLogItem).join('');
             var sentinel = listEl.querySelector('.scroll-sentinel');
             var tmp = document.createElement('div');
             tmp.innerHTML = html;
@@ -104,18 +96,7 @@
 
         container.innerHTML = list.length === 0
           ? '<div class="empty-state"><div class="empty-icon">' + mi('search_off', 'mi-xl') + '</div><p>未找到日志</p></div>'
-          : list.map(function(l) {
-            return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
-              + '<div style="display:flex;justify-content:space-between;align-items:center">'
-              + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-              + '<span class="badge badge-info" style="font-size:10px">' + (SharedUtils.actionMap[l.action] || l.action) + '</span>'
-              + '</div>'
-              + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
-              + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
-              + '<span>' + escapeHtml(l.ip) + '</span>'
-              + '<span>' + formatDate(l.create_time) + '</span>'
-              + '</div></div>';
-          }).join('');
+          : list.map(renderLogItem).join('');
 
         var totalPages = Math.ceil(total / 20) || 1;
         if (totalPages > 1) {
@@ -126,18 +107,7 @@
               if (r.code !== 200) { done(false); return; }
               var items = (r.data || {}).list || [];
               if (items.length === 0) { done(false); return; }
-              var html = items.map(function(l) {
-                return '<div class="app-card" style="margin-bottom:8px;padding:12px">'
-                  + '<div style="display:flex;justify-content:space-between;align-items:center">'
-                  + '<div style="font-size:14px;font-weight:500">' + escapeHtml(l.username) + '</div>'
-                  + '<span class="badge badge-info" style="font-size:10px">' + (SharedUtils.actionMap[l.action] || l.action) + '</span>'
-                  + '</div>'
-                  + '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px">' + escapeHtml(l.detail || '无详情') + '</div>'
-                  + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;display:flex;justify-content:space-between">'
-                  + '<span>' + escapeHtml(l.ip) + '</span>'
-                  + '<span>' + formatDate(l.create_time) + '</span>'
-                  + '</div></div>';
-              }).join('');
+              var html = items.map(renderLogItem).join('');
               var sentinel = container.querySelector('.scroll-sentinel');
               var tmp = document.createElement('div');
               tmp.innerHTML = html;
