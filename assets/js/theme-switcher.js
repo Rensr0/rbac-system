@@ -58,7 +58,7 @@
     createActionSheet(
       '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">切换主题</div>'
-      + '<div style="padding:0 16px 16px">'
+      + '<div class="modal-body">'
       + '<div class="theme-grid">' + renderThemeOptions() + '</div>'
       + '</div>'
       + '<div class="sheet-cancel" onclick="closeActionSheet()">取消</div>'

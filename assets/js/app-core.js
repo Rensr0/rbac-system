@@ -138,7 +138,7 @@
           var sheet = document.createElement('div');
           sheet.className = 'more-tabs-sheet';
           sheet.style.cssText = 'position:fixed;bottom:56px;left:0;right:0;background:var(--bg-card);border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,0.15);z-index:1000;padding:8px 0;max-height:50vh;overflow-y:auto;animation:slideUp 0.2s ease';
-          sheet.innerHTML = '<div class="text-center text-secondary fs-12" style="padding:8px 0 4px">更多功能</div>' + sheetHtml;
+          sheet.innerHTML = '<div class="text-center text-secondary fs-12 p-8-0-4-0">更多功能</div>' + sheetHtml;
           document.body.appendChild(sheet);
 
           setTimeout(function() {

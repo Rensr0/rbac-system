@@ -663,7 +663,7 @@ function checkPwdStrength(pwd) {
 }
 
 function pwdStrengthHtml(inputId) {
-  return '<div class="pwd-strength" id="' + inputId + '-strength" style="display:none">'
+  return '<div class="pwd-strength hidden" id="' + inputId + '-strength">'
     + '<div class="flex gap-4 mt-8">'
     + '<div class="str-bar"></div>'
     + '<div class="str-bar"></div>'

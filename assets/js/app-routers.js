@@ -15,7 +15,7 @@
       + '<span class="icon-lg">' + renderIcon(r.icon) + '</span>'
       + '<div>'
       + '<div class="item-title">' + escapeHtml(r.router_name) + '</div>'
-      + '<div class="text-row-secondary" style="margin-top:0"><code>' + escapeHtml(r.router_path) + '</code> · 排序 ' + r.sort + ' · ' + (r.role_count || 0) + ' 个角色绑定</div>'
+      + '<div class="text-row-secondary mt-0"><code>' + escapeHtml(r.router_path) + '</code> · 排序 ' + r.sort + ' · ' + (r.role_count || 0) + ' 个角色绑定</div>'
       + '</div></div>'
       + '<div class="flex-center gap-8">'
       + '<span class="badge ' + (r.status == 1 ? 'badge-success' : 'badge-danger') + '">' + (r.status == 1 ? '启用' : '禁用') + '</span>'

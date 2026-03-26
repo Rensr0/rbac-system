@@ -27,7 +27,7 @@
           + '<div class="stat-card"><div class="stat-icon">' + mi('group', 'mi-lg') + '</div><div class="stat-value">' + (uR.data && uR.data.total || 0) + '</div><div class="stat-label">系统用户</div></div>'
           + '<div class="stat-card"><div class="stat-icon">' + mi('shield', 'mi-lg') + '</div><div class="stat-value">' + (rR.data && rR.data.total || 0) + '</div><div class="stat-label">角色数量</div></div>'
           + '<div class="stat-card"><div class="stat-icon">' + mi('route', 'mi-lg') + '</div><div class="stat-value">' + routerCount + '</div><div class="stat-label">路由权限</div></div>'
-          + '<div class="stat-card"><div class="stat-icon">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-value" style="color:var(--success)">正常</div><div class="stat-label">系统状态</div></div>'
+          + '<div class="stat-card"><div class="stat-icon">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-value" class="icon-success">正常</div><div class="stat-label">系统状态</div></div>'
           + '</div>'
           + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</div>'
           + '<div class="card-body">'
@@ -80,7 +80,7 @@
         c.innerHTML =
           '<div class="stats-grid">'
           + '<div class="stat-card"><div class="stat-icon">' + mi('route', 'mi-lg') + '</div><div class="stat-value">' + routerCount + '</div><div class="stat-label">可用功能</div></div>'
-          + '<div class="stat-card"><div class="stat-icon">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-value" style="color:var(--success)">正常</div><div class="stat-label">系统状态</div></div>'
+          + '<div class="stat-card"><div class="stat-icon">' + mi('check_circle', 'mi-lg mi-success') + '</div><div class="stat-value" class="icon-success">正常</div><div class="stat-label">系统状态</div></div>'
           + '</div>'
           + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</div>'
           + '<div class="card-body">'
@@ -95,7 +95,7 @@
     if (!panel) return;
     API.get('settings/').then(function(res) {
       if (res.code !== 200) {
-        panel.innerHTML = '<p style="color:var(--danger)">加载设置失败</p>';
+        panel.innerHTML = '<p class="icon-danger">加载设置失败</p>';
         return;
       }
       var settings = res.data || {};

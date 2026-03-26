@@ -15,9 +15,9 @@
       c.innerHTML =
         '<div class="page-header">'
         + '<div><h2>用户管理</h2><div class="subtitle">共 ' + total + ' 个用户</div></div>'
-        + (isSuper ? '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="PCPages.addUser()">' + mi('add', 'mi-18') + ' 新增用户</button>'
+        + (isSuper ? '<div class="flex gap-8"><button class="btn btn-primary" onclick="PCPages.addUser()">' + mi('add', 'mi-18') + ' 新增用户</button>'
         + '<button class="btn btn-outline" onclick="PCPages.exportUsers()">' + mi('download', 'mi-18') + ' 导出CSV</button>'
-        + '<label class="btn btn-outline" style="margin:0;cursor:pointer">' + mi('upload', 'mi-18') + ' 导入CSV<input type="file" accept=".csv" id="csv-import-input" onchange="PCPages.importUsers(this)" style="display:none"></label></div>' : '')
+        + '<label class="btn btn-outline m-0 cursor-pointer">' + mi('upload', 'mi-18') + ' 导入CSV<input type="file" accept=".csv" id="csv-import-input" onchange="PCPages.importUsers(this)" class="hidden"></label></div>' : '')
         + '</div>'
         + '<div class="search-bar">'
         + '<input class="form-input" id="pc-user-search" placeholder="搜索用户名/昵称" value="' + escapeHtml(kw) + '" onkeyup="if(event.key===\'Enter\'){PCPages.userPage=1;PCPages.loadUser(document.getElementById(\'page-content\'))}">'
@@ -32,7 +32,7 @@
         + '</div>' : '')
         + '<div class="card"><div class="table-wrap"><table>'
         + '<thead><tr>' + (isSuper ? '<th style="width:40px"><input type="checkbox" id="user-check-all" onchange="PCPages.toggleAll(this.checked)"></th>' : '') + '<th>ID</th><th>账号</th><th>昵称</th><th>角色</th><th>状态</th><th>最后登录</th><th>操作</th></tr></thead>'
-        + '<tbody>' + (list.length === 0 ? '<tr><td colspan="8" class="text-center text-secondary" style="padding:32px">暂无数据</td></tr>' : '')
+        + '<tbody>' + (list.length === 0 ? '<tr><td colspan="8" class="text-center text-secondary p-32">暂无数据</td></tr>' : '')
         + list.map(function(u) {
           var isSuper = (Storage.get('currentUser') || {}).is_super == 1;
           var isSelf = (Storage.get('currentUser') || {}).id === u.id;

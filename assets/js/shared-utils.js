@@ -100,7 +100,7 @@ var SharedUtils = (function () {
       + '<input type="checkbox" value="' + r.id + '" class="' + prefix + '-router-cb" ' + (checked ? 'checked' : '') + '>'
       + '<span class="perm-label">' + escapeHtml(r.router_name) + '</span>'
       + '</div>'
-      + '<div class="perm-levels" style="padding:0 0 8px 24px">'
+      + '<div class="perm-levels p-0-0-8-24">'
       + '<label class="perm-level"><input type="checkbox" value="view" class="' + prefix + '-perm-cb-' + r.id + '" ' + (hasView ? 'checked' : '') + '> 查看</label>'
       + '<label class="perm-level"><input type="checkbox" value="edit" class="' + prefix + '-perm-cb-' + r.id + '" ' + (hasEdit ? 'checked' : '') + '> 编辑</label>'
       + '<label class="perm-level"><input type="checkbox" value="delete" class="' + prefix + '-perm-cb-' + r.id + '" ' + (hasDelete ? 'checked' : '') + '> 删除</label>'
@@ -115,7 +115,7 @@ var SharedUtils = (function () {
     var hasEdit = perms.indexOf('edit') !== -1;
     var hasDelete = perms.indexOf('delete') !== -1;
     return '<div class="tree-item">'
-      + '<label class="perm-item-row" style="flex:1">'
+      + '<label class="perm-item-row flex-1">'
       + '<input type="checkbox" value="' + r.id + '" class="pc-router-cb" onchange="SharedUtils.toggleRoutePerms(this, \'pc\')" ' + (rp ? 'checked' : '') + '>'
       + '<span class="perm-label">' + escapeHtml(r.router_name) + '</span>'
       + '</label>'

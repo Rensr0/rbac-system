@@ -29,6 +29,8 @@
 .p-32       { padding: 32px; }
 .p-8-0      { padding: 8px 0; }
 .p-12       { padding: 12px; }
+.p-0-0-8-24 { padding: 0 0 8px 24px; }
+.p-8-0-4-0  { padding: 8px 0 4px; }
 
 /* ========== Margin ========== */
 .mt-4   { margin-top: 4px; }
@@ -55,7 +57,17 @@
 .fs-20 { font-size: 20px; }
 .fs-24 { font-size: 24px; }
 
-/* ========== Font Weight ========== */
+/* ========== 通用尺寸 ========== */
+.w-100   { width: 100%; }
+.h-100   { height: 100%; }
+
+/* ========== Cursor ========== */
+.cursor-pointer { cursor: pointer; }
+
+/* ========== Margin Reset ========== */
+.m-0  { margin: 0; }
+.m-1  { margin: 1px; }
+.mt-0 { margin-top: 0; }
 .fw-500 { font-weight: 500; }
 .fw-600 { font-weight: 600; }
 
@@ -181,6 +193,11 @@
 .icon-lg {
   font-size: 24px;
 }
+.icon-primary { color: var(--primary); }
+.icon-success { color: var(--success); }
+.icon-warning { color: var(--warning); }
+.icon-danger  { color: var(--danger); }
+.icon-info    { color: var(--info); }
 
 /* ========== 用户名/标签组合 ========== */
 .name-badge {

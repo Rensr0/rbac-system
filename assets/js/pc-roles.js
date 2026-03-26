@@ -22,7 +22,7 @@
             else if (perms.indexOf('delete') !== -1) permStr = '删';
             else permStr = '看';
             var cls = perms.indexOf('delete') !== -1 ? 'perm-badge-delete' : (perms.indexOf('edit') !== -1 ? 'perm-badge-edit' : 'perm-badge-view');
-            return '<span class="badge badge-info" style="margin:1px">' + renderIcon(rt.icon) + ' ' + escapeHtml(rt.router_name) + '<span class="' + cls + '" style="font-size:10px;margin-left:2px">' + permStr + '</span></span>';
+            return '<span class="badge badge-info m-1">' + renderIcon(rt.icon) + ' ' + escapeHtml(rt.router_name) + '<span class="' + cls + ' fs-10 ml-2">' + permStr + '</span></span>';
           }).join(' ');
           return '<tr>'
             + '<td>' + r.id + '</td><td><strong>' + escapeHtml(r.role_name) + '</strong></td>'

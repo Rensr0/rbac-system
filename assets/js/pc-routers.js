@@ -16,7 +16,7 @@
         + '<thead><tr><th>ID</th><th>图标</th><th>名称</th><th>路径</th><th>排序</th><th>状态</th><th>绑定角色</th>' + (isSuper ? '<th>操作</th>' : '') + '</tr></thead>'
         + '<tbody>' + list.map(function(r) {
           return '<tr>'
-            + '<td>' + r.id + '</td><td style="font-size:20px">' + renderIcon(r.icon) + '</td>'
+            + '<td>' + r.id + '</td><td class="fs-20">' + renderIcon(r.icon) + '</td>'
             + '<td><strong>' + escapeHtml(r.router_name) + '</strong></td>'
             + '<td><code>' + escapeHtml(r.router_path) + '</code></td>'
             + '<td>' + r.sort + '</td>'

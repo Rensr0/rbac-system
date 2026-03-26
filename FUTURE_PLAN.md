@@ -535,6 +535,14 @@ pc-logs.js → pc-mine.js → pc-pages.js
 - 提取公共模板函数：renderLogItem、renderRoleItem、renderRouterPermSheetHtml、renderRouterItem
 - 剩余 35 处为动态样式（如 sheetStyle）或特殊布局，可后续优化
 
+**CSS 文件优化：**
+- pc.css: 侧边栏/导航/登录渐变全部改用 CSS 变量，暗色主题正常生效
+- index.html: 登录页渐变使用 CSS 变量
+- global.css: 新增 .text-tertiary 类
+- components.css: 清理与 global.css 重复的定义（.text-center/.text-secondary）
+- app.css: 移除重复的 @keyframes spin 动画定义
+- 修复暗色主题下侧边栏颜色不跟随变化的问题
+
 ### 15.3 CSS 类封装方案
 
 计划创建以下 CSS 工具类：
