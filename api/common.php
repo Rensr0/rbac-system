@@ -117,33 +117,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/config/database.php';
 
-// ==================== 数据库自动迁移 ====================
+// ==================== 数据库自动迁移（轻量级） ====================
+// 仅在 _migrations 表中无记录时执行，已迁移的版本会跳过
+// 完整迁移请使用 migrate.php
 try {
     $db = getDB();
-    // 检查 role_router 表是否有 permissions 列
-    $col = $db->query("SHOW COLUMNS FROM role_router LIKE 'permissions'")->fetch();
-    if (!$col) {
-        $db->exec("ALTER TABLE role_router ADD COLUMN permissions INT NOT NULL DEFAULT 1 COMMENT '权限位掩码:1=查看 2=编辑 4=删除 7=全部'");
-        $db->exec("UPDATE role_router SET permissions = 7");
+    $needMigration = true;
+    
+    // 检查迁移跟踪表是否存在
+    $hasMigrationTbl = $db->query("SHOW TABLES LIKE '_migrations'")->fetch();
+    if ($hasMigrationTbl) {
+        // 检查 v3.4 迁移是否已完成
+        $done = $db->prepare("SELECT COUNT(*) as cnt FROM _migrations WHERE version = '3.4' AND name = 'migration_system'");
+        $done->execute();
+        if ($done->fetch()['cnt'] > 0) {
+            $needMigration = false;
+        }
     }
-    // 检查 system_settings 表是否存在
-    $tbl = $db->query("SHOW TABLES LIKE 'system_settings'")->fetch();
-    if (!$tbl) {
-        $db->exec("CREATE TABLE IF NOT EXISTS system_settings (
+    
+    if ($needMigration) {
+        // 创建迁移跟踪表
+        $db->exec("CREATE TABLE IF NOT EXISTS _migrations (
             id INT NOT NULL AUTO_INCREMENT,
-            setting_key VARCHAR(100) NOT NULL DEFAULT '',
-            setting_value TEXT,
-            setting_type VARCHAR(20) NOT NULL DEFAULT 'string',
-            label VARCHAR(100) NOT NULL DEFAULT '',
-            create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            version VARCHAR(20) NOT NULL DEFAULT '',
+            name VARCHAR(100) NOT NULL DEFAULT '',
+            applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            UNIQUE KEY uk_key (setting_key)
+            UNIQUE KEY uk_version_name (version, name)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-        $db->exec("INSERT INTO system_settings (setting_key, setting_value, setting_type, label) VALUES ('captcha_enabled', '1', 'bool', '登录验证码')");
+        
+        // 迁移 1：role_router.permissions 列
+        $col = $db->query("SHOW COLUMNS FROM role_router LIKE 'permissions'")->fetch();
+        if (!$col) {
+            $db->exec("ALTER TABLE role_router ADD COLUMN permissions INT NOT NULL DEFAULT 1 COMMENT '权限位掩码:1=查看 2=编辑 4=删除 7=全部'");
+            $db->exec("UPDATE role_router SET permissions = 7");
+        }
+        
+        // 迁移 2：operation_logs 表
+        $tbl = $db->query("SHOW TABLES LIKE 'operation_logs'")->fetch();
+        if (!$tbl) {
+            $db->exec("CREATE TABLE IF NOT EXISTS operation_logs (
+                id INT NOT NULL AUTO_INCREMENT,
+                user_id INT NOT NULL DEFAULT 0,
+                username VARCHAR(50) NOT NULL DEFAULT '',
+                action VARCHAR(50) NOT NULL DEFAULT '',
+                detail VARCHAR(500) NOT NULL DEFAULT '',
+                ip VARCHAR(45) NOT NULL DEFAULT '',
+                create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY idx_user_id (user_id),
+                KEY idx_create_time (create_time)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        }
+        
+        // 迁移 3：system_settings 表
+        $tbl = $db->query("SHOW TABLES LIKE 'system_settings'")->fetch();
+        if (!$tbl) {
+            $db->exec("CREATE TABLE IF NOT EXISTS system_settings (
+                id INT NOT NULL AUTO_INCREMENT,
+                setting_key VARCHAR(100) NOT NULL DEFAULT '',
+                setting_value TEXT,
+                setting_type VARCHAR(20) NOT NULL DEFAULT 'string',
+                label VARCHAR(100) NOT NULL DEFAULT '',
+                create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY uk_key (setting_key)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            $db->exec("INSERT INTO system_settings (setting_key, setting_value, setting_type, label) VALUES ('captcha_enabled', '1', 'bool', '登录验证码')");
+        } else {
+            $row = $db->query("SELECT id FROM system_settings WHERE setting_key = 'captcha_enabled'")->fetch();
+            if (!$row) {
+                $db->exec("INSERT INTO system_settings (setting_key, setting_value, setting_type, label) VALUES ('captcha_enabled', '1', 'bool', '登录验证码')");
+            }
+        }
+        
+        // 标记迁移完成
+        $db->exec("INSERT IGNORE INTO _migrations (version, name) VALUES ('3.1', 'role_router_permissions')");
+        $db->exec("INSERT IGNORE INTO _migrations (version, name) VALUES ('3.2', 'operation_logs')");
+        $db->exec("INSERT IGNORE INTO _migrations (version, name) VALUES ('3.3', 'system_settings')");
+        $db->exec("INSERT IGNORE INTO _migrations (version, name) VALUES ('3.4', 'migration_system')");
+        
+        // 确保日志路由存在（v3.4 新增）
+        $logRoute = $db->query("SELECT id FROM routers WHERE router_path = 'log'")->fetch();
+        if (!$logRoute) {
+            $maxSort = $db->query("SELECT MAX(sort) as ms FROM routers")->fetch();
+            $nextSort = intval($maxSort['ms']) + 1;
+            $db->exec("INSERT INTO routers (router_name, router_path, icon, sort, status) VALUES ('操作日志', 'log', 'list_alt', $nextSort, 1)");
+            $logId = $db->lastInsertId();
+            $db->exec("INSERT IGNORE INTO role_router (role_id, router_id, permissions) VALUES (1, $logId, 7)");
+        }
     }
 } catch (Exception $e) {
-    // 迁移失败不影响启动
+    // 迁移失败不影响启动，降级处理
 }
 
 // ==================== 响应函数 ====================

@@ -1,7 +1,8 @@
 -- ============================================
--- RBAC 权限管理系统 v1.0 - 数据库初始化脚本
+-- RBAC 权限管理系统 v3.4 - 数据库初始化脚本
 -- 适用：MySQL 5.7+ / 8.0+
 -- 默认超级管理员：admin / 123456
+-- 更新时间：2026-03-26
 -- ============================================
 
 SET NAMES utf8mb4;
@@ -74,7 +75,8 @@ INSERT INTO `routers` (`id`, `router_name`, `router_path`, `icon`, `sort`, `stat
 (2, '用户管理', 'user', 'group', 2, 1),
 (3, '角色管理', 'role', 'security', 3, 1),
 (4, '路由管理', 'router', 'route', 4, 1),
-(5, '个人中心', 'mine', 'account_circle', 5, 1);
+(5, '个人中心', 'mine', 'account_circle', 5, 1),
+(6, '操作日志', 'log', 'list_alt', 6, 1);
 
 -- ----------------------------
 -- 角色-路由关联表（含权限细分）
@@ -92,9 +94,9 @@ CREATE TABLE `role_router` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色路由关联表';
 
 INSERT INTO `role_router` (`role_id`, `router_id`, `permissions`) VALUES
-(1, 1, 7), (1, 2, 7), (1, 3, 7), (1, 4, 7), (1, 5, 7),
-(2, 1, 7), (2, 2, 3), (2, 5, 7),
-(3, 1, 7), (3, 2, 1), (3, 5, 7);
+(1, 1, 7), (1, 2, 7), (1, 3, 7), (1, 4, 7), (1, 5, 7), (1, 6, 7),
+(2, 1, 7), (2, 2, 3), (2, 5, 7), (2, 6, 1),
+(3, 1, 7), (3, 2, 1), (3, 5, 7), (3, 6, 1);
 
 -- ----------------------------
 -- 用户-角色关联表
@@ -125,6 +127,7 @@ CREATE TABLE `operation_logs` (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
   PRIMARY KEY (`id`),
   KEY `idx_user_id` (`user_id`),
+  KEY `idx_action` (`action`),
   KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
 
@@ -146,5 +149,25 @@ CREATE TABLE `system_settings` (
 
 INSERT INTO `system_settings` (`setting_key`, `setting_value`, `setting_type`, `label`) VALUES
 ('captcha_enabled', '1', 'bool', '登录验证码');
+
+-- ----------------------------
+-- 数据库迁移跟踪表
+-- ----------------------------
+DROP TABLE IF EXISTS `_migrations`;
+CREATE TABLE `_migrations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `version` varchar(20) NOT NULL DEFAULT '' COMMENT '版本号',
+  `name` varchar(100) NOT NULL DEFAULT '' COMMENT '迁移名称',
+  `applied_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '执行时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_version_name` (`version`, `name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='数据库迁移记录';
+
+-- 记录已完成的迁移
+INSERT INTO `_migrations` (`version`, `name`) VALUES
+('3.1', 'role_router_permissions'),
+('3.2', 'operation_logs'),
+('3.3', 'system_settings'),
+('3.4', 'migration_system');
 
 SET FOREIGN_KEY_CHECKS = 1;
