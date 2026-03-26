@@ -101,7 +101,7 @@
         document.getElementById('form-user-email').value = u.email || '';
         document.getElementById('form-user-phone').value = u.phone || '';
         var statusGroup = document.getElementById('form-user-status-group');
-        if (statusGroup) { statusGroup.style.display = ''; }
+        if (statusGroup) { statusGroup.style.display = isSelf ? 'none' : ''; }
         var statusEl = document.getElementById('form-user-status');
         if (statusEl) { statusEl.value = u.status == 1 ? '1' : '0'; }
         document.getElementById('form-user-roles').innerHTML = roles.map(function(r) {

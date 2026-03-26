@@ -139,6 +139,14 @@ function updateRouter() {
 
     try {
         $db = getDB();
+
+        // 检查路由路径重复
+        if ($routerPath !== null && $routerPath !== '') {
+            $stmt = $db->prepare("SELECT id FROM routers WHERE router_path = ? AND id != ?");
+            $stmt->execute(array($routerPath, $id));
+            if ($stmt->fetch()) { error('路由路径已存在'); }
+        }
+
         $sets = array();
         $params = array();
         if ($routerName !== '') { $sets[] = 'router_name = ?'; $params[] = $routerName; }

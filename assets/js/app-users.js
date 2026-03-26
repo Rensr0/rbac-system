@@ -186,6 +186,7 @@
         var isSuper = currentUser.is_super == 1;
         var isSelf = currentUser.id === u.id;
         var pwdField = (isSuper && !isSelf) ? '<div class="app-form-item"><div class="form-label">新密码</div><input class="form-input" type="password" id="app-edit-password" placeholder="留空则不修改"></div>' : '';
+        var statusField = !isSelf ? '<div class="app-form-item"><div class="form-label">状态</div><select class="form-input" id="app-edit-status"><option value="1" ' + (u.status == 1 ? 'selected' : '') + '>正常</option><option value="0" ' + (u.status == 0 ? 'selected' : '') + '>禁用</option></select></div>' : '';
         createActionSheet(
           '<div class="sheet-handle"></div>'
           + '<div class="sheet-title">编辑用户</div>'
@@ -194,7 +195,7 @@
           + '<div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-edit-nickname" value="' + escapeHtml(u.nickname) + '"></div>'
           + '<div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-edit-email" value="' + escapeHtml(u.email || '') + '"></div>'
           + '<div class="app-form-item"><div class="form-label">手机</div><input class="form-input" id="app-edit-phone" value="' + escapeHtml(u.phone || '') + '"></div>'
-          + '<div class="app-form-item"><div class="form-label">状态</div><select class="form-input" id="app-edit-status"><option value="1" ' + (u.status == 1 ? 'selected' : '') + '>正常</option><option value="0" ' + (u.status == 0 ? 'selected' : '') + '>禁用</option></select></div>'
+          + statusField
           + '<div class="app-form-item"><div class="form-label">分配角色</div>'
           + roles.map(function(r) {
             var checked = (u.role_ids || []).indexOf(r.id) !== -1 ? 'checked' : '';
