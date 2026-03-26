@@ -787,9 +787,7 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+/* spin 动画已在 global.css 中定义 */
 
 /* ========== 移动端权限级别样式 ========== */
 .role-perm-item {
@@ -937,10 +935,6 @@
 }
 .scroll-loading .mi.spin {
   animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 @keyframes slideUp {
