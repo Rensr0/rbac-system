@@ -18,8 +18,8 @@
           var permLabels = (r.routers || []).map(function(rt) {
             var perms = rt.perms || [];
             var permStr = '';
-            if (perms.indexOf('edit') !== -1) permStr = '编';
-            else if (perms.indexOf('delete') !== -1) permStr = '删';
+            if (perms.indexOf('delete') !== -1) permStr = '全';
+            else if (perms.indexOf('edit') !== -1) permStr = '编';
             else permStr = '看';
             var cls = perms.indexOf('delete') !== -1 ? 'perm-badge-delete' : (perms.indexOf('edit') !== -1 ? 'perm-badge-edit' : 'perm-badge-view');
             return '<span class="badge badge-info m-1">' + renderIcon(rt.icon) + ' ' + escapeHtml(rt.router_name) + '<span class="' + cls + ' fs-10 ml-2">' + permStr + '</span></span>';

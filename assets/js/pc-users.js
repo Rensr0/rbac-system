@@ -66,6 +66,7 @@
       document.getElementById('form-user-id').value = '';
       var uEl = document.getElementById('form-user-username'); uEl.value = ''; uEl.disabled = false;
       document.getElementById('form-user-password').value = '123456';
+      document.getElementById('form-user-password').placeholder = '默认 123456';
       document.getElementById('form-user-password').closest('.form-group').style.display = '';
       document.getElementById('form-user-nickname').value = '';
       document.getElementById('form-user-email').value = '';
@@ -94,6 +95,8 @@
         // 超级管理员编辑其他用户时显示密码字段，编辑自己时隐藏
         var pwdGroup = document.getElementById('form-user-password').closest('.form-group');
         pwdGroup.style.display = (isSuper && !isSelf) ? '' : 'none';
+        document.getElementById('form-user-password').value = '';
+        document.getElementById('form-user-password').placeholder = '留空则不修改';
         document.getElementById('form-user-nickname').value = u.nickname;
         document.getElementById('form-user-email').value = u.email || '';
         document.getElementById('form-user-phone').value = u.phone || '';

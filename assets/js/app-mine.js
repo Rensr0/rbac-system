@@ -56,7 +56,7 @@
       + '<div class="avatar-circle" id="app-avatar-preview">'
       + getInitial(currentUser.nickname || currentUser.username)
       + '</div>'
-      + '<label class="app-btn app-btn-sm app-btn-outline m-0 cursor-pointer">' + mi('upload', 'mi-14') + ' 上传头像<input type="file" accept="image/*" id="app-avatar-input" onchange="AppMine.uploadAvatar(this)" class="hidden"></label>'
+      + '<label class="app-btn app-btn-sm app-btn-outline m-0 cursor-pointer">' + mi('upload', 'mi-14') + ' 上传头像<input type="file" accept="image/*" id="app-avatar-input-edit" onchange="AppMine.uploadAvatar(this)" class="hidden"></label>'
       + '</div></div>'
       + '<div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-edit-nickname" value="' + escapeHtml(currentUser.nickname || '') + '"></div>'
       + '<div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-edit-email" value="' + escapeHtml(currentUser.email || '') + '"></div>'
