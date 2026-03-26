@@ -240,7 +240,125 @@
   background: var(--border);
 }
 
+/* ========== 密码强度条 ========== */
+.str-bar {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
 /* ========== 空白居中 ========== */
 .text-center {
   text-align: center;
+}
+
+/* ========== PC 个人中心 ========== */
+.mine-hero {
+  background: linear-gradient(135deg, var(--primary), #6C63FF);
+  padding: 40px 32px;
+  color: #fff;
+  position: relative;
+}
+.mine-hero-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+}
+.mine-hero-circle-1 {
+  top: -40px; right: -40px;
+  width: 160px; height: 160px;
+}
+.mine-hero-circle-2 {
+  bottom: -30px; right: 60px;
+  width: 100px; height: 100px;
+  background: rgba(255,255,255,0.08);
+}
+.avatar-wrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.mine-hero-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(10px);
+}
+.mine-hero-avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  border: 3px solid rgba(255,255,255,0.3);
+}
+.mine-hero-name {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 700;
+}
+.mine-hero-role {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+.mine-role-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+.mine-hero-meta {
+  margin: 8px 0 0;
+  font-size: 13px;
+  opacity: 0.75;
+}
+.mine-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.mine-info-card {
+  text-align: center;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+}
+.mine-info-icon {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.mine-info-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.mine-info-value {
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+.mine-forms-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.mine-form-title {
+  margin: 0 0 20px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

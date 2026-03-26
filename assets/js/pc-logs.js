@@ -1,6 +1,7 @@
 /**
  * pc-logs.js - PC 端操作日志
  * 从 pc-pages.js 拆分
+ * v3.2: 内联样式迁移到 components.css
  */
 (function () {
   var _logPage = 1;
@@ -23,14 +24,14 @@
         '<div class="page-header">'
         + '<div><h2>操作日志</h2><div class="subtitle">共 ' + total + ' 条记录</div></div>'
         + '</div>'
-        + '<div class="search-bar" style="display:flex;gap:8px;flex-wrap:wrap">'
+        + '<div class="search-bar flex gap-8 flex-wrap">'
         + '<input class="form-input" id="pc-log-search" placeholder="搜索用户名/详情/IP" value="' + escapeHtml(kw) + '" onkeyup="if(event.key===\'Enter\'){PCPages.logPage=1;PCPages.loadLog(document.getElementById(\'page-content\'))}" style="flex:1;min-width:200px">'
         + '<select class="form-input" id="pc-log-action" onchange="PCPages.logPage=1;PCPages.loadLog(document.getElementById(\'page-content\'))" style="width:auto;min-width:120px"><option value="">全部操作</option>' + actionOptions + '</select>'
         + '<button class="btn btn-outline" onclick="PCPages.logPage=1;PCPages.loadLog(document.getElementById(\'page-content\'))">' + mi('search', 'mi-18') + ' 搜索</button>'
         + '</div>'
         + '<div class="card"><div class="table-wrap"><table>'
         + '<thead><tr><th>ID</th><th>操作人</th><th>操作类型</th><th>详情</th><th>IP</th><th>时间</th></tr></thead>'
-        + '<tbody>' + (list.length === 0 ? '<tr><td colspan="6" class="text-center text-secondary" style="padding:32px">暂无日志</td></tr>' : '')
+        + '<tbody>' + (list.length === 0 ? '<tr><td colspan="6" class="text-center text-secondary p-32">暂无日志</td></tr>' : '')
         + list.map(function(l) {
           return '<tr>'
             + '<td>' + l.id + '</td>'

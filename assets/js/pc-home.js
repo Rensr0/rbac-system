@@ -1,6 +1,7 @@
 /**
  * pc-home.js - PC 端首页 + 系统设置
  * 从 pc-pages.js 拆分
+ * v3.2: 内联样式迁移到 components.css
  */
 (function () {
   function loadHome(c) {
@@ -30,10 +31,10 @@
           + '</div>'
           + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</div>'
           + '<div class="card-body">'
-          + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。当前系统概况如下：</p>'
+          + '<p class="text-secondary">RBAC 权限管理系统 v3.0 运行正常。当前系统概况如下：</p>'
           + '</div></div>'
-          + '<div class="card" style="margin-top:24px"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:320px;display:flex;align-items:center;justify-content:center"></div></div></div>'
-          + '<div class="card" style="margin-top:24px"><div class="card-header">' + mi('settings', 'mi-18') + ' 系统设置</div><div class="card-body" id="settings-panel"><div class="text-center" style="padding:16px"><div class="spinner"></div></div></div></div>';
+          + '<div class="card mt-24"><div class="card-header">数据概览</div><div class="card-body"><div id="stats-chart" style="height:320px" class="flex-center-center"></div></div></div>'
+          + '<div class="card mt-24"><div class="card-header">' + mi('settings', 'mi-18') + ' 系统设置</div><div class="card-body" id="settings-panel"><div class="text-center p-16-0"><div class="spinner"></div></div></div></div>';
 
         if (window.ApexCharts) {
           var totalUsers = uR.data && uR.data.total || 0;
@@ -83,7 +84,7 @@
           + '</div>'
           + '<div class="card"><div class="card-header">欢迎回来，' + escapeHtml(currentUser.nickname || currentUser.username) + '</div>'
           + '<div class="card-body">'
-          + '<p style="color:var(--text-secondary)">RBAC 权限管理系统 v3.0 运行正常。您可以通过左侧菜单访问已授权的功能模块。</p>'
+          + '<p class="text-secondary">RBAC 权限管理系统 v3.0 运行正常。您可以通过左侧菜单访问已授权的功能模块。</p>'
           + '</div></div>';
       }
     });

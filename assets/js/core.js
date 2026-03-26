@@ -465,7 +465,7 @@ function mi(name, cls) {
   return '<i class="mi' + (cls ? ' ' + cls : '') + '">' + name + '</i>';
 }
 function miSpan(name, text, cls) {
-  return '<span style="display:inline-flex;align-items:center;gap:6px">' + mi(name, cls) + Utils.escapeHtml(text) + '</span>';
+  return '<span class="flex-center gap-6">' + mi(name, cls) + Utils.escapeHtml(text) + '</span>';
 }
 
 function renderIcon(iconText) {
@@ -576,8 +576,8 @@ function openIconPicker(inputId, onChange) {
     pickerOverlay = createActionSheet(
       '<div class="sheet-handle"></div>'
       + '<div class="sheet-title">选择图标</div>'
-      + '<div style="padding:0 12px 8px">'
-      + '<div class="app-search" style="margin-bottom:8px"><span class="search-icon">' + mi('search', 'mi-16') + '</span><input type="text" placeholder="搜索图标名称..." id="icon-pick-search" oninput="filterIconPicker(this.value)"></div>'
+      + '<div class="p-0-12-12">'
+      + '<div class="app-search mb-8"><span class="search-icon">' + mi('search', 'mi-16') + '</span><input type="text" placeholder="搜索图标名称..." id="icon-pick-search" oninput="filterIconPicker(this.value)"></div>'
       + '<div class="icon-pick-grid">' + iconGridHtml + '</div>'
       + '</div>'
       + '<div class="sheet-cancel" id="icon-pick-cancel">取消</div>',
@@ -599,8 +599,8 @@ function openIconPicker(inputId, onChange) {
     pickerOverlay.innerHTML =
       '<div class="modal" style="max-width:560px">'
       + '<div class="modal-header"><h3>选择图标</h3><button class="modal-close" id="icon-pick-close">✕</button></div>'
-      + '<div class="modal-body" style="max-height:60vh;overflow-y:auto">'
-      + '<div style="margin-bottom:10px"><input class="form-input" type="text" placeholder="搜索图标名称..." id="icon-pick-search" oninput="filterIconPicker(this.value)"></div>'
+      + '<div class="modal-body modal-body-scroll">'
+      + '<div class="mb-10"><input class="form-input" type="text" placeholder="搜索图标名称..." id="icon-pick-search" oninput="filterIconPicker(this.value)"></div>'
       + '<div class="icon-pick-grid">' + iconGridHtml + '</div>'
       + '</div></div>';
     document.body.appendChild(pickerOverlay);
@@ -664,12 +664,12 @@ function checkPwdStrength(pwd) {
 
 function pwdStrengthHtml(inputId) {
   return '<div class="pwd-strength" id="' + inputId + '-strength" style="display:none">'
-    + '<div style="display:flex;gap:4px;margin-top:6px">'
-    + '<div class="str-bar" style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>'
-    + '<div class="str-bar" style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>'
-    + '<div class="str-bar" style="flex:1;height:3px;border-radius:2px;background:var(--border)"></div>'
+    + '<div class="flex gap-4 mt-8">'
+    + '<div class="str-bar"></div>'
+    + '<div class="str-bar"></div>'
+    + '<div class="str-bar"></div>'
     + '</div>'
-    + '<span class="str-text" style="font-size:11px;margin-top:2px;display:block;color:var(--text-secondary)"></span>'
+    + '<span class="str-text fs-11 mt-4 text-secondary" style="display:block"></span>'
     + '</div>';
 }
 
