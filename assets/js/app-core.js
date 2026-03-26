@@ -197,6 +197,8 @@
         oldPage.classList.add('slide-out');
         setTimeout(function () { oldPage.classList.remove('slide-out'); }, 300);
       }
+      // 清除目标页面旧内容，防止404或其他残留叠加
+      newPage.querySelector('.app-page-content').innerHTML = '';
       newPage.classList.add('active');
       newPage.scrollTop = 0;
 
