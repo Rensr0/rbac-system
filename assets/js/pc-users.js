@@ -85,10 +85,15 @@
       var u = res.data;
       SharedOps.role.list(100, function(roleRes) {
         var roles = (roleRes.data || {}).list || [];
+        var currentUser = Storage.get('currentUser') || {};
+        var isSuper = currentUser.is_super == 1;
+        var isSelf = currentUser.id === u.id;
         document.getElementById('modal-user-title').textContent = '编辑用户';
         document.getElementById('form-user-id').value = u.id;
         var uEl = document.getElementById('form-user-username'); uEl.value = u.username; uEl.disabled = true;
-        document.getElementById('form-user-password').closest('.form-group').style.display = 'none';
+        // 超级管理员编辑其他用户时显示密码字段，编辑自己时隐藏
+        var pwdGroup = document.getElementById('form-user-password').closest('.form-group');
+        pwdGroup.style.display = (isSuper && !isSelf) ? '' : 'none';
         document.getElementById('form-user-nickname').value = u.nickname;
         document.getElementById('form-user-email').value = u.email || '';
         document.getElementById('form-user-phone').value = u.phone || '';
@@ -118,7 +123,10 @@
 
     function doSave() {
       if (id) {
-        SharedOps.user.update(parseInt(id), { nickname: nickname, email: email, phone: phone, status: status }, function(updateRes) {
+        // 编辑用户：只有密码字段有值时才传递密码
+        var updateData = { nickname: nickname, email: email, phone: phone, status: status };
+        if (password !== '') { updateData.password = password; }
+        SharedOps.user.update(parseInt(id), updateData, function(updateRes) {
           if (updateRes.code !== 200) { showToast(updateRes.msg || '更新用户失败'); return; }
           var current = Storage.get('currentUser');
           if (current && current.id === parseInt(id) && updateRes.data) {

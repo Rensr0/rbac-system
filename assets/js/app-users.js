@@ -182,11 +182,15 @@
       var u = res.data;
       SharedOps.role.list(100, function(roleRes) {
         var roles = (roleRes.data || {}).list || [];
+        var currentUser = Storage.get('currentUser') || {};
+        var isSuper = currentUser.is_super == 1;
+        var isSelf = currentUser.id === u.id;
+        var pwdField = (isSuper && !isSelf) ? '<div class="app-form-item"><div class="form-label">新密码</div><input class="form-input" type="password" id="app-edit-password" placeholder="留空则不修改"></div>' : '';
         createActionSheet(
           '<div class="sheet-handle"></div>'
           + '<div class="sheet-title">编辑用户</div>'
           + '<div class="modal-body">'
-          + '<div class="app-form"><div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="app-edit-username" value="' + escapeHtml(u.username) + '" disabled></div>'
+          + pwdField + '<div class="app-form"><div class="app-form-item"><div class="form-label">账号</div><input class="form-input" id="app-edit-username" value="' + escapeHtml(u.username) + '" disabled></div>'
           + '<div class="app-form-item"><div class="form-label">昵称</div><input class="form-input" id="app-edit-nickname" value="' + escapeHtml(u.nickname) + '"></div>'
           + '<div class="app-form-item"><div class="form-label">邮箱</div><input class="form-input" id="app-edit-email" value="' + escapeHtml(u.email || '') + '"></div>'
           + '<div class="app-form-item"><div class="form-label">手机</div><input class="form-input" id="app-edit-phone" value="' + escapeHtml(u.phone || '') + '"></div>'
@@ -207,13 +211,17 @@
 
   function submitEditUser(userId) {
     var nickname = document.getElementById('app-edit-nickname').value.trim();
+    var password = document.getElementById('app-edit-password') ? document.getElementById('app-edit-password').value.trim() : '';
     var email = document.getElementById('app-edit-email').value.trim();
     var phone = document.getElementById('app-edit-phone').value.trim();
     var roleIds = Array.from(document.querySelectorAll('.app-edit-role-cb:checked')).map(function(cb) { return parseInt(cb.value); });
 
     var status = document.getElementById('app-edit-status') ? document.getElementById('app-edit-status').value : undefined;
+    // 编辑用户：如果有输入密码则包含在更新数据中
+    var updateData = { nickname: nickname, email: email, phone: phone, status: status };
+    if (password !== '') { updateData.password = password; }
     appShowLoading();
-    SharedOps.user.update(userId, { nickname: nickname, email: email, phone: phone, status: status }, function(updateRes) {
+    SharedOps.user.update(userId, updateData, function(updateRes) {
       if (updateRes.code !== 200) { appHideLoading(); appToast(updateRes.msg || '更新失败'); return; }
       var current = Storage.get('currentUser');
       if (current && current.id === userId && updateRes.data) {

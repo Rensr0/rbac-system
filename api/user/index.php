@@ -144,16 +144,19 @@ function updateUser() {
     $data = getJsonBody();
     $id = intval(isset($data['id']) ? $data['id'] : 0);
     if ($id <= 0) { error('参数错误'); }
+    if ($id == 1) { error('超级管理员账号不可修改'); }
 
     $nickname = trim(isset($data['nickname']) ? $data['nickname'] : '');
     $email    = trim(isset($data['email']) ? $data['email'] : '');
     $phone    = trim(isset($data['phone']) ? $data['phone'] : '');
     $status   = isset($data['status']) ? intval($data['status']) : null;
+    $password = isset($data['password']) ? trim($data['password']) : '';
 
     if ($nickname !== '' && !validateLength($nickname, 1, 50)) { error('昵称长度需在 1-50 位之间'); }
     if ($email !== '' && !validateEmail($email)) { error('邮箱格式不正确'); }
     if ($phone !== '' && !preg_match('/^[\d\-+() ]{0,20}$/', $phone)) { error('手机号格式不正确'); }
     if ($status !== null && !in_array($status, array(0, 1), true)) { error('状态值无效'); }
+    if ($password !== '' && (mb_strlen($password) < 6 || mb_strlen($password) > 128)) { error('密码长度需在 6-128 位之间'); }
 
     try {
         $db = getDB();
@@ -164,6 +167,7 @@ function updateUser() {
         if ($email !== '')    { $sets[] = 'email = ?';    $params[] = $email; }
         if ($phone !== '')    { $sets[] = 'phone = ?';    $params[] = $phone; }
         if ($status !== null) { $sets[] = 'status = ?';   $params[] = $status; }
+        if ($password !== '') { $sets[] = 'password = ?'; $params[] = encryptPassword($password); }
 
         if (!empty($sets)) {
             $params[] = $id;
@@ -179,6 +183,7 @@ function updateUser() {
 
         $logDetail = "更新用户 ID=$id";
         if ($status !== null) { $logDetail .= ', 状态=' . ($status ? '启用' : '禁用'); }
+        if ($password !== '') { $logDetail .= ', 密码已修改'; }
         writeLog('user_update', $logDetail);
         success($updatedUser, '更新成功');
     } catch (Exception $e) {
